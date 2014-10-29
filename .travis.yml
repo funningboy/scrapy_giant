@@ -1,0 +1,12 @@
+language: python
+python:
+  - "2.7"
+services:
+    - mongodb
+before_install:
+install:
+  - pip install -r requirements.txt
+  - python setup.py -q install
+after_install:
+script:
+  - nosetests -vv --nocapture

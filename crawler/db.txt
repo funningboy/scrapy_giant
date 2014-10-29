@@ -1,0 +1,46 @@
+
+HisFrame
+[
+  {
+    'stcokid':
+    'stocknm':
+    'date':
+    'data': {
+              'open':
+              'high':
+              'low':
+              'close':
+              'volumn':
+    }
+    'topbuylist': [
+                    {
+                      'traderid':
+                      'tradernm':
+                      'data': {
+                                'avgbuyprice':
+                                'buyvolumn':
+                                'avgsellprice':
+                                'sellvolumn':
+                      }
+                    }, ...
+      ]
+    'topselllist': [
+                    {
+                      'traderid':
+                      'tradernm':
+                      'data': {
+                                'avgbuyprice':
+                                'buyvolumn':
+                                'avgsellprice':
+                                'sellvolumn':
+                      }
+                    }, ...
+      ]
+
+  } ...
+]
+
+RealFrame
+ {
+
+ }
