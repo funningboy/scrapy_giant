@@ -251,6 +251,9 @@ class BaseHisDBQuery(object):
         topselldt = self.get_toptrader_data(starttime, endtime, stockids, traderids, 'stock', 'sell')
         return pd.concat([stockdt, topbuydt, topselldt], axis=2).fillna(0)
 
+    def delete_all_data(self, starttime, endtime, stockids=[], traderids=[]):
+        raise NotImplementedError
+
     def set_stock_data(self, item):
         for it in item:
             # update content if exists

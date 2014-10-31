@@ -58,7 +58,7 @@ def spawn_payloads(debug=False):
 
 def join_payloads(procs):
     for proc in procs:
-        proc.wait()
+        proc.communicate()
 
 def spawn_scrapys(debug=False):
     procs = []
@@ -88,7 +88,7 @@ def spawn_scrapys(debug=False):
 
 def join_scrapys(procs):
     for proc in procs:
-        proc.wait()
+        proc.communicate()
 
 def main(debug):
     if debug and has_mongodb_service():

@@ -62,5 +62,10 @@ CELERYBEAT_SCHEDULE = {
         'task': 'bin.tasks.run_scrapy',
         'schedule': crontab(minute=0, hour='*/8'),
         'args': ('otchisstock', debug)
+    },
+    'run_algorithm_dualema': {
+        'task': 'bin.tasks.run_algorithm',
+        'schedule': crontab(minute='*/1'),
+        'args': (datetime.utcnow() - timedelta(days=60), datetime.utcnow(), ['2317'], debug)
     }
 }
