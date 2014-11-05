@@ -1,26 +1,41 @@
+# -*- coding: utf-8 -*-
 
-from datetime import datetime
 from bson.code import Code
 import traceback
 import pandas as pd
 import numpy as np
 import pytz
 from collections import OrderedDict
-import json
-from bson import json_util
 
 from bin.mongodb_driver import *
 from bin.logger import Logger
 
+# use mongoengine as ORM data backend for Django access
+has_mongoengine = False
+
 __all__ = ['TwseHisDBQuery', 'OtcHisDBQuery']
+
+# trader cache for speed up iter query with the same condition
+tradercache = {
+    'starttime': None,
+    'endtime': None,
+    'pool': None
+}
+
 
 class BaseHisDBQuery(object):
 
     def __init__(self):
-        self._client = connect_mongodb_service()
-        self._db = self._client.twsedb
-        self._coll = self._client.twsedb.twsehiscoll
-        self._coll.ensure_index([('date', -1), ('stockid', 1), ('stocknm', 1)])
+        if has_mongoengine:
+            pass
+#            self._db = TwseDB
+#            self._coll =  ???
+#            self._db.ensure_index[()]
+        else:
+            self._client = connect_mongodb_service()
+            self._db = self._client.twsedb
+            self._coll = self._client.twsedb.twsehiscoll
+            self._coll.ensure_index([('date', -1), ('stockid', 1), ('stocknm', 1)])
         self._stockmap = OrderedDict()
         self._tradermap = OrderedDict()
 
@@ -88,7 +103,8 @@ class BaseHisDBQuery(object):
             '$and': [
                 {'date': {'$gte': starttime, '$lte': endtime}},
                 {'stockid': {'$in': stockids}}
-            ]}
+            ]
+        }
         try:
             pool = self._coll.map_reduce(
                 imap,
@@ -101,7 +117,7 @@ class BaseHisDBQuery(object):
         data = OrderedDict()
         for stockid in stockids:
             if stockid not in self._stockmap:
-              self._stockmap.update({stockid: {}})
+                self._stockmap.update({stockid: {}})
             cursor = pool.find({'_id.stockid': stockid})
             value, index = [], []
             for it in cursor:
@@ -161,18 +177,26 @@ class BaseHisDBQuery(object):
         };')
         # $elemMatch doesn't work for map reduce ...
         iquery = {
-            '$and': [
-                {'date': {'$gte': starttime, '$lte': endtime}}
-        ]}
-        try:
-            pool = self._coll.map_reduce(
-                imap,
-                ireduce,
-                'query_toptrader_from_db',
-                query=iquery)
-        except:
-            Logger.error("%s"  %(traceback.format_exc()))
-            raise
+            '$and': [{'date': {'$gte': starttime, '$lte': endtime}}]
+        }
+        global tradercache
+        if tradercache['starttime'] == starttime and tradercache['endtime'] == endtime:
+            pool = tradercache['pool']
+        else:
+            try:
+                pool = self._coll.map_reduce(
+                    imap,
+                    ireduce,
+                    'query_toptrader_from_db',
+                    query=iquery)
+                tradercache.update({
+                    'starttime': starttime,
+                    'endtime': endtime,
+                    'pool': pool
+                })
+            except:
+                Logger.error("%s" % (traceback.format_exc()))
+                raise
 
         direct = -1 if dtyp == 'buy' else 1
         keynm = 'topbuy' if dtyp == 'buy' else 'topsell'
@@ -246,6 +270,7 @@ class BaseHisDBQuery(object):
         ---------------------------------------------------------------------------
         20140827    | 10 | 11 | 9 | 9 | 100 | 10          | 0   | -10 |  0 |
         """
+        # bottleneck is trader data query ...
         stockdt = self.get_stock_data(starttime, endtime, stockids)
         topbuydt = self.get_toptrader_data(starttime, endtime, stockids, traderids, 'stock', 'buy')
         topselldt = self.get_toptrader_data(starttime, endtime, stockids, traderids, 'stock', 'sell')
@@ -255,82 +280,114 @@ class BaseHisDBQuery(object):
         raise NotImplementedError
 
     def set_stock_data(self, item):
-        for it in item:
-            # update content if exists
+        if has_mongoengine:
+            pass
+#            for it in item:
+#                # update content if exists
+#                with switch_collection(Group, 'group2000') as Group:
+#                    TwseDB(name="hello Group 2000 collection!").save()
+#
+#                TwseDB.object(stockid__eq=it['stockid'], )
+#
+#                data = StockData(**{
+#                    'open': it['open'],
+#                    'high': it['high'],
+#                    'low': it['low'],
+#                    'close': it['close'],
+#                    'volume': it['volume']
+#                })
+#                db = TwseDB({
+#                    'stockid': it['stockid'],
+#                    'date': it['date'],
+#                    'data': data,
+#                    'topbuylist': [],
+#                    'topselllist': []
+#                }).save()
+        else:
+            for it in item:
+                # update content if exists
+                bulk = self._coll.initialize_ordered_bulk_op()
+                bulk.find({
+                    'stockid': it['stockid'],
+                    'date': it['date'],
+                }).update({
+                    '$set': {
+                        'data': {
+                            'open': it['open'],
+                            'high': it['high'],
+                            'low': it['low'],
+                            'close': it['close'],
+                            'volume': it['volume']
+                        }
+                    }
+                })
+                rst = bulk.execute()
+                if sum([rst['nMatched'], rst['nInserted'], rst['nModified']]) == 0:
+                    # insert new content
+                    bulk = self._coll.initialize_ordered_bulk_op()
+                    bulk.insert({
+                        'stockid': it['stockid'],
+                        'date': it['date'],
+                        'data': {
+                            'open': it['open'],
+                            'high': it['high'],
+                            'low': it['low'],
+                            'close': it['close'],
+                            'volume': it['volume']
+                        },
+                        'topbuylist': [],
+                        'topselllist': []
+                    })
+                    bulk.execute()
+
+    def set_trader_data(self, item):
+        if has_mongoengine:
+            pass
+        else:
             bulk = self._coll.initialize_ordered_bulk_op()
             bulk.find({
-                'stockid': it['stockid'],
-                'date': it['date'],
+                'stockid': item['stockid'],
+                'date': item['date']
             }).update({
                 '$set': {
-                    'data': {
-                        'open': it['open'],
-                        'high': it['high'],
-                        'low': it['low'],
-                        'close': it['close'],
-                        'volume': it['volume']
-                    }
-                }
+                    'topbuylist': item['topbuylist'],
+                    'topselllist': item['topselllist']}
             })
             rst = bulk.execute()
             if sum([rst['nMatched'], rst['nInserted'], rst['nModified']]) == 0:
                 # insert new content
                 bulk = self._coll.initialize_ordered_bulk_op()
                 bulk.insert({
-                    'stockid': it['stockid'],
-                    'date': it['date'],
-                    'data': {
-                        'open': it['open'],
-                        'high': it['high'],
-                        'low': it['low'],
-                        'close': it['close'],
-                        'volume': it['volume']
-                    },
-                    'topbuylist': [],
-                    'topselllist': []
+                    'stockid': item['stockid'],
+                    'date': item['date'],
+                    'data': {},
+                    'topbuylist': item['topbuylist'],
+                    'topselllist': item['topselllist']
                 })
                 bulk.execute()
-
-    def set_trader_data(self, item):
-        bulk = self._coll.initialize_ordered_bulk_op()
-        bulk.find({
-            'stockid': item['stockid'],
-            'date': item['date']
-        }).update({
-            '$set': {
-                'topbuylist': item['topbuylist'],
-                'topselllist': item['topselllist']}
-        })
-        rst = bulk.execute()
-
-        if sum([rst['nMatched'], rst['nInserted'], rst['nModified']]) == 0:
-            # insert new content
-            bulk = self._coll.initialize_ordered_bulk_op()
-            bulk.insert({
-                'stockid': item['stockid'],
-                'date': item['date'],
-                'data': {},
-                'topbuylist': item['topbuylist'],
-                'topselllist': item['topselllist']
-            })
-            bulk.execute()
 
 
 class TwseHisDBQuery(BaseHisDBQuery):
 
     def __init__(self):
         super(TwseHisDBQuery, self).__init__()
-        self._client = connect_mongodb_service()
-        self._db = self._client.twsedb
-        self._coll = self._client.twsedb.twsehiscoll
-        self._coll.ensure_index([('date', -1), ('stockid', 1), ('stocknm', 1)])
+        if has_mongoengine:
+            pass
+        else:
+            self._client = connect_mongodb_service()
+            self._db = self._client.twsedb
+            self._coll = self._client.twsedb.twsehiscoll
+            self._coll.ensure_index([('date', -1), ('stockid', 1), ('stocknm', 1)])
 
 
 class OtcHisDBQuery(BaseHisDBQuery):
 
     def __init__(self):
         super(OtcHisDBQuery, self).__init__()
-        self._client = connect_mongodb_service()
-        self._db = self._client.otcdb
-        self._coll = self._client.otcdb.otchiscoll
-        self._coll.ensure_index([('date', -1), ('stockid', 1), ('stocknm', 1)])
+        if has_mongoengine:
+            pass
+        else:
+            self._client = connect_mongodb_service()
+            self._db = self._client.otcdb
+            self._coll = self._client.otcdb.otchiscoll
+            self._coll.ensure_index([('date', -1), ('stockid', 1), ('stocknm', 1)])

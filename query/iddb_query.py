@@ -105,3 +105,7 @@ class OtcIdDBQuery(BaseIdDBQuery):
             stockids = [it['stockid'] for it in cursor]
             for stockid in stockids:
                 yield stockid
+
+
+class TraderIDDBQuery():
+    pass

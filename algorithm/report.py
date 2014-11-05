@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+import re
 
 from datetime import datetime, timedelta
 from collections import OrderedDict
@@ -16,15 +17,22 @@ class Report(object):
         self._pool = OrderedDict()
 
     def collect(self, stockid, results):
-        item = {
+        # the latest date info
+        item = OrderedDict({
             'date': results.index[-1],
+            'buy': results['buy'].values[-1],
+            'sell': results['sell'].values[-1],
+            'buy_count': results['buy'].sum(),
+            'sell_count': results['sell'].sum(),
+            'portfolio_value': results['portfolio_value'].mean(),
+            'ending_value': results['ending_value'].sum(),
+            'ending_cash': results['ending_cash'].mean(),
             'open': results['open'].values[-1],
             'high': results['high'].values[-1],
             'low': results['low'].values[-1],
             'close': results['close'].values[-1],
             'volume': results['volume'].values[-1],
-            'ending_value': results['ending_value'].mean()
-        }
+        })
         # summary
         frame = pd.DataFrame.from_dict({stockid: item}).fillna(0)
         self._report = pd.concat([self._report, frame.T], axis=0).fillna(0).sort(columns=list(self._sort), ascending=list(self._direct))[0:self._limit]
@@ -42,7 +50,25 @@ class Report(object):
         if dtype == 'json':
             return self._pool[stockid].to_json()
         elif dtype == 'html':
-            return self._pool[stockid].to_html()
+            sideband = []
+            columns=[
+                'buy',
+                'sell',
+                'portfolio_value',
+                'ending_value',
+                'ending_cash',
+                'open',
+                'high',
+                'low',
+                'close',
+                'volume'
+            ]
+            for it in list(self._pool[stockid].columns.values):
+                if re.match(r'top(buy|sell)\d+_\w+', it):
+                    sideband.append(it)
+            sideband.sort()
+            columns.extend(sideband)
+            return self._pool[stockid].to_html(columns=columns)
         else:
             return self._pool[stockid]
 
@@ -58,7 +84,23 @@ class Report(object):
         if dtype == 'json':
             return self._report.to_json()
         elif dtype == 'html':
-            return self._report.to_html()
+            return self._report.to_html(
+                columns=[
+                    'date',
+                    'buy',
+                    'sell',
+                    'buy_count',
+                    'sell_count',
+                    'portfolio_value',
+                    'ending_value',
+                    'ending_cash',
+                    'open',
+                    'high',
+                    'low',
+                    'close',
+                    'volume'
+                ]
+            )
         else:
             return self._report
 

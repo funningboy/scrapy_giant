@@ -14,6 +14,7 @@ import traceback
 
 from bin.mongodb_driver import *
 
+
 def wap_scrapy_cmd(spider, loglevel, logfile, logen=True, debug=False):
     cmd = (
         'scrapy crawl %(spider)s ' +
@@ -56,9 +57,11 @@ def spawn_payloads(debug=False):
         procs.append(proc)
     return procs
 
+
 def join_payloads(procs):
     for proc in procs:
         proc.communicate()
+
 
 def spawn_scrapys(debug=False):
     procs = []
@@ -86,15 +89,16 @@ def spawn_scrapys(debug=False):
         procs.append(proc)
     return procs
 
+
 def join_scrapys(procs):
     for proc in procs:
         proc.communicate()
 
-def main(debug):
-    if debug and has_mongodb_service():
-        raise "please turn off mongodb service in debug model"
 
-    if not has_mongodb_service():
+def start_service(debug):
+    if has_mongodb_service():
+        raise "please turn off mongodb service in debug model"
+    else:
         if debug:
             os.environ['ROOTPATH'] = './tmp'
         else:
@@ -102,20 +106,25 @@ def main(debug):
         os.environ['HOSTNAME'] = 'localhost'
         os.environ['DBPORT'] = '27017'
         os.environ['MONGOD'] = 'mongod'
-
         update_mongodb_service()
         proc = start_mongodb_service()
+        return proc
 
+
+def close_service(proc, debug):
+    close_mongodb_service(proc)
+
+
+def main(debug):
+    proc = start_service(debug)
     # 1st update stockids
     sprocs = spawn_payloads(debug)
     join_payloads(sprocs)
-
     # 2nd update all
     sprocs = spawn_scrapys(debug)
     join_scrapys(sprocs)
+    close_service(proc, debug)
 
-    if not has_mongodb_service():
-        close_mongodb_service(proc)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='crawler twse and otc all stocks/traders info')

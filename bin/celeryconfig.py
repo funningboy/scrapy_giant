@@ -10,6 +10,8 @@ sys.path.insert(0, os.getcwd())
 
 from celery.schedules import crontab
 
+from query.iddb_query import (TwseIdDBQuery, OtcIdDBQuery)
+
 _rootpath = os.environ.get('ROOTPATH', './tmp')
 _dbpath = os.environ.get('DBPATH', _rootpath)
 _logpath = os.environ.get('LOGPATH', _rootpath)
@@ -30,42 +32,126 @@ CELERY_MONGODB_BACKEND_SETTINGS = {
 
 CELERY_TIMEZONE = 'UTC'
 
-#used to schedule tasks periodically and passing optional arguments
-#Can be very useful. Celery does not seem to support scheduled task but only periodic
+# used to schedule tasks periodically and passing optional arguments
+# Can be very useful. Celery does not seem to support scheduled task
+# but only periodic
 CELERYBEAT_SCHEDULE = {
-    'run_scrapy_twseid': {
-        'task': 'bin.tasks.run_scrapy',
+    'run_scrapy_service_twseid': {
+        'task': 'bin.tasks.run_scrapy_service',
         'schedule': crontab(minute=0, hour='*/8'),
-        'args': ('twseid', debug)
+        'args': (
+            'twseid',
+            'INFO',
+            "./log/%s_%s.log" % ('twseid', datetime.today().strftime("%Y%m%d_%H%M")),
+            True,
+            debug
+        )
     },
-    'run_scrapy_otcid': {
-        'task': 'bin.tasks.run_scrapy',
+    'run_scrapy_service_otcid': {
+        'task': 'bin.tasks.run_scrapy_service',
         'schedule': crontab(minute=0, hour='*/8'),
-        'args': ('otcid', debug)
+        'args': (
+            'otcid',
+            'INFO',
+            "./log/%s_%s.log" % ('otcid', datetime.today().strftime("%Y%m%d_%H%M")),
+            True,
+            debug
+        )
     },
-    'run_scrapy_twsehistrader': {
-        'task': 'bin.tasks.run_scrapy',
+    'run_scrapy_service_twsehistrader': {
+        'task': 'bin.tasks.run_scrapy_service',
         'schedule': crontab(minute=0, hour='*/8'),
-        'args': ('twsehistrader', debug)
+        'args': (
+            'twsehistrader',
+            'INFO',
+            "./log/%s_%s.log" % ('twsehistrader', datetime.today().strftime("%Y%m%d_%H%M")),
+            True,
+            debug
+        )
     },
-    'run_scrapy_twsehisstock': {
-        'task': 'bin.tasks.run_scrapy',
+    'run_scrapy_service_twsehisstock': {
+        'task': 'bin.tasks.run_scrapy_service',
         'schedule': crontab(minute=0, hour='*/8'),
-        'args': ('twsehisstock', debug)
+        'args': (
+            'twsehisstock',
+            'INFO',
+            "./log/%s_%s.log" % ('twsehisstock', datetime.today().strftime("%Y%m%d_%H%M")),
+            True,
+            debug
+        )
     },
-    'run_scrapy_otchistrader': {
-        'task': 'bin.tasks.run_scrapy',
+    'run_scrapy_service_otchistrader': {
+        'task': 'bin.tasks.run_scrapy_service',
         'schedule': crontab(minute=0, hour='*/8'),
-        'args': ('otchistrader', debug)
+        'args': (
+            'otchistrader',
+            'INFO',
+            "./log/%s_%s.log" % ('otchistrader', datetime.today().strftime("%Y%m%d_%H%M")),
+            True,
+            debug
+        )
     },
-    'run_scrapy_otchisstock': {
-        'task': 'bin.tasks.run_scrapy',
+    'run_scrapy_service_otchisstock': {
+        'task': 'bin.tasks.run_scrapy_service',
         'schedule': crontab(minute=0, hour='*/8'),
-        'args': ('otchisstock', debug)
+        'args': (
+            'otchisstock',
+            'INFO',
+            "./log/%s_%s.log" % ('otchisstock', datetime.today().strftime("%Y%m%d_%H%M")),
+            True,
+            debug
+        )
     },
-    'run_algorithm_dualema': {
-        'task': 'bin.tasks.run_algorithm',
+    'run_algorithm_service_twsedualema': {
+        'task': 'bin.tasks.run_algorithm_service',
         'schedule': crontab(minute='*/1'),
-        'args': (datetime.utcnow() - timedelta(days=60), datetime.utcnow(), ['2317'], debug)
+        'args': (
+            'twse',
+            'dualema',
+            datetime.utcnow() - timedelta(days=60),
+            datetime.utcnow(),
+            TwseIdDBQuery().get_stockids(debug),
+            [],
+            debug
+        )
+    },
+    'run_algorithm_service_otcdualema': {
+        'task': 'bin.tasks.run_algorithm_service',
+        'schedule': crontab(minute='*/1'),
+        'args': (
+            'otc',
+            'dualema',
+            datetime.utcnow() - timedelta(days=60),
+            datetime.utcnow(),
+            OtcIdDBQuery().get_stockids(debug),
+            [],
+            debug
+        )
+    },
+    'run_algorithm_service_twsesuperman': {
+        'task': 'bin.tasks.run_algorithm_service',
+        'schedule': crontab(minute='*/1'),
+        'args': (
+            'twse',
+            'superman',
+            datetime.utcnow() - timedelta(days=60),
+            datetime.utcnow(),
+            TwseIdDBQuery().get_stockids(debug),
+            [],
+            debug
+        )
+    },
+    'run_algorithm_service_otcsuperman': {
+        'task': 'bin.tasks.run_algorithm_service',
+        'schedule': crontab(minute='*/1'),
+        'args': (
+            'otc',
+            'superman',
+            datetime.utcnow() - timedelta(days=60),
+            datetime.utcnow(),
+            OtcIdDBQuery().get_stockids(debug),
+            [],
+            debug
+        )
     }
 }

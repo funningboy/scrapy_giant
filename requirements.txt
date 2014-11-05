@@ -1,7 +1,9 @@
-Scrapy>=0.16.3
 pymongo>=2.4.1
 numpy>=1.6.1
 pandas>=0.14.0
 zipline>=0.7.0
+kombu>=3.0.23
+pyOpenSSL==0.13
 mongoengine>=0.8.7
 celery-with-mongodb>=3.0
+supervisor>=3.1.3

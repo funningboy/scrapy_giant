@@ -9,14 +9,26 @@ import time
 import os
 import re
 from datetime import datetime
-import traceback
-# ref : http://api.mongodb.org/python/current/examples/gevent.html
-#from gevent import monkey; monkey.patch_socket()
-from pymongo import MongoClient
-
 from bin.logger import Logger
 
-__all__ = ['update_mongodb_service', 'has_mongodb_service', 'start_mongodb_service', 'close_mongodb_service', 'connect_mongodb_service']
+# ref : http://api.mongodb.org/python/current/examples/gevent.html
+# from gevent import monkey; monkey.patch_socket()
+has_mongoengine = False
+if has_mongoengine:
+    try:
+        from mongoengine import *
+        from mongoengine.connection import get_db, get_connection
+    except ImportError:
+        Logger.error("import mongoengine error")
+        raise
+else:
+    from pymongo import MongoClient
+
+
+__all__ = ['update_mongodb_service', 'has_mongodb_service',
+           'start_mongodb_service', 'close_mongodb_service',
+           'connect_mongodb_service']
+
 
 class MongoDBDriver(object):
 
@@ -33,7 +45,7 @@ class MongoDBDriver(object):
     def update(cls):
         cls._rootpath = os.environ.get('ROOTPATH', './tmp')
         cls._dbpath = os.environ.get('DBPATH', cls._rootpath)
-        cls._logpath = os.environ.get('LOGPATH',cls. _rootpath)
+        cls._logpath = os.environ.get('LOGPATH', cls. _rootpath)
         cls._host = os.environ.get('HOSTNAME', 'localhost')
         cls._port = int(os.environ.get('DBPORT', '27017'))
         cls._mongod = os.environ.get('MONGOD', 'mongod')
@@ -97,7 +109,7 @@ class MongoDBDriver(object):
             cmd = 'ps -ef | grep mongod'
             proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = proc.stdout.read(), proc.stderr.read()
-            m = re.match(r'mongod.*(--dbpath|--logpath|--replSet|--nojournal).*', stdout)
+            m = re.match(r'.*mongod\s+(-{1,2}.*)+', stdout)
             return True if m else False
         except OSError as e:
             Logger.error("%s" % (e.strerror))
@@ -110,18 +122,30 @@ class MongoDBDriver(object):
             proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = proc.stdout.read(), proc.stderr.read()
             for line in stdout.splitlines():
-                if re.match(r'.*mongod(?<=--)dbpath', line):
+                if re.match(r'.*mongod\s+-{1,2}.*)+', line):
                     pid = int(line.split(None, 1)[0])
                     os.kill(pid, 2)  # 2 as signal.SIGKILL
         except OSError as e:
             Logger.error("%s" % (e.strerror))
             raise
 
+    @classmethod
+    def connect(cls):
+        if has_mongoengine:
+            db = cls._dbpath.replace('.', '').split('/')[-1]
+            register_connection('db', db, host=cls._host, port=cls._port)
+            return get_connection()
+        else:
+            return MongoClient(cls._host, cls._port)  # use_greenlets=True
+
+
 def update_mongodb_service():
     MongoDBDriver.update()
 
+
 def has_mongodb_service():
     return MongoDBDriver.has_proc()
+
 
 def start_mongodb_service():
     if not MongoDBDriver.has_proc():
@@ -130,13 +154,12 @@ def start_mongodb_service():
             Logger.error("%s" % ('wait for mongod service fail'))
             MongoDBDriver.kill_proc(proc)
             raise Exception()
-    return proc
+        return proc
+
 
 def close_mongodb_service(proc):
     MongoDBDriver.kill_proc(proc)
 
+
 def connect_mongodb_service():
-    host = os.environ.get('HOSTNAME', 'localhost')
-    port = int(os.environ.get('DBPORT', '27017'))
-    #return MongoClient(host, port, use_greenlets=True)
-    return MongoClient(host, port)
+    return MongoDBDriver.connect()

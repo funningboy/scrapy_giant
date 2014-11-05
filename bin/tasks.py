@@ -3,16 +3,15 @@ from __future__ import absolute_import
 
 import os
 import subprocess
-import importlib
-import importlib
+import json
 
 from celery import Celery
 
 from bin.mongodb_driver import *
 from bin.start import *
 from bin.logger import Logger
-from query.hisdb_query import *
-from query.iddb_query import *
+from query.hisdb_query import (TwseHisDBQuery, OtcHisDBQuery)
+from query.iddb_query import (TwseIdDBQuery, OtcIdDBQuery)
 from algorithm.report import Report
 from algorithm.dualema_algorithm import DualEMATaLib
 from algorithm.superman_algorithm import SuperManAlgorithm
@@ -26,7 +25,7 @@ _port = int(os.environ.get('DBPORT', '27017'))
 _mongod = os.environ.get('MONGOD', 'mongod')
 _debug = os.environ.get('DEBUG', False)
 
-#Specify mongodb host and datababse to connect to
+# Specify mongodb host and datababse to connect to
 BROKER_URL = 'mongodb://%(host)s:%(port)s/%(db)s' % {
     'host': _host,
     'port': _port,
@@ -35,7 +34,7 @@ BROKER_URL = 'mongodb://%(host)s:%(port)s/%(db)s' % {
 
 celery = Celery('bin', broker=BROKER_URL)
 
-#Loads settings for Backend to store results of jobs
+# Loads settings for Backend to store results of jobs
 celery.config_from_object('bin.celeryconfig')
 
 scrapy_tasks = [
@@ -58,8 +57,8 @@ alg_tasks = {
     'dualema': DualEMATaLib
 }
 
-
-@celery.task(name='bin.tasks.run_scrapy')
+# as background service
+@celery.task(name='bin.tasks.run_scrapy_service')
 def run_scrapy_service(spider, loglevel, logfile, logen=True, debug=False):
     if spider not in scrapy_tasks:
         Logger.error("%s spider not support" % (spider))
@@ -74,7 +73,8 @@ def run_scrapy_service(spider, loglevel, logfile, logen=True, debug=False):
     proc = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     proc.communicate()
 
-@celery.task(name='bin.tasks.run_algorithm')
+# as background service
+@celery.task(name='bin.tasks.run_algorithm_service')
 def run_algorithm_service(hisdb, alg, starttime, endtime, stockids=[], traderids=[], debug=False):
     if hisdb not in hisdb_tasks:
         Logger.error("%s hisdb not support" % (hisdb))
@@ -82,37 +82,13 @@ def run_algorithm_service(hisdb, alg, starttime, endtime, stockids=[], traderids
     if alg not in alg_tasks:
         Logger.error("%s algoritm not support" % (alg))
         raise Exception
-    dbquery = hisdb_query[hisdb]()
+    dbquery = hisdb_tasks[hisdb]()
     data = dbquery.get_all_data(
         starttime=starttime,
         endtime=endtime,
         stockids=stockids,
-        traderids=traderids,
-        debug=debug
+        traderids=traderids
     )
-    if data.empty:
-        return
     alg = alg_tasks[alg](dbquery)
     results = alg.run(data).dropna()
-    return results.to_json()
-
-@celery.task(name='bin.tasks.run_db_query')
-def run_db_query(hisdb, starttime, endtime, stockids=[], traderids=[], debug=False):
-    if hisdb not in hisdb_tasks:
-        Logger.error("%s hisdb not support" % (hisdb))
-        raise Exception
-    dbquery = hisdb_query[hisdb]()
-    data = dbquery.get_all_data(
-        starttime=starttime,
-        endtime=endtime,
-        stockids=stockids,
-        traderids=traderids,
-        debug=debug
-    )
-    if data.empty:
-        return
-    return data.to_json()
-
-@celery.task(name='bin.tasks.run_alg_query')
-def run_alg_query(hisdb, alg, starttime, endtime, stockids=[], traderids=[], debug=False):
-    raise NotImplementedError
+    return results

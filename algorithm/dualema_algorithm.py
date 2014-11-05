@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from datetime import datetime, timedelta
+import pytz
 
 from zipline.algorithm import TradingAlgorithm
 from zipline.utils.factory import *
@@ -8,6 +8,15 @@ from zipline.utils.factory import *
 # Import exponential moving average from talib wrapper
 # ref: http://mrjbq7.github.io/ta-lib/doc_index.html
 from zipline.transforms.ta import EMA, OBV
+
+from datetime import datetime, timedelta
+
+from bin.mongodb_driver import *
+from bin.start import *
+from query.hisdb_query import *
+from query.iddb_query import *
+from algorithm.report import Report
+
 
 class DualEMATaLib(TradingAlgorithm):
     """ Dual Moving Average Crossover algorithm.
@@ -46,11 +55,11 @@ class DualEMATaLib(TradingAlgorithm):
 
         # buy/sell rule
         if (self.short_ema > self.long_ema).all() and not self.invested:
-            self.order(self.mstockid, 100)
+            self.order(self.mstockid, 1000)
             self.invested = True
             self.buy = True
         elif (self.short_ema < self.long_ema).all() and self.invested:
-            self.order(self.mstockid, -100)
+            self.order(self.mstockid, -1000)
             self.invested = False
             self.sell = True
 
@@ -77,18 +86,20 @@ class DualEMATaLib(TradingAlgorithm):
             pass
         self.record(**signals)
 
-if __name__ == '__main':
+def main(debug=False, limit=10):
+    proc = start_service(debug)
     # set time window
     starttime = datetime.utcnow() - timedelta(days=60)
     endtime = datetime.utcnow()
+    # sort factor
     report = Report(
         algname=DualEMATaLib.__name__,
         sort=[('ending_value', 1), ('close', -1)], limit=20)
 
     # set debug or normal mode
     kwargs = {
-        'debug': False,
-        'limit': 0
+        'debug': debug,
+        'limit': limit
     }
     for stockid in TwseIdDBQuery().get_stockids(**kwargs):
         dbquery = TwseHisDBQuery()
@@ -98,11 +109,26 @@ if __name__ == '__main':
         if data.empty:
             continue
         dualema = DualEMATaLib(dbquery=dbquery)
-        results = dualema.run(data).dropna()
+        results = dualema.run(data).fillna(0)
+        if results.empty:
+            continue
         report.collect(stockid, results)
+        print stockid
+
+    # report summary
+    stream = report.summary(dtype='html')
+    report.write(stream, 'dualema.html')
 
     for stockid in report.iter_stockid():
         report.iter_report(stockid, dtype='html')
 
-    stream = report.summary(dtype='html')
-    report.write(stream, 'dualema.html')
+    close_service(proc, debug)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='test dualema algorithm')
+    parser.add_argument('--debug', dest='debug', action='store_true', help='debug mode')
+    parser.add_argument('--random', dest='random', action='store_true', help='random')
+    parser.add_argument('--limit', dest='limit', action='store', type=int, default=10, help='limit')
+    args = parser.parse_args()
+    main(debug=True if args.debug else False, limit=args.limt)
