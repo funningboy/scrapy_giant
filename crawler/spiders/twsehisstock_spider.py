@@ -46,7 +46,7 @@ class TwseHisStockSpider(CrawlSpider):
         }
         requests = []
         for stockid in TwseIdDBQuery().get_stockids(**kwargs):
-            for mon in range(2, -1, -1):
+            for mon in range(4, -1, -1):
                 timestamp = datetime.utcnow() - relativedelta(months=mon)
                 if mon == 0:
                     if timestamp.day == 1 and timestamp.hour <= 14:

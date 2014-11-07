@@ -3,6 +3,7 @@
 
 from crawler.pipelines.twsehistrader_pipeline import TwseHisTraderPipeline
 from query.hisdb_query import *
+from query.iddb_query import *
 
 __all__ = ['OtcHisTraderPipeline']
 
@@ -16,3 +17,4 @@ class OtcHisTraderPipeline(TwseHisTraderPipeline):
         super(OtcHisTraderPipeline, self).__init__(crawler)
         self._name = 'otchistrader'
         self._db = OtcHisDBQuery()
+        self._tr = TraderIdDBQuery()

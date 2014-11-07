@@ -46,28 +46,35 @@ class Report(object):
         for stockid in self._report.index:
             yield stockid
 
-    def iter_report(self, stockid, dtype='json'):
+    def iter_report(self, stockid, dtype='json', has_other=False, has_sideband=False):
+        others = []
+        sidebands = []
+        columns=[
+            'buy',
+            'sell',
+            'portfolio_value',
+            'ending_value',
+            'ending_cash',
+            'open',
+            'high',
+            'low',
+            'close',
+            'volume'
+        ]
+        for it in list(self._pool[stockid].columns.values):
+            if re.match(r'top(buy|sell)\d+_\w+', it):
+                sidebands.append(it)
+            elif it not in columns:
+                others.append(it)
+        sidebands.sort()
+        if has_other:
+            columns.extend(others)
+        if has_sideband:
+            columns.extend(sidebands)
+
         if dtype == 'json':
-            return self._pool[stockid].to_json()
+            return self._pool[stockid].to_json(columns=columns)
         elif dtype == 'html':
-            sideband = []
-            columns=[
-                'buy',
-                'sell',
-                'portfolio_value',
-                'ending_value',
-                'ending_cash',
-                'open',
-                'high',
-                'low',
-                'close',
-                'volume'
-            ]
-            for it in list(self._pool[stockid].columns.values):
-                if re.match(r'top(buy|sell)\d+_\w+', it):
-                    sideband.append(it)
-            sideband.sort()
-            columns.extend(sideband)
             return self._pool[stockid].to_html(columns=columns)
         else:
             return self._pool[stockid]
@@ -81,26 +88,26 @@ class Report(object):
         2330    11             | ... | 100 | 101 | 99 | 100 | 100  |
         2317    10             | ... | 100 | 102 | 98 | 99  | 99   |
         """
+        columns=[
+            'date',
+            'buy',
+            'sell',
+            'buy_count',
+            'sell_count',
+            'portfolio_value',
+            'ending_value',
+            'ending_cash',
+            'open',
+            'high',
+            'low',
+            'close',
+            'volume'
+        ]
+
         if dtype == 'json':
-            return self._report.to_json()
+            return self._report.to_json(columns=columns)
         elif dtype == 'html':
-            return self._report.to_html(
-                columns=[
-                    'date',
-                    'buy',
-                    'sell',
-                    'buy_count',
-                    'sell_count',
-                    'portfolio_value',
-                    'ending_value',
-                    'ending_cash',
-                    'open',
-                    'high',
-                    'low',
-                    'close',
-                    'volume'
-                ]
-            )
+            return self._report.to_html(columns=columns)
         else:
             return self._report
 

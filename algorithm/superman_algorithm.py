@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import pytz
+import numpy as np
 
 from zipline.algorithm import TradingAlgorithm
 from zipline.utils.factory import *
+from zipline.transforms.ta import EMA
+from zipline.transforms.stddev import MovingStandardDev
+from zipline.transforms.mavg import MovingAverage
 
 from datetime import datetime, timedelta
 
@@ -25,54 +29,67 @@ class SuperManAlgorithm(TradingAlgorithm):
         # main stockid, no reference stockids
         self.mstockid = self.dbquery.stockmap.keys()[0]
 
-    def initialize(self):
+    def initialize(self, short_window=5):
         # To keep track of whether we invested in the stock or not
         self.invested = False
-        self.idxmin = (pytz.timezone('UTC').localize(datetime.utcnow()), -1)
-        self.idxmax = (pytz.timezone('UTC').localize(datetime.utcnow()), -1)
-        self.idxcur = (pytz.timezone('UTC').localize(datetime.utcnow()), -1)
+        self.sample = []
+        self.pool = []
+        self.add_transform(MovingAverage, 'mavg', ['price', 'volume'], window_length=short_window)
+        self.add_transform(MovingStandardDev, 'stddev', window_length=short_window)
+        self.idxmin = (pytz.timezone('UTC').localize(datetime.utcnow()), -1, -1)
+        self.idxmax = (pytz.timezone('UTC').localize(datetime.utcnow()), -1, -1)
         self.idxbuy = (pytz.timezone('UTC').localize(datetime.utcnow()), -1)
         self.idxsell = (pytz.timezone('UTC').localize(datetime.utcnow()), -1)
-        self.avg_volume = [0, 0, 0]
+        self.stddev = (-1, -1)
 
     def handle_data(self, data):
         # minidx
         if self.idxmin[1] == -1:
-            self.idxmin = (data[self.mstockid].dt, data[self.mstockid].price)
+            self.idxmin = (data[self.mstockid].dt, data[self.mstockid].price, data[self.mstockid].volume)
         else:
             if data[self.mstockid].price <= self.idxmin[1]:
-                self.idxmin = (data[self.mstockid].dt, data[self.mstockid].price)
-
+                self.idxmin = (data[self.mstockid].dt, data[self.mstockid].price, data[self.mstockid].volume)
         # maxidx
         if self.idxmax[1] == -1:
-            self.idxmax = (data[self.mstockid].dt, data[self.mstockid].price)
+            self.idxmax = (data[self.mstockid].dt, data[self.mstockid].price, data[self.mstockid].volume)
         else:
             if data[self.mstockid].price >= self.idxmax[1]:
-                self.idxmax = (data[self.mstockid].dt, data[self.mstockid].price)
+                self.idxmax = (data[self.mstockid].dt, data[self.mstockid].price, data[self.mstockid].volume)
 
-        # curidx
-        self.idxcur = (data[self.mstockid].dt, data[self.mstockid].price)
+        # sample for 5days period
+        if len(self.pool) == 5:
+            self.sample.append(self.pool[-1])
+            self.pool = []
+        self.pool.append((
+            data[self.mstockid].dt,
+            data[self.mstockid].price,
+            data[self.mstockid].mavg.price,
+            data[self.mstockid].stddev,
+            data[self.mstockid].mavg.volume
+        ))
 
-        # avg volumn
-        if len(self.avg_volume) > 10:
-            self.avg_volume.pop()
-        self.avg_volume.append(data[self.mstockid].volume)
-        avg_v = sum(self.avg_volume) / len(self.avg_volume)
+        # caculate sample as 3*5 = 15days
+        if len(self.sample) == 3:
+            std_of_std = np.array([it[3] for it in self.sample if it[3]])
+            std_of_avg = np.array([it[2] for it in self.sample if it[2]])
+            self.stddev = (np.std(std_of_std), np.std(std_of_avg))
+            self.sample.pop()
 
         self.buy = False
         self.sell = False
 
         # sell after buy
         # buyrule
-        self.buy = self.idxmax[0] <= self.idxmin[0] - timedelta(days=30) and \
-        self.idxcur[0] >= self.idxmin[0] + timedelta(days=5) and \
-        self.idxmax[0] <= self.idxcur[0] - timedelta(days=31) and \
-        data[self.mstockid].close > data[self.mstockid].open * 1.03 and \
-        data[self.mstockid].volume > avg_v * 2
+        self.buy = \
+            self.stddev[1] >= 0 and \
+            self.stddev[1] < 0.3 and \
+            data[self.mstockid].close >= data[self.mstockid].open * 1.04 and \
+            data[self.mstockid].volume >= data[self.mstockid].mavg.volume * 2.5 and \
+            self.idxmax[0] <= self.idxmin[0] - timedelta(30)
 
         #sellrule
         if self.invested:
-            self.sell = self.idxcur[0] >= self.idxbuy[0] + timedelta(5)
+            self.sell = data[self.mstockid].dt >= self.idxbuy[0] + timedelta(3)
 
         if self.buy and not self.invested:
             self.order(self.mstockid, 1000)
@@ -85,6 +102,7 @@ class SuperManAlgorithm(TradingAlgorithm):
             self.invested = False
             self.buy = False
             self.sell = True
+            self.idxsell = (data[self.mstockid].dt, data[self.mstockid].price)
 
         # save to recorder
         signals = {
@@ -93,6 +111,10 @@ class SuperManAlgorithm(TradingAlgorithm):
             'low': data[self.mstockid].low,
             'close': data[self.mstockid].close,
             'volume': data[self.mstockid].volume,
+            'stddev': data[self.mstockid].stddev,
+            'mavg': data[self.mstockid].mavg.price,
+            'std_of_std' : self.stddev[0],
+            'std_of_avg' : self.stddev[1],
             'buy': self.buy,
             'sell': self.sell
         }
@@ -108,15 +130,15 @@ class SuperManAlgorithm(TradingAlgorithm):
         self.record(**signals)
 
 
-def main(debug=False, limit=10):
+def main(debug=False, limit=0):
     proc = start_service(debug)
     # set time window
-    starttime = datetime.utcnow() - timedelta(days=60)
+    starttime = datetime.utcnow() - timedelta(days=300)
     endtime = datetime.utcnow()
     # sort factor
     report = Report(
         algname=SuperManAlgorithm.__name__,
-        sort=[('buy_count', -1), ('sell_count', -1), ('ending_value', -1), ('volume', -1), ('close', -1)], limit=20)
+        sort=[('buy_count', False), ('sell_count', False), ('volume', False)], limit=20)
 
     # set debug or normal mode
     kwargs = {
@@ -142,7 +164,7 @@ def main(debug=False, limit=10):
     report.write(stream, 'superman.html')
 
     for stockid in report.iter_stockid():
-        stream = report.iter_report(stockid, dtype='html')
+        stream = report.iter_report(stockid, dtype='html', has_other=True)
         report.write(stream, "superman_%s.html" % (stockid))
 
     close_service(proc, debug)
@@ -152,6 +174,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='test superman algorithm')
     parser.add_argument('--debug', dest='debug', action='store_true', help='debug mode')
     parser.add_argument('--random', dest='random', action='store_true', help='random')
-    parser.add_argument('--limit', dest='limit', action='store', type=int, default=10, help='limit')
+    parser.add_argument('--limit', dest='limit', action='store', type=int, default=0, help='limit')
     args = parser.parse_args()
     main(debug=True if args.debug else False, limit=args.limit)

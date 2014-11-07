@@ -8,6 +8,7 @@ from datetime import datetime
 from scrapy import log
 from crawler.pipelines.base_pipeline import BasePipeline
 from query.hisdb_query import *
+from query.iddb_query import *
 
 __all__ = ['TwseHisTraderPipeline']
 
@@ -22,6 +23,7 @@ class TwseHisTraderPipeline(BasePipeline):
         self._settings = crawler.settings
         self._name = 'twsehistrader'
         self._db = TwseHisDBQuery()
+        self._tr = TraderIdDBQuery()
 
     def process_item(self, item, spider):
         if spider.name not in [self._name]:
@@ -103,3 +105,5 @@ class TwseHisTraderPipeline(BasePipeline):
 
     def _write_item(self, item):
         self._db.set_trader_data(item)
+        self._tr.set_traderid(item['topbuylist'])
+        self._tr.set_traderid(item['topselllist'])

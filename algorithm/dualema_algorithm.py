@@ -86,15 +86,15 @@ class DualEMATaLib(TradingAlgorithm):
             pass
         self.record(**signals)
 
-def main(debug=False, limit=10):
+def main(debug=False, limit=0):
     proc = start_service(debug)
     # set time window
-    starttime = datetime.utcnow() - timedelta(days=60)
+    starttime = datetime.utcnow() - timedelta(days=300)
     endtime = datetime.utcnow()
     # sort factor
     report = Report(
         algname=DualEMATaLib.__name__,
-        sort=[('ending_value', 1), ('close', -1)], limit=20)
+        sort=[('buy_count', False), ('sell_count', False), ('volume', False)], limit=20)
 
     # set debug or normal mode
     kwargs = {
@@ -129,6 +129,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='test dualema algorithm')
     parser.add_argument('--debug', dest='debug', action='store_true', help='debug mode')
     parser.add_argument('--random', dest='random', action='store_true', help='random')
-    parser.add_argument('--limit', dest='limit', action='store', type=int, default=10, help='limit')
+    parser.add_argument('--limit', dest='limit', action='store', type=int, default=0, help='limit')
     args = parser.parse_args()
-    main(debug=True if args.debug else False, limit=args.limt)
+    main(debug=True if args.debug else False, limit=args.limit)

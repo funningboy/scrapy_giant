@@ -43,7 +43,7 @@ class ZombieAlgorithm(TradingAlgorithm):
     def handle_data(self, data):
         self.real_obv = self.real_obv_trans.handle_data(data)
         self.real_ad = self.real_ad_trans.handle_data(data)
-        if self.real_obv is None or self.read_ad is None:
+        if self.real_obv is None or self.real_ad is None:
             return
 
         # minidx
@@ -67,9 +67,8 @@ class ZombieAlgorithm(TradingAlgorithm):
         self.sell = False
 
         #buyrule
-        self.buy = self.idxmax[0] <= self.idxmin[0] - timedelta(days=30) and \
+        self.buy = self.idxmax[0] <= self.idxmin[0] - timedelta(days=40) and \
         self.idxcur[0] >= self.idxmin[0] + timedelta(days=1) and \
-        self.idxmax[0] <= self.idxcur[0] - timedelta(days=31) and \
         data[self.mstockid].close < data[self.mstockid].open * 1.01 and \
         data[self.mstockid].close >= data[self.mstockid].open
 
@@ -112,14 +111,14 @@ class ZombieAlgorithm(TradingAlgorithm):
         self.record(**signals)
 
 
-def main(debug=False, limit=10):
+def main(debug=False, limit=0):
     proc = start_service(debug)
     # set time window
-    starttime = datetime.utcnow() - timedelta(days=60)
+    starttime = datetime.utcnow() - timedelta(days=300)
     endtime = datetime.utcnow()
     report = Report(
         algname=ZombieAlgorithm.__name__,
-        sort=[('ending_value', -1), ('volume', -1), ('close', -1)], limit=20)
+        sort=[('buy_count', False), ('sell_count', False), ('volume', False)], limit=20)
 
     # set debug or normal mode
     kwargs = {
@@ -155,6 +154,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='test zombie algorithm')
     parser.add_argument('--debug', dest='debug', action='store_true', help='debug mode')
     parser.add_argument('--random', dest='random', action='store_true', help='random')
-    parser.add_argument('--limit', dest='limit', action='store', type=int, default=10, help='limit')
+    parser.add_argument('--limit', dest='limit', action='store', type=int, default=0, help='limit')
     args = parser.parse_args()
-    main(debug=True if args.debug else False, limit=args.limt)
+    main(debug=True if args.debug else False, limit=args.limit)
