@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from algorithm.dualema_algorithm import DualEMATaLib
 
-from test.test_start import *
+from test.test_start import TestTwseHisAll
 from query.iddb_query import *
 from query.hisdb_query import *
 from algorithm.report import Report
@@ -17,7 +17,7 @@ class TestDualEMATaLib(TestTwseHisAll):
         endtime = datetime.utcnow()
         report = Report(
             algname=DualEMATaLib.__name__,
-            sort=[('ending_value', 1), ('close', -1)], limit=20)
+            sort=[('ending_value', False), ('close', False)], limit=20)
 
         # set debug or normal mode
         kwargs = {
@@ -25,21 +25,23 @@ class TestDualEMATaLib(TestTwseHisAll):
             'limit': 0
         }
         for stockid in TwseIdDBQuery().get_stockids(**kwargs):
-            twsedbquery = TwseHisDBQuery()
-            data = twsedbquery.get_all_data(
+            dbquery = TwseHisDBQuery()
+            data = dbquery.transform_all_data(
                 starttime=starttime, endtime=endtime,
                 stockids=[stockid], traderids=[])
             if data.empty:
                 continue
-            dualema = DualEMATaLib(dbquery=twsedbquery)
+            dualema = DualEMATaLib(dbquery=dbquery)
             results = dualema.run(data).dropna()
+            if results.empty:
+                continue
             report.collect(stockid, results)
-
-        for stockid in report.iter_stockid():
-            report.iter_report(stockid, dtype='html')
 
         stream = report.summary(dtype='html')
         report.write(stream, 'dualema.html')
+
+        for stockid in report.iter_stockid():
+            report.iter_report(stockid, dtype='html')
 
     # plot
     #import matplotlib.pyplot as plt

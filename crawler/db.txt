@@ -10,7 +10,7 @@ HisFrame
               'high':
               'low':
               'close':
-              'volumn':
+              'volume':
     }
     'topbuylist': [
                     {
@@ -18,9 +18,9 @@ HisFrame
                       'tradernm':
                       'data': {
                                 'avgbuyprice':
-                                'buyvolumn':
+                                'buyvolume':
                                 'avgsellprice':
-                                'sellvolumn':
+                                'sellvolume':
                       }
                     }, ...
       ]
@@ -30,9 +30,9 @@ HisFrame
                       'tradernm':
                       'data': {
                                 'avgbuyprice':
-                                'buyvolumn':
+                                'buyvolume':
                                 'avgsellprice':
-                                'sellvolumn':
+                                'sellvolume':
                       }
                     }, ...
       ]

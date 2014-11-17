@@ -42,6 +42,7 @@ class TwseIdItem(scrapy.Item):
 class TwseHisStockItem(scrapy.Item):
     url = scrapy.Field()
     stockid = scrapy.Field()
+    stocknm = scrapy.Field()
     data = scrapy.Field()
 #   data:[{
 #       date = scrapy.Field()

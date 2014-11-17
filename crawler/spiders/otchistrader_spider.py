@@ -14,7 +14,7 @@ from scrapy import Request, FormRequest
 from scrapy import log
 from crawler.items import OtcHisTraderItem
 
-from query.iddb_query import OtcIdDBQuery
+from handler.iddb_handler import OtcIdDBHandler
 
 __all__ = ['OtcHisTraderSpider']
 
@@ -39,10 +39,11 @@ class OtcHisTraderSpider(CrawlSpider):
     def start_requests(self):
         kwargs = {
             'debug': self.settings.getbool('GIANT_DEBUG'),
-            'limit': self.settings.getint('GIANT_LIMIT')
+            'limit': self.settings.getint('GIANT_LIMIT'),
+            'opt': 'otc'
         }
         requests = []
-        for stockid in OtcIdDBQuery().get_stockids(**kwargs):
+        for stockid in OtcIdDBHandler().stock.get_ids(**kwargs):
             URL = (
                 'http://www.gretai.org.tw/web/stock/aftertrading/' +
                 'broker_trading/brokerBS.php?l=zh-tw&stk_code=%(stock)s') % {

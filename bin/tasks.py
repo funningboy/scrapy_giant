@@ -83,7 +83,7 @@ def run_algorithm_service(hisdb, alg, starttime, endtime, stockids=[], traderids
         Logger.error("%s algoritm not support" % (alg))
         raise Exception
     dbquery = hisdb_tasks[hisdb]()
-    data = dbquery.get_all_data(
+    data = dbquery.transform_all_data(
         starttime=starttime,
         endtime=endtime,
         stockids=stockids,
@@ -92,3 +92,4 @@ def run_algorithm_service(hisdb, alg, starttime, endtime, stockids=[], traderids
     alg = alg_tasks[alg](dbquery)
     results = alg.run(data).dropna()
     return results
+

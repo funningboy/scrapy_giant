@@ -6,7 +6,7 @@ import os
 
 from scrapy import log
 from crawler.pipelines.base_pipeline import BasePipeline
-from query.iddb_query import *
+from handler.iddb_handler import *
 
 __all__ = ['TwseIdPipeline']
 
@@ -20,7 +20,7 @@ class TwseIdPipeline(BasePipeline):
         super(TwseIdPipeline, self).__init__()
         self._name = 'twseid'
         self._settings = crawler.settings
-        self._db = TwseIdDBQuery()
+        self._id = TwseIdDBHandler()
 
     def process_item(self, item, spider):
         if spider.name not in [self._name]:
@@ -39,4 +39,4 @@ class TwseIdPipeline(BasePipeline):
         return item
 
     def _write_item(self, item):
-        self._db.set_stockid(item)
+        self._id.stock.insert(item)

@@ -14,7 +14,7 @@ from scrapy import Request, FormRequest
 from scrapy import log
 from crawler.items import OtcHisStockItem
 
-from query.iddb_query import OtcIdDBQuery
+from handler.iddb_handler import OtcIdDBHandler
 
 __all__ = ['OtcHisStockSpider']
 
@@ -42,10 +42,11 @@ class OtcHisStockSpider(CrawlSpider):
     def start_requests(self):
         kwargs = {
             'debug': self.settings.getbool('GIANT_DEBUG'),
-            'limit': self.settings.getint('GIANT_LIMIT')
+            'limit': self.settings.getint('GIANT_LIMIT'),
+            'opt': 'otc'
         }
         requests = []
-        for stockid in OtcIdDBQuery().get_stockids(**kwargs):
+        for stockid in OtcIdDBHandler().stock.get_ids(**kwargs):
             for mon in range(2, -1, -1):
                 timestamp = datetime.utcnow() - relativedelta(months=mon)
                 if mon == 0:

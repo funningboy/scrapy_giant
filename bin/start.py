@@ -12,6 +12,9 @@ import re
 from datetime import datetime
 import traceback
 
+from mongoengine import *
+from mongoengine.connection import get_db, get_connection
+
 from bin.mongodb_driver import *
 
 
@@ -95,9 +98,9 @@ def join_scrapys(procs):
         proc.communicate()
 
 
-def start_service(debug):
-    if has_mongodb_service():
-        raise "please turn off mongodb service in debug model"
+def start_main_service(debug):
+    if has_service():
+        raise "please turn off mongodb service in debug mode"
     else:
         if debug:
             os.environ['ROOTPATH'] = './tmp'
@@ -106,24 +109,32 @@ def start_service(debug):
         os.environ['HOSTNAME'] = 'localhost'
         os.environ['DBPORT'] = '27017'
         os.environ['MONGOD'] = 'mongod'
-        update_mongodb_service()
-        proc = start_mongodb_service()
+        update_service()
+        proc = start_service()
         return proc
 
 
-def close_service(proc, debug):
-    close_mongodb_service(proc)
+def close_main_service(proc, debug):
+    close_service(proc)
+
+
+def switch(model, db):
+    """ switch mongoengine db alias as new one """
+    model._meta['db_alias'] = db
+    # must set _collection to none so it is re-evaluated
+    model._collection = None
+    return model
 
 
 def main(debug):
-    proc = start_service(debug)
+    proc = start_main_service(debug)
     # 1st update stockids
     sprocs = spawn_payloads(debug)
     join_payloads(sprocs)
     # 2nd update all
     sprocs = spawn_scrapys(debug)
     join_scrapys(sprocs)
-    close_service(proc, debug)
+    close_main_service(proc, debug)
 
 
 if __name__ == '__main__':

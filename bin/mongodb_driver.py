@@ -13,21 +13,10 @@ from bin.logger import Logger
 
 # ref : http://api.mongodb.org/python/current/examples/gevent.html
 # from gevent import monkey; monkey.patch_socket()
-has_mongoengine = False
-if has_mongoengine:
-    try:
-        from mongoengine import *
-        from mongoengine.connection import get_db, get_connection
-    except ImportError:
-        Logger.error("import mongoengine error")
-        raise
-else:
-    from pymongo import MongoClient
 
-
-__all__ = ['update_mongodb_service', 'has_mongodb_service',
-           'start_mongodb_service', 'close_mongodb_service',
-           'connect_mongodb_service']
+__all__ = ['update_service', 'has_service',
+           'start_service', 'close_service', 'close_services',
+           'MongoDBDriver']
 
 
 class MongoDBDriver(object):
@@ -118,36 +107,27 @@ class MongoDBDriver(object):
     @classmethod
     def kill_procs(cls):
         try:
-            cmd = 'ps -ef | grep mongod'
+            cmd = 'ps -e | grep mongod'
             proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = proc.stdout.read(), proc.stderr.read()
             for line in stdout.splitlines():
-                if re.match(r'.*mongod\s+-{1,2}.*)+', line):
+                if re.match(r'.*mongod\s+(-{1,2}.*)+', line):
                     pid = int(line.split(None, 1)[0])
-                    os.kill(pid, 2)  # 2 as signal.SIGKILL
+                    os.kill(pid, signal.SIGKILL)  # 2 as signal.SIGKILL
+                    # need to rm mongo.lock file
         except OSError as e:
             Logger.error("%s" % (e.strerror))
             raise
 
-    @classmethod
-    def connect(cls):
-        if has_mongoengine:
-            db = cls._dbpath.replace('.', '').split('/')[-1]
-            register_connection('db', db, host=cls._host, port=cls._port)
-            return get_connection()
-        else:
-            return MongoClient(cls._host, cls._port)  # use_greenlets=True
-
-
-def update_mongodb_service():
+def update_service():
     MongoDBDriver.update()
 
 
-def has_mongodb_service():
+def has_service():
     return MongoDBDriver.has_proc()
 
 
-def start_mongodb_service():
+def start_service():
     if not MongoDBDriver.has_proc():
         proc = MongoDBDriver.start_proc()
         if not MongoDBDriver.wait_for_proc(proc):
@@ -157,9 +137,8 @@ def start_mongodb_service():
         return proc
 
 
-def close_mongodb_service(proc):
+def close_service(proc):
     MongoDBDriver.kill_proc(proc)
 
-
-def connect_mongodb_service():
-    return MongoDBDriver.connect()
+def close_services():
+    MongoDBDriver.kill_procs()

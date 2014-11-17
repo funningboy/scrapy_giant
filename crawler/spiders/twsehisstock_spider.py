@@ -14,7 +14,7 @@ from scrapy import Request, FormRequest
 from scrapy import log
 from crawler.items import TwseHisStockItem
 
-from query.iddb_query import TwseIdDBQuery
+from handler.iddb_handler import TwseIdDBHandler
 
 __all__ = ['TwseHisStockSpider']
 
@@ -42,10 +42,11 @@ class TwseHisStockSpider(CrawlSpider):
     def start_requests(self):
         kwargs = {
             'debug': self.settings.getbool('GIANT_DEBUG'),
-            'limit': self.settings.getint('GIANT_LIMIT')
+            'limit': self.settings.getint('GIANT_LIMIT'),
+            'opt': 'twse'
         }
         requests = []
-        for stockid in TwseIdDBQuery().get_stockids(**kwargs):
+        for stockid in TwseIdDBHandler().stock.get_ids(**kwargs):
             for mon in range(4, -1, -1):
                 timestamp = datetime.utcnow() - relativedelta(months=mon)
                 if mon == 0:

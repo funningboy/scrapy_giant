@@ -7,7 +7,9 @@ import threading
 import pandas as pd
 from bson.code import Code
 
+from mongoengine import *
 from bin.mongodb_driver import *
+from pymongo import MongoClient
 
 class TestMongoDBDriver(unittest.TestCase):
     """ test MongoDBDriver
@@ -15,10 +17,10 @@ class TestMongoDBDriver(unittest.TestCase):
 
     def setUp(self):
         # start mongodb service
-        self._proc = start_mongodb_service()
+        self._proc = start_service()
 
     def test_on_run(self):
-        client = connect_mongodb_service()
+        client = MongoClient(MongoDBDriver._host, MongoDBDriver._port)
         # drop = clear database/collection
         client.drop_database('panda_frame_example')
         db = client.panda_frame_example
@@ -132,7 +134,7 @@ class TestMongoDBDriver(unittest.TestCase):
         [it.join() for it in threads]
 
     def tearDown(self):
-        close_mongodb_service(self._proc)
+        close_service(self._proc)
 
 if __name__ == '__main__':
     unittest.main()

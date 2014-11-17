@@ -11,7 +11,7 @@ from scrapy import Request, FormRequest
 from scrapy import log
 from crawler.items import TwseHisTraderItem
 
-from query.iddb_query import TwseIdDBQuery
+from handler.iddb_handler import TwseIdDBHandler
 
 __all__ = ['TwseHisTraderSpider']
 
@@ -36,10 +36,11 @@ class TwseHisTraderSpider(CrawlSpider):
     def start_requests(self):
         kwargs = {
             'debug': self.settings.getbool('GIANT_DEBUG'),
-            'limit': self.settings.getint('GIANT_LIMIT')
+            'limit': self.settings.getint('GIANT_LIMIT'),
+            'opt': 'twse'
         }
         requests = []
-        for stockid in TwseIdDBQuery().get_stockids(**kwargs):
+        for stockid in TwseIdDBHandler().stock.get_ids(**kwargs):
             URL = 'http://bsr.twse.com.tw/bshtm/bsMenu.aspx'
             request = Request(
                 URL,

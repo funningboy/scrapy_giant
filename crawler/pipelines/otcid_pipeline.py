@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from crawler.pipelines.twseid_pipeline import TwseIdPipeline
-from query.iddb_query import *
+from handler.iddb_handler import *
 
 __all__ = ['OtcIdPipeline']
 
@@ -14,4 +14,4 @@ class OtcIdPipeline(TwseIdPipeline):
     def __init__(self, crawler):
         super(OtcIdPipeline, self).__init__(crawler)
         self._name = 'otcid'
-        self._db = OtcIdDBQuery()
+        self._id = OtcIdDBHandler()

@@ -7,7 +7,7 @@ from datetime import datetime
 
 from scrapy import log
 from crawler.pipelines.base_pipeline import BasePipeline
-from query.hisdb_query import *
+from handler.hisdb_handler import *
 
 __all__ = ['TwseHisStockPipeline']
 
@@ -21,7 +21,7 @@ class TwseHisStockPipeline(BasePipeline):
         super(TwseHisStockPipeline, self).__init__()
         self._name = 'twsehisstock'
         self._settings = crawler.settings
-        self._db = TwseHisDBQuery()
+        self._db = TwseHisDBHandler()
 
     def process_item(self, item, spider):
         if spider.name not in [self._name]:
@@ -51,4 +51,4 @@ class TwseHisStockPipeline(BasePipeline):
         return item
 
     def _write_item(self, item):
-        self._db.set_stock_data(item)
+        self._db.stock.insert(item)

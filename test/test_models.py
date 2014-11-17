@@ -48,10 +48,6 @@ class TestTwseIdColl(TestBase):
         t = Template("{% for it in item %}{{ it.stockid }}-{{ it.stocknm }}:{% endfor %}")
         d = {"item": TwseIdColl.objects.order_by('stockid')}
         self.assertEqual(t.render(Context(d)), u'2317-鴻海:2330-台積電:')
-        cursor = TwseIdColl._coll.find({'stockid': stockid})
-        t = Template("{% for it in item %}{{ it.stockid }}-{{ it.stocknm }}:{% endfor %}")
-        d = {"item": cursor}
-        print t.render(Context(t))
 
     def tearDown(self):
         super(TestTwseIdColl, self).tearDown()
@@ -73,7 +69,7 @@ class TestTwseHisColl(TestBase):
         sdata = StockData(open=100, high=111, low=99, close=99, volume=1000)
         # iter
         for i in range(2):
-            cursor = TwseHisColl.objects(Q(date=datetime.utcnow()) & (Q(stockid='2317') | Q(stocknm=u'鴻海')))
+            cursor = TwseHisColl.objects(Q(date=datetime(2014, 10, 10)) & (Q(stockid='2317') | Q(stocknm=u'鴻海')))
             if cursor.count() == 0:
                 coll = TwseHisColl(date=datetime.utcnow()).save()
             else:
@@ -86,7 +82,7 @@ class TestTwseHisColl(TestBase):
         # query
         cursor = TwseHisColl.objects.order_by('-stockid')
         for it in cursor:
-            t = Template("{% for it in item %}{{ it.traderid }}-{{ it.data.avgbuyprice }}-{{ o.data.buyvitemume }}:{% endfor %}")
+            t = Template("{% for it in item %}{{ it.traderid }}-{{ it.data.avgbuyprice }}-{{ it.data.buyvolume }}:{% endfor %}")
             d = {"item": it.topbuylist}
             self.assertEqual(t.render(Context(d)), u'1234-10.0-100:')
         self.assertEqual(len(TwseHisColl.objects), 1)
