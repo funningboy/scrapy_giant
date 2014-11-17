@@ -112,7 +112,7 @@ class ZombieAlgorithm(TradingAlgorithm):
 
 
 def main(debug=False, limit=0):
-    proc = start_service(debug)
+    proc = start_main_service(debug)
     # set time window
     starttime = datetime.utcnow() - timedelta(days=300)
     endtime = datetime.utcnow()
@@ -127,7 +127,7 @@ def main(debug=False, limit=0):
     }
     for stockid in TwseIdDBQuery().get_stockids(**kwargs):
         dbquery = TwseHisDBQuery()
-        data = dbquery.get_all_data(
+        data = dbquery.transform_all_data(
             starttime=starttime, endtime=endtime,
             stockids=[stockid], traderids=[])
         if data.empty:
@@ -147,7 +147,7 @@ def main(debug=False, limit=0):
         stream = report.iter_report(stockid, dtype='html')
         report.write(stream, "zombie_%s.html" % (stockid))
 
-    close_service(proc, debug)
+    close_main_service(proc, debug)
 
 
 if __name__ == '__main__':

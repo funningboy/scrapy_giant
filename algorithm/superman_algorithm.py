@@ -13,8 +13,8 @@ from datetime import datetime, timedelta
 
 from bin.mongodb_driver import *
 from bin.start import *
-from query.hisdb_query import *
-from query.iddb_query import *
+from handler.hisdb_handler import TwseHisDBHandler
+from handler.iddb_handler import TwseIdDBHandler
 from algorithm.report import Report
 
 
@@ -23,11 +23,11 @@ class SuperManAlgorithm(TradingAlgorithm):
     find the best buy point when the cur.volume >= volume.avg(10) and price.idxmax <= price.idxmin ...
     """
 
-    def __init__(self, dbquery, *args, **kwargs):
+    def __init__(self, dbhandler, *args, **kwargs):
         super(SuperManAlgorithm, self).__init__(*args, **kwargs)
-        self.dbquery = dbquery
+        self.dbhandler = dbhandler
         # main stockid, no reference stockids
-        self.mstockid = self.dbquery.stockmap.keys()[0]
+        self.mstockid = self.dbhandler.stock.ids[0]
 
     def initialize(self, short_window=5):
         # To keep track of whether we invested in the stock or not
@@ -122,8 +122,8 @@ class SuperManAlgorithm(TradingAlgorithm):
         # add sideband signal
         try:
             signals.update({
-                'topbuy0_%s' % (self.dbquery.find_stockmap(self.mstockid, 'topbuy0')): data[self.mstockid].topbuy0,
-                'topsell0_%s' % (self.dbquery.find_stockmap(self.mstockid, 'topsell0')): data[self.mstockid].topsell0
+                'topbuy0_%s' % (self.dbhandler.trader.map_alias([self.mstockid], 'stock','topbuy0')): data[self.mstockid].topbuy0,
+                'topsell0_%s' % (self.dbhandler.trader.map_alias([self.mstockid], 'stock', 'topsell0')): data[self.mstockid].topsell0
             })
         except:
           pass
@@ -131,7 +131,7 @@ class SuperManAlgorithm(TradingAlgorithm):
 
 
 def main(debug=False, limit=0):
-    proc = start_service(debug)
+    proc = start_main_service(debug)
     # set time window
     starttime = datetime.utcnow() - timedelta(days=300)
     endtime = datetime.utcnow()
@@ -139,20 +139,31 @@ def main(debug=False, limit=0):
     report = Report(
         algname=SuperManAlgorithm.__name__,
         sort=[('buy_count', False), ('sell_count', False), ('volume', False)], limit=20)
-
     # set debug or normal mode
     kwargs = {
         'debug': debug,
-        'limit': limit
+        'limit': limit,
+        'opt': 'twse'
     }
-    for stockid in TwseIdDBQuery().get_stockids(**kwargs):
-        dbquery = TwseHisDBQuery()
-        data = dbquery.get_all_data(
+    for stockid in TwseIdDBHandler().stock.get_ids(**kwargs):
+        dbhandler = TwseHisDBHandler()
+        dbhandler.stock.ids = [stockid]
+        stockdt = dbhandler.stock.query(
             starttime=starttime, endtime=endtime,
-            stockids=[stockid], traderids=[])
+            stockids=[stockid])
+        stockdt = dbhandler.stock.to_pandas(stockdt)
+        topbuydt = dbhandler.trader.query(
+            starttime=starttime, endtime=endtime,
+            stockids=[stockid], traderids=[], base='stock', opt='buy', limit=10)
+        topbuydt = dbhandler.trader.to_pandas(topbuydt)
+        topselldt = dbhandler.trader.query(
+            starttime=starttime, endtime=endtime,
+            stockids=[stockid], traderids=[], base='stock', opt='sell', limit=10)
+        topselldt = dbhandler.trader.to_pandas(topselldt)
+        data = pd.concat([stockdt, topbuydt, topselldt], axis=2).fillna(0)
         if data.empty:
             continue
-        supman = SuperManAlgorithm(dbquery=dbquery)
+        supman = SuperManAlgorithm(dbhandler=dbhandler)
         results = supman.run(data).fillna(0)
         if results.empty:
             continue
@@ -162,12 +173,18 @@ def main(debug=False, limit=0):
     # report summary
     stream = report.summary(dtype='html')
     report.write(stream, 'superman.html')
+    # set item as django models
+    item = report.summary(dtype='dict')
+    algquery.set_summary_data(item)
 
     for stockid in report.iter_stockid():
-        stream = report.iter_report(stockid, dtype='html', has_other=True)
+        stream = report.iter_report(stockid, dtype='html', has_other=True, has_sideband=True)
         report.write(stream, "superman_%s.html" % (stockid))
+        # set item as django models
+        item = report.iter_report(stockid, dtype='item', has_other=True, has_sideband=True)
+        algquery.set_detail_data(item)
 
-    close_service(proc, debug)
+    close_main_service(proc, debug)
 
 
 if __name__ == '__main__':

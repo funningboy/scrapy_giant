@@ -76,6 +76,8 @@ class Report(object):
             return self._pool[stockid].to_json(columns=columns)
         elif dtype == 'html':
             return self._pool[stockid].to_html(columns=columns)
+        elif dtype == 'dict':
+            return self._pool[stockid].to_dict(columns=columns)
         else:
             return self._pool[stockid]
 
@@ -108,6 +110,8 @@ class Report(object):
             return self._report.to_json(columns=columns)
         elif dtype == 'html':
             return self._report.to_html(columns=columns)
+        elif dtype == 'dict':
+            return self._report.to_dict(columns=columns)
         else:
             return self._report
 

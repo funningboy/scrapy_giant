@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pytz
+import matplotlib.pyplot as plt
 
 from zipline.algorithm import TradingAlgorithm
 from zipline.utils.factory import *
@@ -87,7 +88,7 @@ class DualEMATaLib(TradingAlgorithm):
         self.record(**signals)
 
 def main(debug=False, limit=0):
-    proc = start_service(debug)
+    proc = start_main_service(debug)
     # set time window
     starttime = datetime.utcnow() - timedelta(days=300)
     endtime = datetime.utcnow()
@@ -103,7 +104,7 @@ def main(debug=False, limit=0):
     }
     for stockid in TwseIdDBQuery().get_stockids(**kwargs):
         dbquery = TwseHisDBQuery()
-        data = dbquery.get_all_data(
+        data = dbquery.transform_all_data(
             starttime=starttime, endtime=endtime,
             stockids=[stockid], traderids=[])
         if data.empty:
@@ -122,7 +123,22 @@ def main(debug=False, limit=0):
     for stockid in report.iter_stockid():
         report.iter_report(stockid, dtype='html')
 
-    close_service(proc, debug)
+        # plt
+        fig = plt.figure()
+        ax1 = fig.add_subplot(211, ylabel='portfolio value')
+        results.portfolio_value.plot(ax=ax1)
+
+        ax2 = fig.add_subplot(212)
+        results[['short_ema', 'long_ema']].plot(ax=ax2)
+
+        ax2.plot(results.ix[results.buy].index, results.short_ema[results.buy],
+                 '^', markersize=10, color='m')
+        ax2.plot(results.ix[results.sell].index, results.short_ema[results.sell],
+                 'v', markersize=10, color='k')
+        plt.legend(loc=0)
+        plt.gcf().set_size_inches(18, 8)
+
+    close_main_service(proc, debug)
 
 
 if __name__ == '__main__':

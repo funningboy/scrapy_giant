@@ -1,0 +1,41 @@
+        map_f = """
+            function () {
+                var key =  { stockid : this.stockid, date : this.date };
+                var value = {
+                    open : this.data.open,
+                    high : this.data.high,
+                    low : this.data.low,
+                    close : this.data.close,
+                    volume : this.data.volume,
+                    price : this.data.close
+                };
+                emit(key, value);
+            }
+        """
+        reduce_f = """
+            function (key, values) {
+                var redval = {
+                    open : 0,
+                    high : 0,
+                    low : 0,
+                    close : 0,
+                    volume : 0,
+                    price : 0
+                };
+                if (values.length == 0) {
+                    return redval;
+                }
+                redval.open = values[0].open;
+                redval.high = values[0].high;
+                redval.low = values[0].low;
+                redval.close = values[0].close;
+                redval.volume = values[0].volume;
+                redval.price = values[0].price;
+                return redval;
+            }
+        """
+        results = cursor.map_reduce(
+            map_f,
+            reduce_f,
+            "stockhismap")
+ 

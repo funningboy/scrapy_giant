@@ -75,7 +75,7 @@ class DarkManAlgorithm(TradingAlgorithm):
 
 
 def main(debug=False, limit=0):
-    proc = start_service(debug)
+    proc = start_service(False)
     # set time window
     starttime = datetime.utcnow() - timedelta(days=30)
     endtime = datetime.utcnow()
@@ -107,7 +107,7 @@ def main(debug=False, limit=0):
         stockids = [dbquery.find_tradermap(traderid, 'topbuy%d' % (i)) for i in range(5)]
         for stockid in stockids:
             dbquery = TwseHisDBQuery()
-            data = dbquery.get_all_data(
+            data = dbquery.transform_all_data(
                 starttime=starttime,
                 endtime=endtime,
                 traderids=[traderid],
@@ -126,10 +126,10 @@ def main(debug=False, limit=0):
         report.write(stream, 'darkman_%s.html' % (traderid))
 
         for stockid in report.iter_stockid():
-            stream = report.iter_report(stockid, dtype='html')
+            stream = report.iter_report(stockid, dtype='html', has_other=True, has_sideband=True)
             report.write(stream, "darkman_%s_%s.html" % (traderid, stockid))
 
-    close_service(proc, debug)
+    close_service(proc, False)
 
 
 if __name__ == '__main__':
