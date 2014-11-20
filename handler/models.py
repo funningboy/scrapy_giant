@@ -24,7 +24,7 @@ class StockData(EmbeddedDocument):
     low = FloatField(min_value=0, max_value=9999)
     close = FloatField(min_value=0, max_value=9999)
     volume = IntField(min_value=0, max_value=9999999)
-
+    price = IntField(min_value=0, max_value=9999999)
 
 class StockHisColl(Document):
     stockid = StringField()

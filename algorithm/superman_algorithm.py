@@ -2,6 +2,7 @@
 
 import pytz
 import numpy as np
+import pandas as pd
 
 from zipline.algorithm import TradingAlgorithm
 from zipline.utils.factory import *
@@ -13,8 +14,8 @@ from datetime import datetime, timedelta
 
 from bin.mongodb_driver import *
 from bin.start import *
-from handler.hisdb_handler import TwseHisDBHandler
-from handler.iddb_handler import TwseIdDBHandler
+from handler.hisdb_handler import TwseHisDBHandler, OtcHisDBHandler
+from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
 from algorithm.report import Report
 
 
@@ -121,17 +122,19 @@ class SuperManAlgorithm(TradingAlgorithm):
 
         # add sideband signal
         try:
+            alias_topbuy0 = self.dbhandler.trader.map_alias([self.mstockid], 'stock', ['topbuy0'])[0]
+            alias_topsell0 = self.dbhandler.trader.map_alias([self.mstockid], 'stock', ['topsell0'])[0]
             signals.update({
-                'topbuy0_%s' % (self.dbhandler.trader.map_alias([self.mstockid], 'stock','topbuy0')): data[self.mstockid].topbuy0,
-                'topsell0_%s' % (self.dbhandler.trader.map_alias([self.mstockid], 'stock', 'topsell0')): data[self.mstockid].topsell0
+                'topbuy0_%s' % (alias_topbuy0): data[self.mstockid].topbuy0,
+                'topsell0_%s' % (alias_topsell0): data[self.mstockid].topsell0
             })
         except:
-          pass
+            pass
         self.record(**signals)
 
 
-def main(debug=False, limit=0):
-    proc = start_main_service(debug)
+def run(opt='twse', debug=False, limit=0):
+    """ as doctest run """
     # set time window
     starttime = datetime.utcnow() - timedelta(days=300)
     endtime = datetime.utcnow()
@@ -143,24 +146,13 @@ def main(debug=False, limit=0):
     kwargs = {
         'debug': debug,
         'limit': limit,
-        'opt': 'twse'
+        'opt': opt
     }
-    for stockid in TwseIdDBHandler().stock.get_ids(**kwargs):
-        dbhandler = TwseHisDBHandler()
+    idhandler = TwseIdDBHandler() if kwargs['opt'] == 'twse' else OtcIdDBHandler()
+    for stockid in idhandler.stock.get_ids(**kwargs):
+        dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
         dbhandler.stock.ids = [stockid]
-        stockdt = dbhandler.stock.query(
-            starttime=starttime, endtime=endtime,
-            stockids=[stockid])
-        stockdt = dbhandler.stock.to_pandas(stockdt)
-        topbuydt = dbhandler.trader.query(
-            starttime=starttime, endtime=endtime,
-            stockids=[stockid], traderids=[], base='stock', opt='buy', limit=10)
-        topbuydt = dbhandler.trader.to_pandas(topbuydt)
-        topselldt = dbhandler.trader.query(
-            starttime=starttime, endtime=endtime,
-            stockids=[stockid], traderids=[], base='stock', opt='sell', limit=10)
-        topselldt = dbhandler.trader.to_pandas(topselldt)
-        data = pd.concat([stockdt, topbuydt, topselldt], axis=2).fillna(0)
+        data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 10)
         if data.empty:
             continue
         supman = SuperManAlgorithm(dbhandler=dbhandler)
@@ -173,24 +165,18 @@ def main(debug=False, limit=0):
     # report summary
     stream = report.summary(dtype='html')
     report.write(stream, 'superman.html')
-    # set item as django models
-    item = report.summary(dtype='dict')
-    algquery.set_summary_data(item)
 
     for stockid in report.iter_stockid():
         stream = report.iter_report(stockid, dtype='html', has_other=True, has_sideband=True)
         report.write(stream, "superman_%s.html" % (stockid))
-        # set item as django models
-        item = report.iter_report(stockid, dtype='item', has_other=True, has_sideband=True)
-        algquery.set_detail_data(item)
-
-    close_main_service(proc, debug)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='test superman algorithm')
-    parser.add_argument('--debug', dest='debug', action='store_true', help='debug mode')
+    parser.add_argument('--debug', dest='debug', action='store_true', default=False, help='debug mode')
     parser.add_argument('--random', dest='random', action='store_true', help='random')
     parser.add_argument('--limit', dest='limit', action='store', type=int, default=0, help='limit')
     args = parser.parse_args()
-    main(debug=True if args.debug else False, limit=args.limit)
+    proc = start_main_service(args.debug)
+    run('twse', args.debug, args.limit)
+    close_main_service(proc, args.debug)

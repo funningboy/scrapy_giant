@@ -14,8 +14,8 @@ from datetime import datetime, timedelta
 
 from bin.mongodb_driver import *
 from bin.start import *
-from query.hisdb_query import *
-from query.iddb_query import *
+from handler.hisdb_handler import TwseHisDBHandler, OtcHisDBHandler
+from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
 from algorithm.report import Report
 
 
@@ -29,10 +29,10 @@ class DualEMATaLib(TradingAlgorithm):
 
     """
 
-    def __init__(self, dbquery, *args, **kwargs):
+    def __init__(self, dbhandler, *args, **kwargs):
         super(DualEMATaLib, self).__init__(*args, **kwargs)
-        self.dbquery = dbquery
-        self.mstockid = self.dbquery._stockmap.keys()[0]
+        self.dbhandler = dbhandler
+        self.mstockid = self.dbhandler.stock.ids[0]
 
     def initialize(self, short_window=20, long_window=40):
         # Add 2 mavg transforms, one with a long window, one
@@ -77,18 +77,11 @@ class DualEMATaLib(TradingAlgorithm):
             'sell': self.sell
         }
 
-        try:
-            # add sideband siganl
-            signals.update({
-                'topbuy0_%s' % (self.dbquery.stockmap(self.mstockid, 'topbuy0')): data[self.mstockid].topbuy0,
-                'topsell0_%s' % (self.dbquery.stockmap(self.mstockid, 'topsell0')): data[self.mstockid].topsell0
-            })
-        except:
-            pass
         self.record(**signals)
 
-def main(debug=False, limit=0):
-    proc = start_main_service(debug)
+
+def run(opt='twse', debug=False, limit=0):
+    """ as doctest run """
     # set time window
     starttime = datetime.utcnow() - timedelta(days=300)
     endtime = datetime.utcnow()
@@ -96,20 +89,20 @@ def main(debug=False, limit=0):
     report = Report(
         algname=DualEMATaLib.__name__,
         sort=[('buy_count', False), ('sell_count', False), ('volume', False)], limit=20)
-
     # set debug or normal mode
     kwargs = {
         'debug': debug,
-        'limit': limit
+        'limit': limit,
+        'opt': opt
     }
-    for stockid in TwseIdDBQuery().get_stockids(**kwargs):
-        dbquery = TwseHisDBQuery()
-        data = dbquery.transform_all_data(
-            starttime=starttime, endtime=endtime,
-            stockids=[stockid], traderids=[])
+    idhandler = TwseIdDBHandler() if kwargs['opt'] == 'twse' else OtcIdDBHandler()
+    for stockid in idhandler.stock.get_ids(**kwargs):
+        dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
+        dbhandler.stock.ids = [stockid]
+        data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 10)
         if data.empty:
             continue
-        dualema = DualEMATaLib(dbquery=dbquery)
+        dualema = DualEMATaLib(dbhandler=dbhandler)
         results = dualema.run(data).fillna(0)
         if results.empty:
             continue
@@ -121,7 +114,8 @@ def main(debug=False, limit=0):
     report.write(stream, 'dualema.html')
 
     for stockid in report.iter_stockid():
-        report.iter_report(stockid, dtype='html')
+        stream = report.iter_report(stockid, dtype='html')
+        report.write(stream, "dualema_%s.html" % (stockid))
 
         # plt
         fig = plt.figure()
@@ -138,13 +132,13 @@ def main(debug=False, limit=0):
         plt.legend(loc=0)
         plt.gcf().set_size_inches(18, 8)
 
-    close_main_service(proc, debug)
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='test dualema algorithm')
-    parser.add_argument('--debug', dest='debug', action='store_true', help='debug mode')
+    parser.add_argument('--debug', dest='debug', action='store_true', default=False, help='debug mode')
     parser.add_argument('--random', dest='random', action='store_true', help='random')
     parser.add_argument('--limit', dest='limit', action='store', type=int, default=0, help='limit')
     args = parser.parse_args()
-    main(debug=True if args.debug else False, limit=args.limit)
+    proc = start_main_service(args.debug)
+    run('twse', args.debug, args.limit)
+    close_main_service(proc, args.debug)

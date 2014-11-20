@@ -3,7 +3,6 @@
 from datetime import datetime
 
 from mongoengine import *
-from handler.models import switch
 
 class BaseAlgSummaryColl(Document):
     """ all fileds should be sync with summary alg results
@@ -60,10 +59,4 @@ class SuperManSummaryColl(BaseAlgSummaryColl):
 
 class SuperManDetailColl(BaseAlgDetailColl):
     pass
-
-
-connect('supermandb', alias='supermandb')
-SuperManSummaryCol = ()
-
-
 

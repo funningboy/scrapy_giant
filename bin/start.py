@@ -13,8 +13,6 @@ from datetime import datetime
 import traceback
 
 from mongoengine import *
-from mongoengine.connection import get_db, get_connection
-
 from bin.mongodb_driver import *
 
 
@@ -139,6 +137,6 @@ def main(debug):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='crawler twse and otc all stocks/traders info')
-    parser.add_argument('--debug', dest='debug', action='store_true', help='debug mode')
+    parser.add_argument('--debug', dest='debug', action='store_true', default=False, help='debug mode')
     args = parser.parse_args()
-    main(debug=True if args.debug else False)
+    main(args.debug)

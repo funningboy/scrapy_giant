@@ -1,14 +1,14 @@
 # ref: celery and scrapy integrate
 # http://stackoverflow.com/questions/11528739/running-scrapy-spiders-in-a-celery-task
-find . -name "*.pyc" -exec rm -rf {} \;
-find . -name "*.json" -exec rm -rf {} \;
-find . -name "*.log" -exec rm -rf {} \;
-find . -name "*.html" -exec rm -rf {} \;
+find . -name '*.pyc' -exec rm -rf {} \;
+find . -name '*.json' -exec rm -rf {} \;
+find . -name '*.log' -exec rm -rf {} \;
+find . -name '*.html' -exec rm -rf {} \;
+find . -type d -name '.ropeproject' -exec rm -rf {} \;
 #rm -rf .env
 rm -rf dist
 rm -rf build
 rm -rf *.egg-info
-rm -rf tmp
 #mkdir tmp
 #rm -rf data
 #virtualenv .env

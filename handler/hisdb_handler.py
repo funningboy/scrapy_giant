@@ -37,6 +37,16 @@ class TwseHisDBHandler(object):
     def trader(self):
         return self._trader
 
+    def transform_all_data(self, starttime, endtime, stockids=[], traderids=[], limit=10):
+        """ transfrom stock/trader data as pandas type """
+        stockdt = self._stock.query(starttime, endtime, stockids)
+        stockdt = self._stock.to_pandas(stockdt)
+        topbuydt = self._trader.query(starttime, endtime, stockids, traderids, 'stock', 'buy', limit)
+        topbuydt = self._trader.to_pandas(topbuydt)
+        topselldt = self._trader.query(starttime, endtime, stockids, traderids, 'stock', 'sell', limit)
+        topselldt = self._trader.to_pandas(topselldt)
+        return pd.concat([stockdt, topbuydt, topselldt], axis=2).fillna(0)
+
 
 class OtcHisDBHandler(TwseHisDBHandler):
 
@@ -64,11 +74,14 @@ class StockHisDBHandler(object):
     def ids(self, ids):
         self._ids = ids
 
+    def drop(self):
+        pass
+
     def insert(self, item):
         """ insert stock item to db """
         for it in item:
             data = {
-                'open': it ['open'],
+                'open': it['open'],
                 'high': it['high'],
                 'low': it['low'],
                 'close': it['close'],
@@ -93,7 +106,6 @@ class StockHisDBHandler(object):
         20140929    100 | 102 | 98 | 99  | 99   | 20140929 | 11   | ...
         """
         cursor = self._coll.objects(Q(date__gte=starttime) & Q(date__lte=endtime) & Q(stockid__in=stockids))
-#        return cursor.values_list('date', 'stockid', 'data')
         return cursor
 
     def to_pandas(self, cursor):
@@ -106,13 +118,19 @@ class StockHisDBHandler(object):
             index, data = [], []
             for it in pool:
                 index.append(pytz.timezone('UTC').localize(it.date))
-                data.append(it.data)
+                data.append({
+                    'open': it.data.open,
+                    'high': it.data.high,
+                    'low': it.data.low,
+                    'close': it.data.close,
+                    'volume': it.data.volume,
+                    'price': it.data.close
+                })
             if index and data:
                 item.update({
                     stockid: pd.DataFrame(data, index=index).fillna(0)
                  })
         return pd.Panel(item)
-
 
     def to_json(self, cursor):
         """ transform orm to json stream
@@ -138,6 +156,9 @@ class TraderHisDBHandler(object):
     @ids.setter
     def ids(self, ids):
         self._ids = ids
+
+    def drop(self):
+        self._mapcoll.drop_collection()
 
     def insert(self, item):
         """ insert trader item to db """
@@ -250,7 +271,7 @@ class TraderHisDBHandler(object):
                 coll.alias = "topbuy%d" % (i) if opt == 'buy' else "topsell%d" % (i)
                 coll.base = base
                 coll.save()
-        return self._mapcoll.objects()
+        return self._mapcoll.objects(Q(alias__contains=opt))
 
     def to_pandas(self, cursor):
         """ transform orm to pandas panel
@@ -275,12 +296,11 @@ class TraderHisDBHandler(object):
         """
         return cursor.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
 
-    def map_alias(self, ids=[], base='stock', aliases=['topbuy0']):
+    def map_alias(self, ids=[], base='stock', aliases=['topbuy0'], cursor=None):
+        mapcoll = cursor if cursor else self._mapcoll
         if base == 'stock':
-            cursor = self._mapcoll.objects(Q(base=base) & Q(stockid__in=ids) & Q(alias__in=aliases))
+            cursor = mapcoll.objects(Q(base=base) & Q(stockid__in=ids) & Q(alias__in=aliases))
             return [it.traderid for it in cursor]
         else:
-            cursor = self._mapcoll.objects(Q(base=base) & Q(traderid__in=ids) & Q(alias__in=aliases))
+            cursor = mapcoll.objects(Q(base=base) & Q(traderid__in=ids) & Q(alias__in=aliases))
             return [it.stockid for it in cursor]
-
-
