@@ -12,7 +12,7 @@ HisFrame
               'close':
               'volume':
     }
-    'topbuylist': [
+    'toplist': [
                     {
                       'traderid':
                       'tradernm':
@@ -21,10 +21,9 @@ HisFrame
                                 'buyvolume':
                                 'avgsellprice':
                                 'sellvolume':
+                                'totalvolume':
                       }
-                    }, ...
-      ]
-    'topselllist': [
+                    }, 
                     {
                       'traderid':
                       'tradernm':
@@ -33,11 +32,12 @@ HisFrame
                                 'buyvolume':
                                 'avgsellprice':
                                 'sellvolume':
+                                'totalvolume':
                       }
                     }, ...
       ]
-
-  } ...
+  },
+  ...
 ]
 
 RealFrame

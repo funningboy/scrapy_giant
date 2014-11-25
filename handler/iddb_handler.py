@@ -61,6 +61,7 @@ class StockIdDBHandler(object):
                     yield stockid
         else:
             cursor = self._coll.objects.limit(limit) if limit > 0 else self._coll.objects
+            cursor = list(cursor)
             for it in cursor:
                 yield it.stockid
 
@@ -74,32 +75,34 @@ class StockIdDBHandler(object):
                     yield stocknm
         else:
             cursor = self._coll.objects.limit(limit) if limit > 0 else self._coll.objects
+            cursor = list(cursor)
             for it in cursor:
                 yield it.stocknm
 
     def get_id(self, stocknm):
         cursor = self._coll.objects(Q(stocknm=stocknm)).limit(1)
+        cursor = list(cursor)
         try:
-            item = list(cursor)[0]
-            return item.stockid
+            return cursor[0].stockid
         except:
-            return None
+            pass
 
     def get_name(self, stockid):
         cursor = self._coll.objects(Q(stockid=stockid)).limit(1)
+        cursor = list(cursor)
         try:
-            item = list(cursor)[0]
-            return item.stocknm
+            return cursor[0].stocknm
         except:
-            return None
+            pass
 
     def insert(self, item):
         for it in item:
             cursor = self._coll.objects(Q(stockid=it['stockid']))
-            if cursor.count() == 0:
+            cursor = list(cursor)
+            if len(cursor) == 0:
                 coll = self._coll().save()
             else:
-                coll = list(cursor)[0]
+                coll = cursor[0]
             coll.stockid = it['stockid']
             coll.stocknm = it['stocknm']
             coll.onmarket = it['onmarket']
@@ -119,6 +122,7 @@ class TraderIdDBHandler(object):
                     yield traderid
         else:
             cursor = self._coll.objects.limit(limit)
+            cursor = list(cursor)
             for it in cursor:
                 yield it.traderid
 
@@ -129,32 +133,34 @@ class TraderIdDBHandler(object):
                     yield tradernm
         else:
             cursor = self._coll.objects.limit(limit) if limit > 0 else self._coll.objects
+            cursor = list(cursor)
             for it in cursor:
                 yield it.tradernm
 
     def get_id(self, tradernm):
         cursor = self._coll.objects(Q(tradernm=tradernm)).limit(1)
+        cursor = list(cursor)
         try:
-            item = list(cursor)[0]
-            return item.traderid
+            return cursor[0].traderid
         except:
-            return None
+            pass
 
     def get_name(self, traderid):
         cursor = self._coll.objects(Q(traderid=traderid)).limit(1)
+        cursor = list(cursor)
         try:
-            item = list(cursor)[0]
-            return item.tradernm
+            return cursor[0].tradernm
         except:
-            return None
+            pass
 
     def insert(self, item):
         for it in item:
             cursor = self._coll.objects(Q(traderid=it['traderid']))
-            if cursor.count() == 0:
+            cursor = list(cursor)
+            if len(cursor) == 0:
                 coll = self._coll().save()
             else:
-                coll = list(cursor)[0]
+                coll = cursor[0]
             coll.traderid = it['traderid']
             coll.tradernm = it['tradernm']
             coll.save()

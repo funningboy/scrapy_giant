@@ -10,6 +10,7 @@ class TraderData(EmbeddedDocument):
     buyvolume = IntField(min_value=0, max_value=9999999)
     avgsellprice = FloatField(min_value=0, max_value=9999)
     sellvolume = IntField(min_value=0, max_value=9999999)
+    totalvolume = IntField(min_value=0, max_value=9999999)
 
 
 class TraderInfo(EmbeddedDocument):
@@ -26,16 +27,16 @@ class StockData(EmbeddedDocument):
     volume = IntField(min_value=0, max_value=9999999)
     price = IntField(min_value=0, max_value=9999999)
 
+
 class StockHisColl(Document):
     stockid = StringField()
     stocknm = StringField()
     date = DateTimeField(default=datetime.utcnow())
-    topselllist = ListField(EmbeddedDocumentField(TraderInfo))
-    topbuylist = ListField(EmbeddedDocumentField(TraderInfo))
+    toplist = ListField(EmbeddedDocumentField(TraderInfo))
     data = EmbeddedDocumentField(StockData)
     meta = {
         'allow_inheritance': True,
-        'indexes': [('stockid', 'stocknm', '-date')]
+        'indexes': [('stockid', 'stocknm', 'date')]
     }
 
 
@@ -73,9 +74,28 @@ class TraderIdColl(Document):
         'indexes': [('traderid', 'tradernm')]
     }
 
-class TraderMapData(EmbeddedDocument):
+
+class StockMapData(EmbeddedDocument):
+    open = FloatField(min_value=0, max_value=9999)
+    high = FloatField(min_value=0, max_value=9999)
+    low = FloatField(min_value=0, max_value=9999)
+    close = FloatField(min_value=0, max_value=9999)
     volume = IntField(min_value=0, max_value=9999999)
+    price = IntField(min_value=0, max_value=9999999)
     date = DateTimeField(default=datetime.utcnow())
+
+
+class StockMapColl(Document):
+    stockid = StringField()
+    datalist = ListField(EmbeddedDocumentField(StockMapData))
+
+
+class TraderMapData(EmbeddedDocument):
+    ratio = FloatField(min_value=0, max_value=100)
+    price = FloatField(min_value=0, max_value=9999)
+    volume = IntField(min_value=-9999999, max_value=9999999)
+    date = DateTimeField(default=datetime.utcnow())
+
 
 class TraderMapColl(Document):
     alias = StringField()
@@ -85,5 +105,5 @@ class TraderMapColl(Document):
     datalist = ListField(EmbeddedDocumentField(TraderMapData))
     meta = {
         'allow_inheritance': True,
-        'indexes': [('stockid', 'traderid', 'alias', 'base')]
+        'indexes': [('stockid', 'traderid', 'alias')]
     }

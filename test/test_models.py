@@ -71,20 +71,22 @@ class TestTwseHisColl(TestBase):
         # iter
         for i in range(2):
             cursor = TwseHisColl.objects(Q(date=datetime(2014, 10, 10)) & (Q(stockid='2317') | Q(stocknm=u'鴻海')))
-            if cursor.count() == 0:
+            cursor = list(cursor)
+            if len(cursor) == 0:
                 coll = TwseHisColl(date=datetime.utcnow()).save()
             else:
                 coll = cursor[0]
             coll.stockid='2317'
             coll.stocknm=u'鴻海'
             coll.data=sdata
-            coll.topbuylist = [tinfo]
+            coll.toplist = [tinfo]
             coll.save()
         # query
         cursor = TwseHisColl.objects.order_by('-stockid')
+        cursor = list(cursor)
         for it in cursor:
             t = Template("{% for it in item %}{{ it.traderid }}-{{ it.data.avgbuyprice }}-{{ it.data.buyvolume }}:{% endfor %}")
-            d = {"item": it.topbuylist}
+            d = {"item": it.toplist}
             self.assertEqual(t.render(Context(d)), u'1234-10.0-100:')
         #self.assertEqual(len(TwseHisColl.objects), 1)
 

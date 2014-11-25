@@ -27,6 +27,9 @@ backend=mongodb
 mongod --dbpath data &
 celery -A bin.tasks worker -l info
 celery -A algorithm.tasks worker -l info
+python manage.py syncdb
+python manage.py test handler
+
 python
 >>> from bin.tasks import *
 >>> from datetime import datetime, timedelta

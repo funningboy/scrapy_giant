@@ -27,8 +27,7 @@ class TwseHisTraderItem(scrapy.Item):
 #       buyvolume = scrapy.Field()
 #       sellvolume = scrapy.Field()
 #    }]
-    topbuylist = scrapy.Field()
-    topselllist = scrapy.Field()
+    toplist = scrapy.Field()
 
 class TwseIdItem(scrapy.Item):
     data = scrapy.Field()

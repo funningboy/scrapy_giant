@@ -41,14 +41,14 @@ class TestTwseHisDBTraderQuery(TestTwseHisAll):
         starttime = datetime.utcnow() - timedelta(days=4)
         endtime = datetime.utcnow()
         self._db = TwseHisDBHandler()
-        cursor = self._db.trader.query(starttime, endtime, ['2330'], [], 'stock', 'buy', 3)
-        self._traderids = self._db.trader.map_alias(['2330'], 'stock', ['topbuy0'])
+        cursor = self._db.trader.query(starttime, endtime, ['2330'], [], 'stock', 'totalvolume', 3)
+        self._traderids = self._db.trader.map_alias(['2330'], 'stock', ['top0'])
         # update handler as new ptr
         self._db = TwseHisDBHandler()
 
         def wap_get_toptrader_data(starttime, endtime, traderids):
             while self._check:
-                cursor = self._db.trader.query(starttime, endtime, [], traderids, 'trader', 'buy', 3)
+                cursor = self._db.trader.query(starttime, endtime, [], traderids, 'trader', 'totalvolume', 3)
                 if cursor:
                     if len(self._pool) > 3:
                         self._pool.pop(0)
@@ -98,11 +98,11 @@ class TestTwseHisDBStockQuery(TestTwseHisAll):
 
         def wap_get_stock_data(starttime, endtime, stockids):
             while self._check:
-                stream = self._db.stock.query(starttime, endtime, stockids)
-                if stream:
+                cursor = self._db.stock.query(starttime, endtime, stockids)
+                if cursor:
                     if len(self._pool) > 3:
                         self._pool.pop(0)
-                    self._pool.append(stream)
+                    self._pool.append(cursor)
                 time.sleep(0.5)
 
         self._threads = [
@@ -148,7 +148,7 @@ class TestTwseHisDBAllQuery(TestTwseHisAll):
 
         def wap_get_all_data(starttime, endtime, stockids):
             while self._check:
-                stream = self._db.transform_all_data(starttime, endtime, stockids, [], 10)
+                stream = self._db.transform_all_data(starttime, endtime, stockids, [], 'totalvolume', 10)
                 if not stream.empty:
                     if len(self._pool) > 3:
                         self._pool.pop(0)
@@ -159,7 +159,7 @@ class TestTwseHisDBAllQuery(TestTwseHisAll):
             threading.Thread(
                 target=wap_get_all_data,
                 args=(starttime, endtime, self._stockids))
-            ]
+        ]
 
         [it.setDaemon(True) for it in self._threads]
         [it.start() for it in self._threads]

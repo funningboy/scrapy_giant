@@ -39,7 +39,7 @@ CELERY_MONGODB_BACKEND_SETTINGS = {
 
 CELERY_TIMEZONE = 'UTC'
 
-BROKER_URL = "amqp://guest:guest@%s:%d//" % (_host, _amqport)
+BROKER_URL = "amqp://guest:guest@%s:%d" % (_host, _amqport)
 BACKEND_URL = "mongodb://%s:%d" % (_host, _dbport)
 
 ELERY_ACCEPT_CONTENT = ['json']
@@ -99,7 +99,7 @@ LANGUAGE_CODE = 'en-us'
 #>>> s = Site()
 #>>> s.save()
 #python ./manage.py tellsiteid
-SITE_ID=u'546d43721fd21c4fc79792b3'
+SITE_ID=u'54747c5a1fd21ca8c89fd773'
 #SITE_ID=1
 
 # If you set this to False, Django will make some optimizations so as not
@@ -147,7 +147,12 @@ STATICFILES_DIRS = [os.path.join('./', 'static')]
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'compressor.finders.CompressorFinder'
 )
+
+COMPRESS_JS_FILTERS = [
+        'compressor.filters.template.TemplateFilter',
+]
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'x2$s&amp;0z2xehpnt_99i8q3)4)t*5q@+n(+6jrqz4@rt%a8fdf+!'
@@ -181,6 +186,8 @@ TEMPLATE_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
 )
 
+COMPRESS_ENABLED = True
+
 INSTALLED_APPS = (
     'django_nose',
     'django_mongodb_engine',
@@ -193,6 +200,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
     #'kombu.transport.django.KombuAppConfig',
+    'compressor',
     'bin',
     'handler',
     'algorithm'

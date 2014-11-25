@@ -5,10 +5,10 @@
 
 import timeit
 import re
+from celery import group
 from main.tests import NoSQLTestCase
 from bin.tasks import *
 from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
-
 
 class TestAdd(NoSQLTestCase):
 
@@ -72,6 +72,22 @@ class TestOtcHisStock(TestRunScrapyService):
         print "scrapy otchisstock used %.4f(s)/%d(u)" % (t.timeit(), len(ids))
         self.assertTrue(self.has_pass('./log/otchisstock.log'))
 
-#class
-#    group()
-#    join
+class TestThreadService(TestRunScrapyService):
+
+    def test_on_run(self):
+        args = [
+            ('twsehistrader', 'INFO', './log/twsehistrader.log', True, True),
+            ('twsehisstock', 'INFO', './log/twsehisstock.log', True, True),
+            ('otchistrader', 'INFO', './log/otchistrader.log', True, True),
+            ('otchisstock', 'INFO', './log/otchisstock.log', True, True)
+        ]
+        tasks = group([
+            run_scrapy_service.subtask(args[0]),
+            run_scrapy_service.subtask(args[1]),
+            run_scrapy_service.subtask(args[2]),
+            run_scrapy_service.subtask(args[3])
+        ])
+        results = tasks.apply_async()
+        results.join()
+        self.assertTrue(results.ready())
+        self.assertTrue(results.successful())

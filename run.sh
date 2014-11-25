@@ -3,7 +3,7 @@
 find . -name '*.pyc' -exec rm -rf {} \;
 find . -name '*.json' -exec rm -rf {} \;
 find . -name '*.log' -exec rm -rf {} \;
-find . -name '*.html' -exec rm -rf {} \;
+#find . -name '*.html' -exec rm -rf {} \;
 find . -type d -name '.ropeproject' -exec rm -rf {} \;
 #rm -rf .env
 rm -rf dist
