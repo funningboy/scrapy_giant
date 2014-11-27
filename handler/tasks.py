@@ -18,24 +18,21 @@ hisdb_tasks = {
 
 # as pipeline to alg service
 @shared_task
-def run_hisstock_query(hisdb, starttime, endtime, stockids=[], debug=False):
-    if hisdb not in hisdb_tasks:
-        logger.error("%s handler not support" % (hisdb))
-        raise Exception
+def run_hisstock_query(hisdb, starttime, endtime, stockids=[], order='totalvolume', limit=10):
     dbhandler = hisdb_tasks[hisdb]()
     dbhandler.stock.ids = stockids
     cursor = dbhandler.stock.query(
         starttime=starttime,
         endtime=endtime,
-        stockids=stockids)
+        stockids=stockids,
+        order=order,
+        limit=limit)
     return dbhandler.stock.to_pandas(cursor)
 
 # as pipeline to alg service
 @shared_task
-def run_histoptrader_query(hisdb, starttime, endtime, stockids=[], traderids=[], base='stock', order='totalvolume', limit=10, debug=False):
-    if hisdb not in hisdb_tasks:
-        logger.error("%s handler not support" % (hisdb))
-        raise Exception
+def run_histoptrader_query(hisdb, starttime, endtime, stockids=[],
+                           traderids=[], base='stock', order='totalvolume', limit=10):
     dbhandler = hisdb_tasks[hisdb]()
     dbhandler.stock.ids = stockids
     dbhandler.trader.ids = traderids
@@ -51,10 +48,8 @@ def run_histoptrader_query(hisdb, starttime, endtime, stockids=[], traderids=[],
 
 # as pipeline to alg service
 @shared_task
-def run_transform_all_data(hisdb, starttime, endtime, stockids=[], traderids=[], base='stock', order='totalvolume', limit=10, debug=False):
-    if hisdb not in hisdb_tasks:
-        logger.error("%s handler not support" % (hisdb))
-        raise Exception
+def run_transform_all_data(hisdb, starttime, endtime, stockids=[],
+                           traderids=[], base='stock', order='totalvolume', limit=10):
     dbhandler = hisdb_tasks[hisdb]()
     dbhandler.stock.ids = stockids
     dbhandler.trader.ids = traderids

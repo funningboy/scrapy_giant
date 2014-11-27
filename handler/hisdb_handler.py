@@ -8,6 +8,7 @@ from bson import json_util
 from mongoengine import *
 from bin.start import switch
 from bin.mongodb_driver import MongoDBDriver
+from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
 from handler.models import (
     TwseHisColl, OtcHisColl, StockData, TraderData,
     TraderInfo, TraderMapColl, TraderMapData, StockMapColl, StockMapData
@@ -24,8 +25,8 @@ class TwseHisDBHandler(object):
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect('twsehisdb', host=host, port=port, alias='twsehisdb')
         twsehiscoll = switch(TwseHisColl, 'twsehisdb')
-        self._stock = StockHisDBHandler(twsehiscoll)
-        self._trader = TraderHisDBHandler(twsehiscoll)
+        self._stock = TwseStockHisDBHandler(twsehiscoll)
+        self._trader = TwseTraderHisDBHandler(twsehiscoll)
 
     @property
     def stock(self):
@@ -43,7 +44,6 @@ class TwseHisDBHandler(object):
         traderdt = self._trader.to_pandas(traderdt)
         return pd.concat([stockdt, traderdt], axis=2).fillna(0)
 
-
 class OtcHisDBHandler(TwseHisDBHandler):
 
     def __init__(self):
@@ -51,16 +51,15 @@ class OtcHisDBHandler(TwseHisDBHandler):
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect('otchisdb', host=host, port=port, alias='otchisdb')
         otchiscoll = switch(OtcHisColl, 'otchisdb')
-        self._stock = StockHisDBHandler(otchiscoll)
-        self._trader = TraderHisDBHandler(otchiscoll)
+        self._stock = OtcStockHisDBHandler(otchiscoll)
+        self._trader = OtcTraderHisDBHandler(otchiscoll)
 
-
-class StockHisDBHandler(object):
+class TwseStockHisDBHandler(object):
 
     def __init__(self, coll):
-        """ specified hiscoll as twse/otc """
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect('stockhisdb', host=host, port=port, alias='stockhisdb')
+        self._iddbhandler = TwseIdDBHandler()
         self._mapcoll = switch(StockMapColl, 'stockhisdb')
         self._mapcoll.drop_collection()
         self._coll = coll
@@ -69,7 +68,6 @@ class StockHisDBHandler(object):
     @property
     def ids(self):
         return self._ids
-
     @ids.setter
     def ids(self, ids):
         self._ids = ids
@@ -79,7 +77,6 @@ class StockHisDBHandler(object):
         self._ids = []
 
     def insert(self, item):
-        """ insert stock item to db """
         for it in item:
             data = {
                 'open': it['open'],
@@ -100,18 +97,18 @@ class StockHisDBHandler(object):
             coll.data = data
             coll.save()
 
-    def query(self, starttime, endtime, stockids=[]):
+    def query(self, starttime, endtime, stockids=[], order='totalvolume', limit=10):
         """ return orm
         <stockid>                               | <stockid> ...
                     open| high| low|close|volume|          | open | ...
         20140928    100 | 101 | 99 | 100 | 100  | 20140928 | 11   | ...
         20140929    100 | 102 | 98 | 99  | 99   | 20140929 | 11   | ...
         """
-        cursor = self._coll.objects(Q(date__gte=starttime) & Q(date__lte=endtime) & Q(stockid__in=stockids))
         map_f = """
             function () {
                 var key =  { stockid : this.stockid };
                 var value = {
+                    totalvolume: this.data.volume,
                     data: [{
                         date: this.date,
                         open: this.data.open,
@@ -128,12 +125,14 @@ class StockHisDBHandler(object):
         reduce_f = """
           function (key, values) {
                 var redval = {
+                    totalvolume: 0,
                     data: []
                 };
                 if (values.length == 0) {
                     return redval;
                 }
                 for (var i=0; i < values.length; i++) {
+                    redval.totalvolume += values[i].totalvolume;
                     redval.data = values[i].data.concat(redval.data);
                 }
                 return redval;
@@ -141,6 +140,8 @@ class StockHisDBHandler(object):
         """
         ids = stockids
         mkey = 'stockid'
+        assert(order in ['totalvolume'])
+        cursor = self._coll.objects(Q(date__gte=starttime) & Q(date__lte=endtime) & Q(stockid__in=stockids))
         results = cursor.map_reduce(
             map_f,
             reduce_f,
@@ -148,38 +149,40 @@ class StockHisDBHandler(object):
         results = list(results)
         for id in ids:
             pool = list(filter(lambda x: x.key[mkey]==id, results))
+            pool = sorted(pool, key=lambda x: x.value[order], reverse=True)[:limit]
             for it in pool:
                 coll = self._mapcoll().save()
                 for data in it.value['data']:
-                    coll.datalist.append(
-                        StockMapData(
-                            date=data['date'],
-                            open=data['open'],
-                            high=data['high'],
-                            low=data['low'],
-                            close=data['close'],
-                            price=data['price'],
-                            volume=data['volume']))
+                    map = {
+                        'date': data['date'],
+                        'open': data['open'],
+                        'high': data['high'],
+                        'low': data['low'],
+                        'close': data['close'],
+                        'price': data['price'],
+                        'volume': data['volume']
+                    }
+                    coll.datalist.append(StockMapData(**map))
                 coll.stockid = it.key['stockid']
+                coll.stocknm = self._iddbhandler.stock.get_name(it.key['stockid'])
                 coll.save()
         return self._mapcoll.objects
 
     def to_pandas(self, cursor):
-        """ transform orm to pandas panel
-        """
         item = OrderedDict()
         for it in cursor:
             index, data = [], []
             for ii in it.datalist:
                 index.append(pytz.timezone('UTC').localize(ii.date))
-                data.append({
+                map = {
                     'open': ii.open,
                     'high': ii.high,
                     'low': ii.low,
                     'close': ii.close,
                     'price': ii.price,
                     'volume': ii.volume
-                })
+                }
+                data.append(map)
             if index and data:
                 id = it.stockid
                 item.update({
@@ -188,17 +191,15 @@ class StockHisDBHandler(object):
         return pd.Panel(item)
 
     def to_json(self, cursor):
-        """ transform orm to json stream
-        """
         return cursor.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
 
 
-class TraderHisDBHandler(object):
+class TwseTraderHisDBHandler(object):
 
     def __init__(self, coll):
-        """ specified hiscoll as twse/otc """
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect('traderhisdb', host=host, port=port, alias='traderhisdb')
+        self._iddbhandler = TwseIdDBHandler()
         self._mapcoll = switch(TraderMapColl, 'traderhisdb')
         self._mapcoll.drop_collection()
         self._coll = coll
@@ -217,7 +218,6 @@ class TraderHisDBHandler(object):
         self._ids = []
 
     def insert(self, item):
-        """ insert trader item to db """
         toplist = []
         for it in item['toplist']:
             data = {
@@ -227,8 +227,7 @@ class TraderHisDBHandler(object):
                 'sellvolume': it['data']['sellvolume'],
                 'totalvolume': it['data']['totalvolume']
             }
-            toplist.append(
-                TraderInfo(
+            toplist.append(TraderInfo(
                     traderid=it['traderid'],
                     tradernm=it['tradernm'],
                     data=TraderData(**data)))
@@ -265,14 +264,17 @@ class TraderHisDBHandler(object):
                 for (var i=0; i < this.toplist.length; i++) {
                     var key =  { traderid: this.toplist[i].traderid, stockid: this.stockid };
                     var totalvolume = this.toplist[i].data.totalvolume;
-                    var volume = this.toplist[i].data.buyvolume - this.toplist[i].data.sellvolume;
+                    var buyvolume = this.toplist[i].data.buyvolume;
+                    var sellvolume = this.toplist[i].data.sellvolume;
                     var price = 0;
                     var hit = 0;
                     var ratio = 0;
-                    if (volume > 0) {
+                    if (buyvolume > sellvolume) {
                         price = this.toplist[i].data.avgbuyprice;
-                    } else if (volume <0) {
+                    } else if (buyvolume < sellvolume) {
                         price = this.toplist[i].data.avgsellprice;
+                    } else if (buyvolume == sellvolume && totalvolume > 0){
+                        price = (this.toplist[i].data.avgbuyprice + this.toplist[i].data.avgsellprice) / 2;
                     } else {
                         price = 0;
                     }
@@ -286,7 +288,7 @@ class TraderHisDBHandler(object):
                     var value = {
                         totalvolume: totalvolume,
                         hit: hit,
-                        data: [{ date: this.date, ratio: ratio, price: price, volume: volume }]
+                        data: [{ date: this.date, ratio: ratio, price: price, buyvolume: buyvolume, sellvolume: sellvolume }]
                     };
                     emit(key, value);
                 }
@@ -313,7 +315,7 @@ class TraderHisDBHandler(object):
         ids = stockids if base == 'stock' else traderids
         mkey = 'stockid' if base == 'stock' else 'traderid'
         vkey = 'traderid' if base == 'stock' else 'stockid'
-        assert(order in ['totalvolume', 'hit', 'ratio'])
+        assert(order in ['totalvolume', 'hit'])
         cursor = self._coll.objects(
             Q(date__gte=starttime) & Q(date__lte=endtime) &
             (Q(stockid__in=stockids) | Q(toplist__traderid__in=traderids)))
@@ -324,26 +326,29 @@ class TraderHisDBHandler(object):
         results = list(results)
         for id in ids:
             pool = list(filter(lambda x: x.key[mkey]==id, results))
-            pool = sorted(pool, lambda x: x.value[order], reverse=True)[:limit]
+            pool = sorted(pool, key=lambda x: x.value[order], reverse=True)[:limit]
             for i, it in enumerate(pool):
                 coll = self._mapcoll().save()
                 for data in it.value['data']:
-                    coll.datalist.append(
-                        TraderMapData(
-                            ratio=data['ratio'],
-                            price=data['price'],
-                            volume=data['volume'],
-                            date=data['date']))
+                    map = {
+                        'ratio': data['ratio'],
+                        'price': data['price'],
+                        'buyvolume': data['buyvolume'],
+                        'sellvolume': data['sellvolume'],
+                        'date': data['date']
+                    }
+                    coll.datalist.append(TraderMapData(**map))
                 coll.traderid = it.key['traderid']
                 coll.stockid = it.key['stockid']
+                coll.tradernm = self._iddbhandler.trader.get_name(it.key['traderid'])
+                coll.stocknm = self._iddbhandler.stock.get_name(it.key['stockid'])
+                coll.tradervolume = it.value['totalvolume']
                 coll.alias = "top%d" % (i)
                 coll.base = base
                 coll.save()
         return self._mapcoll.objects
 
     def to_pandas(self, cursor):
-        """ transform orm to pandas panel
-        """
         bases = list(set([it.base for it in cursor]))
         assert(len(bases)<2)
         item = OrderedDict()
@@ -351,11 +356,13 @@ class TraderHisDBHandler(object):
             index, data = [], []
             for ii in it.datalist:
                 index.append(pytz.timezone('UTC').localize(ii.date))
-                data.append({
+                map = {
                     "%s_ratio" % (it.alias): ii.ratio,
                     "%s_price" % (it.alias): ii.price,
-                    "%s_volume" % (it.alias): ii.volume
-                })
+                    "%s_buyvolume" % (it.alias): ii.buyvolume,
+                    "%s_sellvolume" % (it.alias): ii.sellvolume
+                }
+                data.append(map)
             if index and data:
                 id = it.stockid if bases[0] == 'stock' else it.traderid
                 item.update({
@@ -364,8 +371,6 @@ class TraderHisDBHandler(object):
         return pd.Panel(item)
 
     def to_json(self, cursor):
-        """ transform orm to json
-        """
         return cursor.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
 
     def map_alias(self, ids=[], base='stock', aliases=['top0'], cursor=None):
@@ -380,3 +385,13 @@ class TraderHisDBHandler(object):
             cursor = mapcoll.objects(Q(base=base) & Q(traderid__in=ids) & Q(alias__in==aliases))
             cursor = list(cursor)
             return [it.stockid for it in cursor]
+
+class OtcStockHisDBHandler(TwseStockHisDBHandler):
+    def __init__(self, coll):
+        super(OtcStockHisDBHandler, self).__init__(coll)
+        self._iddbhandler = OtcIdDBHandler()
+
+class OtcTraderHisDBHandler(TwseTraderHisDBHandler):
+    def __init__(self, coll):
+        super(OtcTraderHisDBHandler, self).__init__(coll)
+        self._iddbhandler = OtcIdDBHandler()

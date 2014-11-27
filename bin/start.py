@@ -29,8 +29,7 @@ def wap_scrapy_cmd(spider, loglevel, logfile, logen=True, debug=False):
             'logen': 1 if logen else 0,
             'debug': 1 if debug else 0
         }
-    if debug:
-        print cmd
+    print cmd
     return cmd
 
 # update stockids

@@ -26,9 +26,6 @@ def add(x, y):
 # as background service
 @shared_task
 def run_scrapy_service(spider, loglevel, logfile, logen=True, debug=False):
-    if spider not in scrapy_tasks:
-        logger.error("%s spider not support" % (spider))
-        raise Exception
     cmd = wap_scrapy_cmd(
         spider=spider,
         loglevel=loglevel,

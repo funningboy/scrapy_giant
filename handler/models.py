@@ -87,20 +87,25 @@ class StockMapData(EmbeddedDocument):
 
 class StockMapColl(Document):
     stockid = StringField()
+    stocknm = StringField()
     datalist = ListField(EmbeddedDocumentField(StockMapData))
 
 
 class TraderMapData(EmbeddedDocument):
     ratio = FloatField(min_value=0, max_value=100)
     price = FloatField(min_value=0, max_value=9999)
-    volume = IntField(min_value=-9999999, max_value=9999999)
+    buyvolume = IntField(min_value=0, max_value=9999999)
+    sellvolume = IntField(min_value=0, max_value=9999999)
     date = DateTimeField(default=datetime.utcnow())
 
 
 class TraderMapColl(Document):
     alias = StringField()
     traderid = StringField()
+    tradernm = StringField()
     stockid = StringField()
+    stocknm = StringField()
+    tradervolume = IntField(min_value=0, max_value=9999999)
     base = StringField()
     datalist = ListField(EmbeddedDocumentField(TraderMapData))
     meta = {

@@ -95,6 +95,16 @@ class StockIdDBHandler(object):
         except:
             pass
 
+    def has_id(self, stockid):
+        cursor = self._coll.objects(Q(stockid=stockid)).limit(1)
+        cursor = list(cursor)
+        return True if cursor else False
+
+    def has_name(self, stocknm):
+        cursor = self._coll.objects(Q(stocknm=stocknm)).limit(1)
+        cursor = list(cursor)
+        return True if cursor else False
+
     def insert(self, item):
         for it in item:
             cursor = self._coll.objects(Q(stockid=it['stockid']))
@@ -153,6 +163,16 @@ class TraderIdDBHandler(object):
         except:
             pass
 
+    def has_id(self, traderid):
+        cursor = self._coll.objects(Q(traderid=traderid)).limit(1)
+        cursor = list(cursor)
+        return True if cursor else False
+
+    def has_name(self, tradernm):
+        cursor = self._coll.objects(Q(tradernm=tradernm)).limit(1)
+        cursor = list(cursor)
+        return True if cursor else False
+
     def insert(self, item):
         for it in item:
             cursor = self._coll.objects(Q(traderid=it['traderid']))
@@ -162,5 +182,5 @@ class TraderIdDBHandler(object):
             else:
                 coll = cursor[0]
             coll.traderid = it['traderid']
-            coll.tradernm = it['tradernm']
+            coll.tradernm = it['tradernm'] if it['tradernm'] else None
             coll.save()

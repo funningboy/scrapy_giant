@@ -21,21 +21,16 @@ class TestTwseHisStockQuery(TestTwseHisTrader, TestTwseHisStock):
         t = timeit.Timer()
         starttime = datetime.utcnow() - timedelta(days=4)
         endtime = datetime.utcnow()
-        args = ('twse', starttime, endtime, ['2317'])
+        args = ('twse', starttime, endtime, ['2317'], 'totalvolume', 10)
         panel = run_hisstock_query.delay(*args).get()
-        print "run stock 300d query using %.4f(s)" % (t.timeit())
+        print "run stock 300d query used %.4f(s)" % (t.timeit())
         self.assertFalse(panel.empty)
         self.assertFalse(panel['2317'].empty)
 
     def test_on_orm(self):
-        super(TestTwseHisStockQuery, self).test_on_orm()
-        t = timeit.Timer()
-        starttime = datetime.utcnow() - timedelta(days=4)
-        endtime = datetime.utcnow()
-        args = ('twse', starttime, endtime, ['2317'])
-        run_hisstock_query.delay(*args).get()
-        response = self.client.get(reverse('proposal:proposal', kwargs={"proposal_id": "08-01-YS-01-001"}))
-        self.assertEqual(response.status_code, 200)
+        super(TestTwseHisStockQuery, self).test_on_run()
+#        response = self.client.get(reverse('proposal:proposal', kwargs={"proposal_id": "08-01-YS-01-001"}))
+#        self.assertEqual(response.status_code, 200)
 
 class TestTwseHisTraderQuery(TestTwseHisTrader, TestTwseHisStock):
 
@@ -46,13 +41,13 @@ class TestTwseHisTraderQuery(TestTwseHisTrader, TestTwseHisStock):
         endtime = datetime.utcnow()
         args = ('twse', starttime, endtime, ['2317'], [], 'stock', 'totalvolume', 10)
         panel = run_histoptrader_query.delay(*args).get()
-        print "run stock 300d query using %.4f(s)" % (t.timeit())
+        print "run stock 300d query used %.4f(s)" % (t.timeit())
         self.assertFalse(panel.empty)
         self.assertFalse(panel['2317'].empty)
 
     def test_on_orm(self):
-        response = self.client.get(reverse('proposal:proposal', kwargs={"proposal_id": "08-01-YS-01-001"}))
-        self.assertEqual(response.status_code, 200)
+        super(TestTwseHisTraderQuery, self).test_on_run()
+        pass
 
 class TestOtcHisStockQuery(TestOtcHisTrader, TestOtcHisStock):
 
@@ -63,11 +58,12 @@ class TestOtcHisStockQuery(TestOtcHisTrader, TestOtcHisStock):
         endtime = datetime.utcnow()
         args = ('otc', starttime, endtime, ['5371'])
         panel = run_hisstock_query.delay(*args).get()
-        print "run stock 300d query using %.4f(s)" % (t.timeit())
+        print "run stock 300d query used %.4f(s)" % (t.timeit())
         self.assertFalse(panel.empty)
         self.assertFalse(panel['5371'].empty)
 
     def test_on_orm(self):
+        super(TestOtcHisStockQuery, self).test_on_run()
         pass
 
 class TestOtcHisTraderQuery(TestOtcHisTrader, TestOtcHisStock):
@@ -79,9 +75,10 @@ class TestOtcHisTraderQuery(TestOtcHisTrader, TestOtcHisStock):
         endtime = datetime.utcnow()
         args = ('otc', starttime, endtime, ['5371'], [], 'stock', 'totalvolume', 10)
         panel = run_histoptrader_query.delay(*args).get()
-        print "run stock 300d query using %.4f(s)" % (t.timeit())
+        print "run stock 300d query used %.4f(s)" % (t.timeit())
         self.assertFalse(panel.empty)
         self.assertFalse(panel['5371'].empty)
 
     def test_on_orm(self):
+        super(TestOtcHisTraderQuery, self).test_on_run()
         pass

@@ -99,7 +99,7 @@ LANGUAGE_CODE = 'en-us'
 #>>> s = Site()
 #>>> s.save()
 #python ./manage.py tellsiteid
-SITE_ID=u'54747c5a1fd21ca8c89fd773'
+SITE_ID=u'54773d741fd21c6231a08a65'
 #SITE_ID=1
 
 # If you set this to False, Django will make some optimizations so as not

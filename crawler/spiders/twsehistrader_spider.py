@@ -130,8 +130,8 @@ class TwseHisTraderSpider(CrawlSpider):
         item['date'] = sel.xpath('.//td[@id="receive_date"]/text()').extract()[0].strip(string.whitespace).replace(',', '').replace('/', '-')
         elem = sel.xpath('.//td[@id="stock_id"]/text()').extract()[0].strip(string.whitespace).replace(',', '')
         m = re.search(r'([0-9a-zA-Z]+)(\W+)', elem.replace(u' ', u''))
-        item['stockid'] = m.group(1) if m else None
-        item['stocknm'] = m.group(2) if m else None
+        item['stockid'] = m.group(1) if m and m.group(1) else None
+        item['stocknm'] = m.group(2) if m and m.group(2) else ""
         item['open'] = sel.xpath('.//td[@id="open_price"]/text()').extract()[0].strip(string.whitespace).replace(',', '')
         item['high'] = sel.xpath('.//td[@id="high_price"]/text()').extract()[0].strip(string.whitespace).replace(',', '')
         item['low'] = sel.xpath('.//td[@id="low_price"]/text()').extract()[0].strip(string.whitespace).replace(',', '')
@@ -145,8 +145,8 @@ class TwseHisTraderSpider(CrawlSpider):
             m = re.search(r'([0-9a-zA-Z]+)(\W+)?', nwelem[1].replace(u' ', u'').replace(u'\u3000', u''))
             sub.update({
                 'index': nwelem[0] if nwelem[0] else -1,
-                'traderid': m.group(1) if m else None,
-                'tradernm': m.group(2) if m else None,
+                'traderid': m.group(1) if m and m.group(1) else None,
+                'tradernm': m.group(2) if m and m.group(2) else "",
                 'price': nwelem[2] if nwelem[2] else 0,
                 'buyvolume': nwelem[3] if nwelem[3] else 0,
                 'sellvolume': nwelem[4] if nwelem[4] else 0

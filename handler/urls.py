@@ -7,11 +7,15 @@ urlpatterns = patterns('',
     #  /handler/hisstock/twse
 
     # ex: /handler/hisstock/twse/2317/20140808/20141111
-    url(r'^(?P<hisdb>\w+)/(?P<stockid>\w+)/(?P<starttime>\d{8})/(?P<endtime>\d{8})/$',
+    url(r'^hisstock/(?P<hisdb>\w+)/(?P<stockid>\w+)/(?P<starttime>\d{8})/(?P<endtime>\d{8})/$',
         view=views.hisstock_detail,
         name='hisstock_detail'
     ),
     # ex: /handler/hisstock/twse/2317/1440/20140808/20141111
+    url(r'^hisstock/(?P<hisdb>\w+)/(?P<stockid>\w+)/(?P<traderid>)/(?P<starttime>\d{8})/(?P<endtime>\d{8})/$',
+        view=views.hisstock_detail,
+        name='hisstock_detail'
+    ),
     # ex: /handler/histrader/twse/1470/20140808/20141111
     url(r'^$',
         view=views.hisstock_list,

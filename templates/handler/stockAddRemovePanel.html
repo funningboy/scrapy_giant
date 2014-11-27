@@ -4,10 +4,11 @@
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"> <title>amStock Example</title>
-        <link rel="stylesheet" href="{% static 'amcharts/style.css' %}" type="text/css">
-        <script src={% static 'amcharts/amcharts.js' %} type="text/javascript"></script>
-        <script src={% static 'amcharts/serial.js' %} type="text/javascript"></script>
-        <script src={% static 'amcharts/amstock.js' %} type="text/javascript"></script>
+        <link rel="stylesheet" href="http://www.amcharts.com/lib/3/style.css" type="text/css">
+        <script src="http://www.amcharts.com/lib/3/amcharts.js" type="text/javascript"></script>
+        <script src="http://www.amcharts.com/lib/3/serial.js" type="text/javascript"></script>
+        <script src="http://www.amcharts.com/lib/3/amstock.js" type="text/javascript"></script>
+        <script src="http://www.amcharts.com/lib/3/themes/none.js" type="text/javascript"></script>
         {% compress js %}
 		<script type="text/javascript">
 			AmCharts.ready(function () {
@@ -21,21 +22,23 @@
 			var stockPanel;
 
 			function generateChartData() {
-                {% for it in stockitem %}
-					chartData.push({
-                    date: new Date("{{ it.date.isoformat }}"),
-                    open: {{ it.data.open }},
-                    close: {{ it.data.close }},
-                    high: {{ it.data.high }},
-                    low: {{ it.data.low }},
-                    volume: {{ it.data.volume }}
-                    });
-                 {% endfor %}
+                {% for item in stockitem %}
+                    {% for it in item.datalist %}
+					    chartData.unshift({
+                            "date": new Date("{{ it.date.isoformat }}"),
+                            "open": {{ it.open }},
+                            "close": {{ it.close }},
+                            "high": {{ it.high }},
+                            "low": {{ it.low }},
+                            "volume": {{ it.volume }}
+                        });
+                    {% endfor %}
+                {% endfor %}
 			}
 
 			function createStockChart() {
 				chart = new AmCharts.AmStockChart();
-                chart.pathToImages ={% static 'amcharts/images/' %};
+                chart.pathToImages ="http://www.amcharts.com/lib/3/images/";
 				chart.balloon.horizontalPadding = 13;
 
 				// DATASET //////////////////////////////////////////

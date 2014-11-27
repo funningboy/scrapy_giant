@@ -105,7 +105,11 @@ class OtcHisStockSpider(CrawlSpider):
             sub = {}
             for indx, elem in enumerate(nwelem):
                 if indx == 0:
-                    yy, mm, dd = elem.split('/')
+                    # pass empty data
+                    try:
+                        yy, mm, dd = elem.split('/')
+                    except Exception:
+                        continue
                     yy = int(yy) + 1911
                     sub[self._headers[indx][1]] = "%s-%s-%s" % (yy, mm, dd)
                     sub['stockid'] = item['stockid']

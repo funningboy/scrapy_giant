@@ -28,6 +28,15 @@ class TestRunScrapyService(NoSQLTestCase):
         except:
             return False
 
+class TestTwseId(TestRunScrapyService):
+
+    def test_on_run(self):
+        t = timeit.Timer()
+        args = ('twseid', 'INFO', './log/twseid.log', True, True)
+        run_scrapy_service.delay(*args).get()
+        print "scrapy twseid used %.4f(s)" % (t.timeit())
+        self.assertTrue(self.has_pass('./log/twseid.log'))
+
 class TestTwseHisTrader(TestRunScrapyService):
 
     def test_on_run(self):
@@ -49,6 +58,15 @@ class TestTwseHisStock(TestRunScrapyService):
         run_scrapy_service.delay(*args).get()
         print "scrapy twsehisstock used %.4f(s)/%d(u)" % (t.timeit(), len(ids))
         self.assertTrue(self.has_pass('./log/twsehisstock.log'))
+
+class TestOtcId(TestRunScrapyService):
+
+    def test_on_run(self):
+        t = timeit.Timer()
+        args = ('otcid', 'INFO', './log/otcid.log', True, True)
+        run_scrapy_service.delay(*args).get()
+        print "scrapy otcid used %.4f(s)" % (t.timeit())
+        self.assertTrue(self.has_pass('./log/otcid.log'))
 
 class TestOtcHisTrader(TestRunScrapyService):
 
@@ -76,6 +94,19 @@ class TestThreadService(TestRunScrapyService):
 
     def test_on_run(self):
         args = [
+            ('twseid', 'INFO', './log/twseid.log', True, False),
+            ('otcid', 'INFO', './log/otcid.log', True, False)
+        ]
+        tasks = group([
+            run_scrapy_service.subtask(args[0]),
+            run_scrapy_service.subtask(args[1])
+        ])
+        results = tasks.apply_async()
+        results.join()
+        self.assertTrue(results.ready())
+        self.assertTrue(results.successful())
+
+        args = [
             ('twsehistrader', 'INFO', './log/twsehistrader.log', True, True),
             ('twsehisstock', 'INFO', './log/twsehisstock.log', True, True),
             ('otchistrader', 'INFO', './log/otchistrader.log', True, True),
@@ -87,7 +118,9 @@ class TestThreadService(TestRunScrapyService):
             run_scrapy_service.subtask(args[2]),
             run_scrapy_service.subtask(args[3])
         ])
+        t = timeit.Timer()
         results = tasks.apply_async()
         results.join()
+        print "scrapy all bin.tasks used %.4f(s)" % (t.timeit())
         self.assertTrue(results.ready())
         self.assertTrue(results.successful())
