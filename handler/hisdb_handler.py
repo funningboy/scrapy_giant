@@ -97,6 +97,7 @@ class TwseStockHisDBHandler(object):
             coll.data = data
             coll.save()
 
+    # callback
     def query(self, starttime, endtime, stockids=[], order='totalvolume', limit=10):
         """ return orm
         <stockid>                               | <stockid> ...
@@ -152,7 +153,7 @@ class TwseStockHisDBHandler(object):
             pool = sorted(pool, key=lambda x: x.value[order], reverse=True)[:limit]
             for it in pool:
                 coll = self._mapcoll().save()
-                for data in it.value['data']:
+                for data in sorted(it.value['data'], key=lambda x: x['date']):
                     map = {
                         'date': data['date'],
                         'open': data['open'],
@@ -242,6 +243,7 @@ class TwseTraderHisDBHandler(object):
         coll.toplist = toplist
         coll.save()
 
+    # query
     def query(self, starttime, endtime, stockids=[], traderids=[],
             base='stock', order='totalvolume', limit=10):
         """ get rank toplist volume stock/trader data
@@ -267,7 +269,7 @@ class TwseTraderHisDBHandler(object):
                     var buyvolume = this.toplist[i].data.buyvolume;
                     var sellvolume = this.toplist[i].data.sellvolume;
                     var price = 0;
-                    var hit = 0;
+                    var totalhit = 0;
                     var ratio = 0;
                     if (buyvolume > sellvolume) {
                         price = this.toplist[i].data.avgbuyprice;
@@ -279,15 +281,15 @@ class TwseTraderHisDBHandler(object):
                         price = 0;
                     }
                     if (totalvolume >0) {
-                        hit = 1;
+                        totalhit = 1;
                         ratio = totalvolume / this.data.volume * 100;
                     } else {
-                        hit = 0;
+                        totalhit = 0;
                         ratio = 0;
                     }
                     var value = {
                         totalvolume: totalvolume,
-                        hit: hit,
+                        totalhit: totalhit,
                         data: [{ date: this.date, ratio: ratio, price: price, buyvolume: buyvolume, sellvolume: sellvolume }]
                     };
                     emit(key, value);
@@ -298,7 +300,7 @@ class TwseTraderHisDBHandler(object):
             function (key, values) {
                 var redval = {
                     totalvolume: 0,
-                    hit: 0,
+                    totalhit: 0,
                     data: []
                 };
                 if (values.length == 0) {
@@ -306,7 +308,7 @@ class TwseTraderHisDBHandler(object):
                 }
                 for (var i=0; i < values.length; i++) {
                     redval.totalvolume += values[i].totalvolume;
-                    redval.hit += values[i].hit;
+                    redval.totalhit += values[i].totalhit;
                     redval.data = values[i].data.concat(redval.data);
                 }
                 return redval;
@@ -315,7 +317,7 @@ class TwseTraderHisDBHandler(object):
         ids = stockids if base == 'stock' else traderids
         mkey = 'stockid' if base == 'stock' else 'traderid'
         vkey = 'traderid' if base == 'stock' else 'stockid'
-        assert(order in ['totalvolume', 'hit'])
+        assert(order in ['totalvolume', 'totalhit'])
         cursor = self._coll.objects(
             Q(date__gte=starttime) & Q(date__lte=endtime) &
             (Q(stockid__in=stockids) | Q(toplist__traderid__in=traderids)))
@@ -329,7 +331,7 @@ class TwseTraderHisDBHandler(object):
             pool = sorted(pool, key=lambda x: x.value[order], reverse=True)[:limit]
             for i, it in enumerate(pool):
                 coll = self._mapcoll().save()
-                for data in it.value['data']:
+                for data in sorted(it.value['data'], key=lambda x: x['date']):
                     map = {
                         'ratio': data['ratio'],
                         'price': data['price'],
@@ -342,7 +344,8 @@ class TwseTraderHisDBHandler(object):
                 coll.stockid = it.key['stockid']
                 coll.tradernm = self._iddbhandler.trader.get_name(it.key['traderid'])
                 coll.stocknm = self._iddbhandler.stock.get_name(it.key['stockid'])
-                coll.tradervolume = it.value['totalvolume']
+                coll.totalvolume = it.value['totalvolume']
+                coll.totalhit = it.value['totalhit']
                 coll.alias = "top%d" % (i)
                 coll.base = base
                 coll.save()

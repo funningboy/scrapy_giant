@@ -105,7 +105,8 @@ class TraderMapColl(Document):
     tradernm = StringField()
     stockid = StringField()
     stocknm = StringField()
-    tradervolume = IntField(min_value=0, max_value=9999999)
+    totalvolume = IntField(min_value=0, max_value=9999999)
+    totalhit = IntField(min_value=0, max_value=9999999)
     base = StringField()
     datalist = ListField(EmbeddedDocumentField(TraderMapData))
     meta = {

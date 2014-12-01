@@ -182,5 +182,5 @@ class TraderIdDBHandler(object):
             else:
                 coll = cursor[0]
             coll.traderid = it['traderid']
-            coll.tradernm = it['tradernm'] if it['tradernm'] else None
+            coll.tradernm = it['tradernm']
             coll.save()

@@ -19,14 +19,14 @@ iddb_tasks = {
     'otc': OtcIdDBHandler
 }
 
-def hisstock_list(request):
-    """ list all best buy/sell stock
+def hisstock_list(request, hisdb):
+    """ list all stocks
     """
-    return render(request,'handler/stocklist.html', {})
+    pass
 
 def hisstock_detail(request, hisdb, stockid, starttime, endtime,
                     traderids=[], order='totalvolume', limit=10):
-    """ show stock detail
+    """ show stock
     """
     dbhandler = hisdb_tasks[hisdb]()
     idhandler = iddb_tasks[hisdb]()
@@ -68,6 +68,7 @@ def histrader_detail(request, hisdb, traderid, starttime, endtime,
         base='trader',
         order=order,
         limit=limit)
+    stockids = [it.stockid for it in traderitem]
     # 2nd
     stockitem = dbhandler.stock.query(
         starttime=datetime(start_yy, start_mm, start_dd),

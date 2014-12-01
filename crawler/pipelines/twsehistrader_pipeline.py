@@ -44,7 +44,8 @@ class TwseHisTraderPipeline(BasePipeline):
         grouped = frame.groupby('traderid', sort=False)
         for trdid, group in grouped:
             trdid = group['traderid'].iloc[0]
-            trdnm = group['tradernm'].iloc[0]
+#            trdnm = group['tradernm'].iloc[0]
+            trdnm = filter(lambda x: x != '', group['tradernm'])[0]
             buyvolume = group['buyvolume'].astype(int).sum() // 1000
             sellvolume = group['sellvolume'].astype(int).sum() // 1000
             totalvolume = buyvolume + sellvolume

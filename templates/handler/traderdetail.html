@@ -24,10 +24,15 @@
     font-size : 11px;
     float: left;
 }
+#chartdiv3 {
+    width : 100%;
+    height : 300px;
+    font-size : 11px;
+    float: left;
+}
   </style>
 
 
-{% compress js %}
 {% compress js %}
 <script type='text/javascript'>//<![CDATA[ 
 window.onload=function(){
@@ -40,53 +45,76 @@ AmCharts.ready(function () {
     callbackPieChart();
 });
 
-var pieChart;
-var stockChart;
+var pieChart1;
+var pieChart3;
+var stockChart2
 var chartData = [];
 var collectiveData = [];
+var index = 0;
 
 function generateChartData() {
-    var data = [];
-    var traderid;
-    var tradernm;
-    // populate trader data as init
+    var traderitem = [];
+
+    // populate ader data as init
     {% for item in traderitem %}
+        var data = [];
         {% for it in item.datalist %}
-		    data.unshift({
+            data.push({
+                "ratio": {{ it.ratio }},
+                "price": {{ it.price }},
+                "buyvolume": {{ it.buyvolume }},
+                "sellvolume": {{ it.sellvolume }},
+                "date" :new Date("{{ it.date.isoformat }}")
+            });
+        {% endfor 
+        traderitem.push({
+            "index": index++,
+            "traderid": "{{ item.traderid }}",
+            "stockid": "{{ item.stockid }}",
+            "tradernm": "{{ item.tradernm }}",
+            "stocknm": "{{ item.stocknm }}",
+            "totalvolume": {{ item.totalvolume }},
+            "totalhit": {{ item.totalhit }},
+            "datalist": data
+        });
+    {% endfor %}
+
+    // populate stock data as update
+    {% for item in stockitem %}
+        var ndata = [];
+        var match = jQuery.grep(traderitem, function(e){ return e.stockid == "{{ item.stockid }}"; }); 
+        if (match.length == 0) {
+            console.log("match is empty"); 
+        }
+        {% for it in item.datalist %}
+            ndata.push({
                 "date": new Date("{{ it.date.isoformat }}"),
-                "stockopen": 0,
-                "stockclose": 0,
-                "stockhigh": 0,
-                "stocklow": 0,
-                "stockprice": 0,
-                "stockvolume": 0,
-                "traderprice": {{ it.price }},
-                "traderbuyvolume": {{ it.buyvolume }},
-                "tradersellvolume": {{ it.sellvolume }},
+                "stockopen": {{ it.open }},
+                "stockclose": {{ it.close }},
+                "stockhigh": {{ it.high }},
+                "stocklow": {{ it.low }},
+                "stockprice": {{ it.close }},
+                "stockvolume": {{ it.volume }},
+                "traderprice": 0,
+                "traderbuyvolume": 0,
+                "tradersellvolume": 0,
                 "event": ""
             });
         {% endfor %}
-    {% endfor %}
-    // populate stock data as update
-    {% for item in stockitem %}
-        var ndata = jQuery.extend(true, [], data);
-        {% for it in item.datalist %}
-            var date = new Date("{{ it.date.isoformat }}");
-            var result = jQuery.grep(ndata, function(e){ return e.date.getTime() == date.getTime(); });
+        for (var ii in match[0].datalist) {
+            var result = jQuery.grep(ndata, function(e){ return e.date.getTime() == match[0].datalist[ii].date.getTime(); }); 
             if (result.length != 0) {
-                result[0].stockopen = {{ it.open }};
-                result[0].stockhigh = {{ it.high }};
-                result[0].stocklow = {{ it.low }};
-                result[0].stockclose = {{ it.close }};
-                result[0].stockvolume = {{ it.volume }};
+                result[0].traderprice = match[0].datalist[ii].price;
+                result[0].traderbuyvolume = match[0].datalist[ii].buyvolume;
+                result[0].tradersellvolume = match[0].datalist[ii].sellvolume;
             } else {
-
+                console.log("trader data is over stock data");
             }
-        {% endfor %}
+        }
         var unit = {
             "stockidnm": "{{ item.stockid }}-{{ item.stocknm }}",
-            "traderidnm": "{{  }}-{{ }}",
-            "tradervolume": "{{  }}",
+            "traderidnm": match[0].traderid + '-' + match[0].tradernm,
+            "stockvolume": match[0].totalvolume,
             "url": "",
             "description": "",
             "data": ndata
@@ -112,8 +140,8 @@ for (var x in chartData) {
                 "tradersellvolume": dataPoint.data[y].tradersellvolume,
                 "tradersumvolume": dataPoint.data[y].tradersumvolume,
                 "traderprice": dataPoint.data[y].traderprice * dataPoint.data[y].tradersumvolume,
-                "stockvolume": dataPoint.data[y].stockvolume,
-                "stockprice": dataPoint.data[y].stockprice
+                "stockvolume": 0,
+                "stockprice": 0 
             });
         }
     }
@@ -133,11 +161,11 @@ for (var x in collectiveData) {
 
 function createPieChart(){
 // create pie chart
-    pieChart = AmCharts.makeChart("chartdiv1", {
+    pieChart1 = AmCharts.makeChart("chartdiv1", {
     "type": "pie",
     "dataProvider": chartData,
-    "valueField": "tradervolume",
-    "titleField": "traderidnm",
+    "valueField": "stockvolume",
+    "titleField": "stockidnm",
     "labelText": "[[title]]: [[value]]",
      "legend": {
         "markerType": "circle",
@@ -146,15 +174,30 @@ function createPieChart(){
         "autoMargins": false
     },
     "pullOutOnlyOne": true
-});
+    });
+
+    pieChart3 = AmCharts.makeChart("chartdiv3", {
+    "type": "pie",
+    "dataProvider": chartData,
+    "valueField": "stockhit,
+    "titleField": "stockidnm",
+    "labelText": "[[title]]: [[value]]",
+     "legend": {
+        "markerType": "circle",
+        "position": "right",
+        "marginRight": 80, 
+        "autoMargins": false
+    },
+    "pullOutOnlyOne": true
+    });
 }
 
 function createColumnChart(){
 // create column chart
-    stockChart = AmCharts.makeChart("chartdiv2", {
+    stockChart2 = AmCharts.makeChart("chartdiv2", {
     "type": "serial",
     "theme": "none",
-     "pathToImages": "http://www.amcharts.com/lib/3/images/",    
+    "pathToImages": "http://www.amcharts.com/lib/3/images/",    
     "dataProvider": collectiveData,  
     "legend": {
         "equalWidths": false,
@@ -289,18 +332,17 @@ function createColumnChart(){
     },
 });                            
 }
-
 function callbackPieChart(){
-    pieChart.addListener("pullOutSlice", function (event) {
-    stockChart.dataProvider = event.dataItem.dataContext.data;
-    stockChart.validateData();
-    stockChart.animateAgain();
+    pieChart1.addListener("pullOutSlice", function (event) {
+    stockChart2.dataProvider = event.dataItem.dataContext.data;
+    stockChart2.validateData();
+    stockChart2.animateAgain();
 });
 
-    pieChart.addListener("pullInSlice", function (event) {
-    stockChart.dataProvider = collectiveData;
-    stockChart.validateData();
-    stockChart.animateAgain();
+    pieChart1.addListener("pullInSlice", function (event) {
+    stockChart2.dataProvider = collectiveData;
+    stockChart2.validateData();
+    stockChart2.animateAgain();
 });
 }
 

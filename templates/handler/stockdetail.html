@@ -24,6 +24,12 @@
     font-size : 11px;
     float: left;
 }
+#chartdiv3 {
+    width : 100%;
+    height : 300px;
+    font-size : 11px;
+    float: left;
+}
   </style>
 
 
@@ -39,17 +45,19 @@ AmCharts.ready(function () {
     callbackPieChart();
 });
 
-var pieChart;
-var stockChart;
+var pieChart1;
+var pieChart3;
+var stockChart2;
 var chartData = [];
 var collectiveData = [];
+var index = 0;
 
 function generateChartData() {
     var data = [];
     // populate stock data as init
     {% for item in stockitem %}
         {% for it in item.datalist %}
-		    data.unshift({
+            data.push({
                 "date": new Date("{{ it.date.isoformat }}"),
                 "stockopen": {{ it.open }},
                 "stockclose": {{ it.close }},
@@ -75,13 +83,15 @@ function generateChartData() {
                 result[0].traderbuyvolume = {{ it.buyvolume }};
                 result[0].tradersellvolume = {{ it.sellvolume }};
             } else {
-                
+                console.log("trader data is over stock data");
             }
         {% endfor %}
         var unit = {
+            "index": index++,
             "traderidnm": "{{ item.traderid }}-{{ item.tradernm }}",
             "stockidnm": "{{ item.stockid }}-{{ item.stocknm }}",
-            "tradervolume": "{{ item.tradervolume }}",
+            "tradervolume": "{{ item.totalvolume }}",
+            "traderhit": "{{ item.totalhit }}",
             "url": "",
             "description": "",
             "data": ndata
@@ -128,7 +138,7 @@ for (var x in collectiveData) {
 
 function createPieChart(){
 // create pie chart
-    pieChart = AmCharts.makeChart("chartdiv1", {
+    pieChart1 = AmCharts.makeChart("chartdiv1", {
     "type": "pie",
     "dataProvider": chartData,
     "valueField": "tradervolume",
@@ -141,12 +151,27 @@ function createPieChart(){
         "autoMargins": false
     },
     "pullOutOnlyOne": true
-});
+    });
+
+    pieChart3 = AmCharts.makeChart("chartdiv3", {
+    "type": "pie",
+    "dataProvider": chartData,
+    "valueField": "traderhit",
+    "titleField": "traderidnm",
+    "labelText": "[[title]]: [[value]]",
+     "legend": {
+        "markerType": "circle",
+        "position": "right",
+        "marginRight": 80, 
+        "autoMargins": false
+    },
+    "pullOutOnlyOne": true
+    });
 }
 
 function createColumnChart(){
 // create column chart
-    stockChart = AmCharts.makeChart("chartdiv2", {
+    stockChart2 = AmCharts.makeChart("chartdiv2", {
     "type": "serial",
     "theme": "none",
      "pathToImages": "http://www.amcharts.com/lib/3/images/",    
@@ -286,17 +311,36 @@ function createColumnChart(){
 }
 
 function callbackPieChart(){
-    pieChart.addListener("pullOutSlice", function (event) {
-    stockChart.dataProvider = event.dataItem.dataContext.data;
-    stockChart.validateData();
-    stockChart.animateAgain();
-});
+    pieChart1.addListener("pullOutSlice", function (event) {
+    index = event.dataItem.dataContext.index
+    stockChart2.dataProvider = event.dataItem.dataContext.data;
+    stockChart2.validateData();
+    stockChart2.animateAgain();
+    pieChart3.clickSlice(index);
+    });
 
-    pieChart.addListener("pullInSlice", function (event) {
-    stockChart.dataProvider = collectiveData;
-    stockChart.validateData();
-    stockChart.animateAgain();
-});
+    pieChart1.addListener("pullInSlice", function (event) {
+    stockChart2.dataProvider = collectiveData;
+    stockChart2.validateData();
+    stockChart2.animateAgain();
+    pieChart3.clickSlice(index);
+    });
+
+    pieChart3.addListener("pullOutSlice", function (event) {
+    index = event.dataItem.dataContext.index
+    stockChart2.dataProvider = event.dataItem.dataContext.data;
+    stockChart2.validateData();
+    stockChart2.animateAgain();
+// infinity loop
+//    pieChart1.clickSlice(index);
+    });
+
+    pieChart3.addListener("pullInSlice", function (event) {
+    stockChart2.dataProvider = collectiveData;
+    stockChart2.validateData();
+    stockChart2.animateAgain();
+//    pieChart1.clickSlice(index);
+    });
 }
 
 }//]]>  
@@ -315,6 +359,7 @@ function callbackPieChart(){
 <script src="//code.jquery.com/jquery-1.10.2.js"></script>
 <script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
 <div id="chartdiv1"></div>
+<div id="chartdiv3"></div>
 <div id="chartdiv2"></div>
   
 </body>

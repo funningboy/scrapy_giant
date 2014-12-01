@@ -131,7 +131,7 @@ class OtcHisTraderSpider(CrawlSpider):
         # divided left right frames
         fm0, fm1 = frame.ix[:, 0:5], frame.ix[:, 6:]
         for fm in [fm0, fm1]:
-            for elem in fm.T.to_dict().values():
+            for elem in fm.dropna().T.to_dict().values():
                 nwelem = [str(elem[it]).strip(string.whitespace).replace(',', '') for it in sorted(elem.keys())]
                 sub = {}
                 m = re.search(r'([0-9a-zA-Z]+)(\W+)?', nwelem[1].decode('cp950').replace(u'\u3000', u'').replace(u' ', u''))
