@@ -10,8 +10,9 @@ here = lambda *x: join(abspath(dirname(__file__)), *x)
 PROJECT_ROOT = here("..")
 root = lambda *x: join(abspath(PROJECT_ROOT), *x)
 
-import djcelery
-djcelery.setup_loader()
+## djcelery ...
+#import djcelery
+#djcelery.setup_loader()
 
 import mongoengine
 #from mongoengine.django.sessions import MongoSession
@@ -99,7 +100,7 @@ LANGUAGE_CODE = 'en-us'
 #>>> s = Site()
 #>>> s.save()
 #python ./manage.py tellsiteid
-SITE_ID=u'54773d741fd21c6231a08a65'
+SITE_ID=u'54815f50ffd7a92c1828f9e5'
 #SITE_ID=1
 
 # If you set this to False, Django will make some optimizations so as not

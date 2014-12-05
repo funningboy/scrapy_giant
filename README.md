@@ -3,42 +3,92 @@
 https://www.quantopian.com/help#api-doco
 
 Mac OS setup flow
-0.1 install basic tools and env
+0.1 #install anaconda python
+https://store.continuum.io/cshop/anaconda/
+
+0.2 install external conda libs
 ```
-pip install virtualenv
+conda install opencv
+```
+0.3 install external python pkgs
+```
 pip install -r requirements.txt
 ```
 
-0.2 normal run
-0.3 debug run
-nose
-Redis vs RabbitMQ
-http://blog.langoor.mobi/django-celery-redis-vs-rabbitmq-message-broker/
-sudo rabbitmq-server -detached
-sudo rabbitmqctl stop
-sudo mongod --dbpath ./tmp
-export DJANGO_SETTINGS_MODULE=main.settings
-export DJANGO_PROJECT_DIR=`pwd`
-python manage.py celery worker --loglevel=info
-run as celery task
+ubuntu setup flow
+0.1 #install anaconda python
+https://store.continuum.io/cshop/anaconda/
+
+0.2 install external conda libs
+```
+conda install scrapy
+conda install opencv
+conda install mongodb
+conda install -c Quantopian zipline
+```
+0.3 install drive libs
+```
+apt-get install rabbitmq-server
+```
+0.3.1 install 3path libs
+```
+wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
+untar and cd
+./configure --prefix=/usr
+make 
+make install
+```
+0.4 install python wrappers
+```
+easy_install TA-Lib
+pip install Pillow
+pip install mongoengine
+pip install zipline
+pip install celery
+pip install celery-with-mongodb
+pip install supervisor
+pip install mongodb-cache
+pip install pytesseract  
+#pip install mongengineform
+pip install django-rest-framework-mongoengine
+# for django mongodb engine used
+# https://django-mongodb-engine.readthedocs.org/en/latest/topics/setup.html
+pip install git+https://github.com/django-nonrel/django@nonrel-1.5
+pip install git+https://github.com/django-nonrel/djangotoolbox
+pip install git+https://github.com/django-nonrel/mongodb-engine
+pip install django_nose
+pip install django_compressor
+```
+
+0.5 normal run
 broker=rabbitmq
 backend=mongodb
 ```
-mongod --dbpath data &
-celery -A bin.tasks worker -l info
-celery -A algorithm.tasks worker -l info
+rabbitmqctl cluster MASTER SLAVE
+rabbitmqctl start_app
+# rabbitmq-server -detached
+# rabbitmqctl stop
+#sudo netstat -tulpn | grep :27017
+# kill -9 <pid> if proc has running the same port
+mongod --dbpath ./tmp --journal
+export DJANGO_SETTINGS_MODULE=main.settings 
+export DJANGO_PROJECT_DIR=`pwd`
+export C_FORCE_ROOT=true
+celery -A main worker -l info
 python manage.py syncdb
-python manage.py test handler
+python manage.py shell
 
-python
->>> from bin.tasks import *
->>> from datetime import datetime, timedelta
->>> from handler.iddb_handler import TwseIdDBHandler
->>> args = ('twsehistrader', 'INFO', 'test.log', True, True)
->>> run_scrapy_service(*args)
->>> stockids = TwseIdDBHandler().stock.get_ids(debug=True)
->>> traderids = []
->>> agrs = ('twse', 'superman', datetime.utcnow() - timedelta(days=60), datetime.utcnow(), stockids, traderids, True)
->>> run_algorithm_service(*args)
->>>
->>> run_report_service()
+```
+
+0.6 unittest run
+```
+python manage.py test bin
+python manage.py test handler
+```
+
+ref:
+Redis vs RabbitMQ
+http://blog.langoor.mobi/django-celery-redis-vs-rabbitmq-message-broker/
+run as celery task
+```
+
