@@ -23,7 +23,7 @@ class TestRunScrapyService(NoSQLTestCase):
             f = open(fpath, 'r')
             c = f.read()
             f.close()
-            m = re.findall('Traceback ', c)
+            m = re.findall('Traceback|fail ', c)
             return False if m else True
         except:
             return False

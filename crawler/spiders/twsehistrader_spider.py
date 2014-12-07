@@ -52,20 +52,46 @@ class TwseHisTraderSpider(CrawlSpider):
             requests.append(request)
         return requests
 
+    def run_pytesser_perdition(url):
+        response = urllib2.open(url)
+        arr = np.asarray(bytearray(response.read()), dtype=np.uint8)
+        img = cv2.imdecode(arr, -1) # 'load it as it is'
+        # gray
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        # smooth noise
+        blur = cv2.GaussianBlur(gray,(5,5),0)
+        # threshold filter
+        ret,th1 = cv2.threshold(blur,223,255,cv2.THRESH_BINARY)
+        return pytesser.iplimage_to_string(cv.fromarray(th1))
+
+    def try_predict_captcha(self, url, loop=5):
+        record = []
+        for i in xrange(loop):
+            try:
+                text = run_pytesser_perdition(url).strip()
+                if len(text) == 5:
+                    record.append(text)
+                time.sleep(0.5)
+            except Exception:
+                time.sleep(2)
+                pass
+        return Counter(record).most_common(1)[0][0] if record else ''
+
     def parse(self, response):
         """ override level 0 """
         item = response.meta['item']
         sel = Selector(response)
         # get asp cookie contents for sumbit form
+        url = sel.xpath('.//td/div/div/img/@src').extract()[0]
         contents = {
             '__EVENTTARGET': '',
             '__EVENTARGUMENT': '',
+            '__LASTFOCUS': '',
             '__VIEWSTATE': sel.xpath('.//input[@id="__VIEWSTATE"]/@value').extract()[0],
             '__EVENTVALIDATION': sel.xpath('.//input[@id="__EVENTVALIDATION"]/@value').extract()[0],
-            'HiddenField_spDate': '',
-            'HiddenField_page': 'PAGE_BS',
-            'txtTASKNO': item['stockid'],
-            'hidTASKNO': '',
+            'RadioButton_Normal': 'RadioButton_Normal',
+            'TextBox_Stkno': item['stockid'],
+            'CaptchaControl1': self.try_predict_captcha(url),
             'btnOK': u'查詢'
         }
         # register next response handler after sumbit form
@@ -82,25 +108,25 @@ class TwseHisTraderSpider(CrawlSpider):
         item = response.meta['item']
         sel = Selector(response)
         try:
-            pages = sel.xpath('.//span[@id="sp_ListCount"]/text()').extract()[0]
+            # register next response handler after csv was found
+            find = self.xpath('.//a[@id="HyperLink_DownloadCSV"]/@href')
+            request = Request(
+                URL,
+                callback=self.parse_after_csv_find,
+                dont_filter=True)
+            request.meta['item'] = item
+            yield request
         except:
-            log.msg("fetch %s fail" % (item['stockid']), log.INFO)
+            if
+                request = Request(
+                    URL,
+                    callback=self.parser
+                    dont_filter=True)
+            else:
+                log.msg("fetch %s fail" % (item['stockid']), log.INFO)
             return
-        URL = (
-            'http://bsr.twse.com.tw/bshtm/bsContent.aspx?' +
-            'StartNumber=%(stock)s&FocusIndex=All_%(pages)s&flg_Print=1') % {
-                'stock': item['stockid'],
-                'pages': pages
-        }
-        # register next response handler after page was found
-        request = Request(
-            URL,
-            callback=self.parse_after_page_find,
-            dont_filter=True)
-        request.meta['item'] = item
-        yield request
 
-    def parse_after_page_find(self, response):
+    def parse_after_csv_find(self, response):
         """ level 2
         data struct
         {
@@ -124,34 +150,4 @@ class TwseHisTraderSpider(CrawlSpider):
         log.msg("URL: %s" % (response.url), level=log.DEBUG)
         item = response.meta['item']
         sel = Selector(response)
-         # populate content
-        item['traderlist'] = []
-        item['url'] = response.url
-        item['date'] = sel.xpath('.//td[@id="receive_date"]/text()').extract()[0].strip(string.whitespace).replace(',', '').replace('/', '-')
-        elem = sel.xpath('.//td[@id="stock_id"]/text()').extract()[0].strip(string.whitespace).replace(',', '')
-        m = re.search(r'([0-9a-zA-Z]+)(\W+)', elem.replace(u' ', u''))
-        item['stockid'] = m.group(1) if m and m.group(1) else None
-        item['stocknm'] = m.group(2) if m and m.group(2) else ""
-        item['open'] = sel.xpath('.//td[@id="open_price"]/text()').extract()[0].strip(string.whitespace).replace(',', '')
-        item['high'] = sel.xpath('.//td[@id="high_price"]/text()').extract()[0].strip(string.whitespace).replace(',', '')
-        item['low'] = sel.xpath('.//td[@id="low_price"]/text()').extract()[0].strip(string.whitespace).replace(',', '')
-        item['close'] = sel.xpath('.//td[@id="last_price"]/text()').extract()[0].strip(string.whitespace).replace(',', '')
-        item['volume'] = sel.xpath('.//td[@id="trade_qty"]/text()').extract()[0].strip(string.whitespace).replace(',', '')
-        # populate traderlist content
-        elems = sel.xpath('.//tr[re:test(@class, "column_value_price_[0-9]{1,2}")]')
-        for elem in elems:
-            sub = {}
-            nwelem = [it.strip(string.whitespace).replace(',', '') for it in elem.xpath('.//td/text()').extract()]
-            m = re.search(r'([0-9a-zA-Z]+)(\W+)?', nwelem[1].replace(u' ', u'').replace(u'\u3000', u''))
-            sub.update({
-                'index': nwelem[0] if nwelem[0] else -1,
-                'traderid': m.group(1) if m and m.group(1) else None,
-                'tradernm': m.group(2) if m and m.group(2) else "",
-                'price': nwelem[2] if nwelem[2] else 0,
-                'buyvolume': nwelem[3] if nwelem[3] else 0,
-                'sellvolume': nwelem[4] if nwelem[4] else 0
-            })
-            item['traderlist'].append(sub)
-        log.msg("fetch %s pass" % (item['stockid']), log.INFO)
-        log.msg("item[0] %s ..." % (item['traderlist'][0]), level=log.DEBUG)
         yield item
