@@ -19,6 +19,7 @@ class TwseHisTraderItem(scrapy.Item):
     close = scrapy.Field()
     volume = scrapy.Field()
     traderlist = scrapy.Field()
+    maxloop = scrap.Field()
 #    traderlist: [{
 #       index = scrapy.Field()
 #       traderid = scrapy.Field()

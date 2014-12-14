@@ -12,6 +12,7 @@ from scrapy import log
 from crawler.items import TwseHisTraderItem
 
 from handler.iddb_handler import TwseIdDBHandler
+from crawler.spiders.twsehistrader_captcha import TwseHisTraderCaptcha0
 
 __all__ = ['TwseHisTraderSpider']
 
@@ -48,33 +49,24 @@ class TwseHisTraderSpider(CrawlSpider):
                 dont_filter=True)
             item = TwseHisTraderItem()
             item['stockid'] = stockid
+            item['maxloop'] = 20
             request.meta['item'] = item
             requests.append(request)
         return requests
 
-    def run_pytesser_perdition(url):
-        response = urllib2.open(url)
-        arr = np.asarray(bytearray(response.read()), dtype=np.uint8)
-        img = cv2.imdecode(arr, -1) # 'load it as it is'
-        # gray
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        # smooth noise
-        blur = cv2.GaussianBlur(gray,(5,5),0)
-        # threshold filter
-        ret,th1 = cv2.threshold(blur,223,255,cv2.THRESH_BINARY)
-        return pytesser.iplimage_to_string(cv.fromarray(th1))
-
-    def try_predict_captcha(self, url, loop=5):
+    def predict_captcha(self, url, loop=3):
         record = []
-        for i in xrange(loop):
-            try:
-                text = run_pytesser_perdition(url).strip()
+        try:
+            for i in xrange(loop):
+                response = urllib2.open(url)
+                arr = np.asarray(bytearray(response.read()), dtype=np.uint8)
+                img = cv2.imdecode(arr, -1)
+                text = TwseHisTraderCaptcha0().run(img)
                 if len(text) == 5:
                     record.append(text)
-                time.sleep(0.5)
-            except Exception:
-                time.sleep(2)
-                pass
+                time.sleep(1)
+        except Exception:
+            pass
         return Counter(record).most_common(1)[0][0] if record else ''
 
     def parse(self, response):
@@ -91,7 +83,7 @@ class TwseHisTraderSpider(CrawlSpider):
             '__EVENTVALIDATION': sel.xpath('.//input[@id="__EVENTVALIDATION"]/@value').extract()[0],
             'RadioButton_Normal': 'RadioButton_Normal',
             'TextBox_Stkno': item['stockid'],
-            'CaptchaControl1': self.try_predict_captcha(url),
+            'CaptchaControl1': self.predict_captcha(url),
             'btnOK': u'查詢'
         }
         # register next response handler after sumbit form
@@ -108,6 +100,7 @@ class TwseHisTraderSpider(CrawlSpider):
         item = response.meta['item']
         sel = Selector(response)
         try:
+            URL = ''
             # register next response handler after csv was found
             find = self.xpath('.//a[@id="HyperLink_DownloadCSV"]/@href')
             request = Request(
@@ -117,11 +110,15 @@ class TwseHisTraderSpider(CrawlSpider):
             request.meta['item'] = item
             yield request
         except:
-            if
+            URL = ''
+            if item['maxloop'] > 0:
+                item['maxloop']-=1
                 request = Request(
                     URL,
-                    callback=self.parser
+                    callback=self.parser,
                     dont_filter=True)
+                request.meta['item'] = item
+                yield request
             else:
                 log.msg("fetch %s fail" % (item['stockid']), log.INFO)
             return

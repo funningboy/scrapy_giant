@@ -167,7 +167,7 @@ class TwseStockHisDBHandler(object):
                 coll.stockid = it.key['stockid']
                 coll.stocknm = self._iddbhandler.stock.get_name(it.key['stockid'])
                 coll.save()
-        return self._mapcoll.objects
+        return self._mapcoll.objects.all()
 
     def to_pandas(self, cursor):
         item = OrderedDict()
@@ -190,9 +190,6 @@ class TwseStockHisDBHandler(object):
                     id: pd.DataFrame(data, index=index).fillna(0)
                  })
         return pd.Panel(item)
-
-    def to_json(self, cursor):
-        return cursor.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
 
 
 class TwseTraderHisDBHandler(object):
@@ -349,7 +346,7 @@ class TwseTraderHisDBHandler(object):
                 coll.alias = "top%d" % (i)
                 coll.base = base
                 coll.save()
-        return self._mapcoll.objects
+        return self._mapcoll.objects.all()
 
     def to_pandas(self, cursor):
         bases = list(set([it.base for it in cursor]))
@@ -372,9 +369,6 @@ class TwseTraderHisDBHandler(object):
                     id: pd.DataFrame(data, index=index).fillna(0)
                  })
         return pd.Panel(item)
-
-    def to_json(self, cursor):
-        return cursor.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
 
     def map_alias(self, ids=[], base='stock', aliases=['top0'], cursor=None):
         """ get alias map

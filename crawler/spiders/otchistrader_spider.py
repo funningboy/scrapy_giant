@@ -20,7 +20,7 @@ __all__ = ['OtcHisTraderSpider']
 
 class OtcHisTraderSpider(CrawlSpider):
     name = 'otchistrader'
-    allowed_domains = ['http://bsr.twse.com.tw']
+    allowed_domains = ['http://www.gretai.org.tw']
     _headers = [
         (u'序號', u'index'),
         (u'券商', u'traderid'),
