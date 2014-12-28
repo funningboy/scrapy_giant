@@ -18,18 +18,39 @@ class TwseHisTraderCaptcha0(object):
         self._debug = debug
 
     def run(self, img):
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        #gray = cv2.equalizeHist(gray)
-        #h, w = gray.shape
-        # smooth backgroun noise
-        blur = cv2.GaussianBlur(gray, (5,5), 0)
-        # threshold filter
-        ret,th1 = cv2.threshold(blur, 220, 255, cv2.THRESH_BINARY)
-        if self._debug:
-            cv2.imshow('rule0', th1)
+
+        def normalize(img):
+            img = cv2.cvtColor(img, cv2.CV_32F)
+            gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+            gray = cv2.equalizeHist(gray)
+            ret,th0 = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
+            return th0
+
+        def resize(img, resize=2):
+            h,w = img.shape
+            img = cv2.resize(img, (w*resize,h*resize), interpolation=cv2.INTER_CUBIC)
+            return img
+
+        def feature(img):
+            # smooth backgroun noise
+            blur = cv2.GaussianBlur(gray, (5,5), 0)
+            # threshold filter
+            ret,th1 = cv2.threshold(blur, 220, 255, cv2.THRESH_BINARY)
+            # colsing/opening
+            open = cv2.morphologyEx(th1, cv2.MORPH_OPEN, kernel, iterations=5)
+            close = cv2.morphologyEx(open, cv2.MORPH_CLOSE, kernel, iterations=5)
+            mask = cv2.bitwise_and(th1, th1, mask=close)
+            return mask
+
+        def debug(img):
+            cv2.imshow('test', img)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
-        text = pytesser.iplimage_to_string(cv.fromarray(th1), 'eng').strip()
+
+        img = feature(resize(normalize(img)))
+        if self._debug:
+            debug(img)
+        text = pytesser.iplimage_to_string(cv.fromarray(img), 'eng').strip()
         return text if text else ''
 
 
@@ -38,41 +59,46 @@ class TwseHisTraderCaptcha1(object):
         self._debug = debug
 
     def run(self, img):
-        text = ''
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        # resize as zoom in
-        h, w = gray.shape
-        #gray = cv2.pyrUp(gray)
-        gray = cv2.resize(gray, (w*2, h*2), interpolation=cv2.INTER_CUBIC)
-        # smooth background noise
-        #gray = cv2.equalizeHist(gray)
-        blur = cv2.GaussianBlur(gray, (7,7), 0)
-        # threshold filter
-        ret,th1 = cv2.threshold(blur, 240, 255, cv2.THRESH_BINARY)
-        th2 = th1.copy()
-        # find best match captcha area
-        contours,hierarchy = cv2.findContours(th1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        area = lambda (x, y, w, h): (w*h, x, y, w, h)
-        best = sorted([area(cv2.boundingRect(cnt)) for cnt in contours], reverse=True)
-        kernel = np.ones((1,1), np.uint8)
-        # iter sub captcha
-        for it in sorted(best[:5], key=lambda x: x[1]):
-            th3 = th2[it[2]:it[2]+it[4], it[1]:it[1]+it[3]]
-            # closing/opening
-            open = cv2.morphologyEx(th3, cv2.MORPH_OPEN, kernel, iterations=5)
-            close = cv2.morphologyEx(open, cv2.MORPH_CLOSE, kernel, iterations=5)
-            mask = cv2.bitwise_and(th3, th3, mask=close)
-            # regular size
 
-            text += pytesser.iplimage_to_string(cv.fromarray(mask), 'eng', 10).strip()
-        if self._debug:
+        def normalize(img):
+            img = cv2.cvtColor(img, cv2.CV_32F)
+            gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+            gray = cv2.equalizeHist(gray)
+            ret,th0 = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
+            return th0
+
+        def resize(img, resize=2):
+            h,w = img.shape
+            img = cv2.resize(img, (w*resize,h*resize), interpolation=cv2.INTER_CUBIC)
+            return img
+
+        def feature(img):
+            h, w = img.shape
+            # find best match captcha area
+            contours,hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            area = lambda (x, y, w, h): (w*h, x, y, w, h)
+            best = sorted([area(cv2.boundingRect(cnt)) for cnt in contours], reverse=True)
+            kernel = np.ones((1,1), np.uint8)
+            # iter sub captcha
             for it in sorted(best[:5], key=lambda x: x[1]):
-                cv2.rectangle(th2, (it[1],it[2]), (it[1]+it[3],it[2]+it[4]), (255,255,255), 2)
-            cv2.imshow('rule1', th2)
+                ft = img[it[2]:it[2]+it[4], it[1]:it[1]+it[3]]
+                # closing/opening
+                open = cv2.morphologyEx(ft, cv2.MORPH_OPEN, kernel, iterations=5)
+                close = cv2.morphologyEx(open, cv2.MORPH_CLOSE, kernel, iterations=5)
+                mask = cv2.bitwise_and(ft, ft, mask=close)
+                yield mask
+
+        def debug(img):
+            cv2.imshow('test', img)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
-        return text if text else ''
 
+        text = ''
+        for it in feature(resize(normalize(img))):
+            text += pytesser.iplimage_to_string(cv.fromarray(it), 'eng', 10).strip()
+            if self._debug:
+                debug(img)
+        return text if text else ''
 
 def test_captcha():
     exp = ['HKYAX', 'YK2F1', 'EVAH8']

@@ -92,33 +92,31 @@ class TestTwseHisTraderCaptcha(object):
                 opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self._cj))
                 response = opener.open(self._domain + '/bshtm/' + find[0])
                 return True
-            return False
         except Exception:
             print 'error download csv'
             pass
         return False
 
-    def fetch_trader_info(self, rule, stockid, max_loop=3):
-        loop = 0
-        while loop < max_loop:
+    def fetch_trader_info(self, rule, stockid, loop=0, max_loop=100):
+        if max_loop > 0:
             if self._download_csv(rule, stockid):
                 return loop
             else:
-                loop += 1
                 time.sleep(2)
+                return self.fetch_trader_info(rule, stockid, loop+1, max_loop-1)
 
 def test_captcha():
     cap = TestTwseHisTraderCaptcha()
     record = defaultdict(list)
-    for it in xrange(10):
-        tests = [
-            TwseHisTraderCaptcha0(rand=True),
-#            TwseHisTraderCaptcha1(rand=True)
-        ]
-        for test in tests:
-            runtime = cap.fetch_trader_info(test.run, '2317')
-            if runtime:
-                record[runtime].append((test.__class__.__name__, test.cfg))
+    tests = [
+        TwseHisTraderCaptcha0(),
+        TwseHisTraderCaptcha1()
+    ]
+    for test in tests:
+        print test.__class__.__name__
+        runtime = cap.fetch_trader_info(test.run, '2317')
+        if runtime:
+            record[runtime].append((test.__class__.__name__))
     print json.dumps(record, sort_keys=True, indent=4, separators=(',', ': '))
 
 def main():

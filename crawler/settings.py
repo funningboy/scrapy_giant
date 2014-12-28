@@ -17,7 +17,7 @@ BOT_NAME = 'crawler'
 SPIDER_MODULES = ['crawler.spiders']
 NEWSPIDER_MODULE = 'crawler.spiders'
 
-DOWNLOAD_DELAY = 0.25    # 250 ms of delay
+DOWNLOAD_DELAY = 1    # 1s of delay #0.25
 
 ## some sane limits by default (override if needed)
 #CLOSESPIDER_PAGECOUNT = 1000
@@ -33,7 +33,7 @@ RETRY_ENABLED = False
 COOKIES_ENABLED = False
 
 LOG_ENABLED = True
-LOG_LEVEL = 'INFO'
+LOG_LEVEL = 'DEBUG'
 
 # our ginat internal debug set
 GIANT_DEBUG = False

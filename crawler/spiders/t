@@ -1,0 +1,98 @@
+# encoding: utf8
+import Image
+import pygame
+import numpy as np
+import sys
+import os
+import cv2.cv as cv
+import cv2
+import shutil
+
+def normalize(im):    
+    im=cv2.cvtColor(im, cv2.CV_32F)
+    im=cv2.cvtColor(im, cv.CV_RGB2GRAY)
+    im=cv2.equalizeHist(im)
+    return im
+
+# load bitmap of a char from TTF
+pygame.init()
+default_font1= pygame.font.Font("font/mingliu.ttc", 12)
+cache={}
+internal_digit={}
+def get_char(txt, fname=None, size=None):
+    if txt.isdigit() and fname==None and size==None:
+        return internal_digit[txt]
+    if fname==None:
+        if txt in cache:
+            return cache[txt]
+        font= default_font1
+    else:
+        if size == None:
+            size=12
+        font = pygame.font.Font(fname, size)    
+    t = font.render(txt, False, (255, 255, 255), (0,0,0))
+    wh=(t.get_width(), t.get_height())
+    t_str=pygame.image.tostring(t, "RGBA")
+    rtn=normalize(np.array(Image.fromstring("RGBA", wh, t_str)))
+    if fname==None:
+        cache[txt]=rtn
+    return rtn
+
+# find the bitmap of a charater in an image
+def find_match(img, txt, fname=None, size=None):
+    template=get_char(txt, fname, size)
+    result=cv2.matchTemplate(img, template, cv2.TM_SQDIFF)
+    r=result.min()    
+    c=np.unravel_index(result.argmin(),result.shape)
+    pt2=(c[1]+template.shape[1], c[0]+template.shape[0])
+    return r, (c[1],c[0]), pt2
+
+# built internal digit image bitmaps
+for i,nums in enumerate([u"41760", u"25",  u"9", u"8", u"3"]):
+    im0=normalize(cv2.imread("num%d.png"%(i+1)))
+    for c in nums:
+        r, pt1, pt2=find_match(im0, c, "font/ARIALN.TTF", 13 if i<3 else 12)
+        internal_digit[c]=im0[pt1[1]:pt2[1], pt1[0]:pt2[0]]
+
+# load char table
+uchars=u"0123456789~一強沂"+open("freq.txt").read().decode("big5")[3:]
+uchars={x:0 for x in uchars if x not in u"\n "}
+
+# decode an image
+def decode_img(img):
+    h,w=img.shape
+    x=0
+    rtn=u""
+    uitems=list(reversed(sorted([(v,k) for k,v in uchars.items()])))
+    while x < w-8:        
+        part_img=img[0:h, x:x+14]
+        if part_img.max()<0.1:            
+            x+=14
+            continue
+        best_c=None        
+        for v,c in uitems:
+            r, pt1, pt2=find_match(part_img, c)            
+            if  pt1[0]<5 and  4> r:
+                rtn+=c
+                uchars[c]+=1 
+                x+=(pt2[0]-1)
+                best_c=c
+                break
+        if not best_c:
+            rtn+="???"            
+            break 
+    return rtn
+
+# main
+cv2.namedWindow("win")
+for f in os.listdir("address"):    
+    im0=normalize(cv2.imread("address/"+f))
+    im1=cv2.cvtColor(im0, cv.CV_GRAY2RGB)
+    cv2.imshow("win", im1)
+    if cv2.waitKey(10)==27:
+        break
+    addr=decode_img(im0)    
+    print f, addr
+    if len(addr)<3 or addr[-3:]=="???":
+        shutil.copy("address/"+f, "error/"+f)
+cv2.destroyAllWindows()

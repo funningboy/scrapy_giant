@@ -10,6 +10,7 @@ from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy import Request, FormRequest
 from scrapy import log
 from crawler.items import TwseHisTraderItem
+import urllib2
 
 from handler.iddb_handler import TwseIdDBHandler
 from crawler.spiders.twsehistrader_captcha import TwseHisTraderCaptcha0
@@ -49,24 +50,24 @@ class TwseHisTraderSpider(CrawlSpider):
                 dont_filter=True)
             item = TwseHisTraderItem()
             item['stockid'] = stockid
-            item['maxloop'] = 20
             request.meta['item'] = item
             requests.append(request)
         return requests
 
     def predict_captcha(self, url, loop=3):
         record = []
-        try:
-            for i in xrange(loop):
-                response = urllib2.open(url)
-                arr = np.asarray(bytearray(response.read()), dtype=np.uint8)
-                img = cv2.imdecode(arr, -1)
-                text = TwseHisTraderCaptcha0().run(img)
-                if len(text) == 5:
-                    record.append(text)
-                time.sleep(1)
-        except Exception:
-            pass
+        #try:
+        for i in xrange(loop):
+            response = urllib2.open(url)
+            arr = np.asarray(bytearray(response.read()), dtype=np.uint8)
+            img = cv2.imdecode(arr, -1)
+            print img
+            text = TwseHisTraderCaptcha0().run(img)
+            if len(text) == 5:
+                record.append(text)
+            print text
+        #except Exception:
+        #    pass
         return Counter(record).most_common(1)[0][0] if record else ''
 
     def parse(self, response):
@@ -75,6 +76,7 @@ class TwseHisTraderSpider(CrawlSpider):
         sel = Selector(response)
         # get asp cookie contents for sumbit form
         url = sel.xpath('.//td/div/div/img/@src').extract()[0]
+        print url
         contents = {
             '__EVENTTARGET': '',
             '__EVENTARGUMENT': '',
@@ -100,7 +102,7 @@ class TwseHisTraderSpider(CrawlSpider):
         item = response.meta['item']
         sel = Selector(response)
         try:
-            URL = ''
+            URL = self._domain + '/bshtm/bsContent.aspx'
             # register next response handler after csv was found
             find = self.xpath('.//a[@id="HyperLink_DownloadCSV"]/@href')
             request = Request(
@@ -110,18 +112,13 @@ class TwseHisTraderSpider(CrawlSpider):
             request.meta['item'] = item
             yield request
         except:
-            URL = ''
-            if item['maxloop'] > 0:
-                item['maxloop']-=1
-                request = Request(
-                    URL,
-                    callback=self.parser,
-                    dont_filter=True)
-                request.meta['item'] = item
-                yield request
-            else:
-                log.msg("fetch %s fail" % (item['stockid']), log.INFO)
-            return
+            URL = 'http://bsr.twse.com.tw/bshtm/bsMenu.aspx'
+            request = Request(
+                URL,
+                callback=self.parse,
+                dont_filter=True)
+            request.meta['item'] = item
+            yield request
 
     def parse_after_csv_find(self, response):
         """ level 2
@@ -147,4 +144,14 @@ class TwseHisTraderSpider(CrawlSpider):
         log.msg("URL: %s" % (response.url), level=log.DEBUG)
         item = response.meta['item']
         sel = Selector(response)
+        try:
+            frame = pd.read_csv(
+                StringIO(response.body), delimiter=',',
+                na_values=['--'], header=None, skiprows=[0, 1, 2], encoding=None, dtype=np.object)
+            if frame.empty:
+                log.msg("fetch %s empty" %(item['stockid']), log.INFO)
+                return
+        except:
+            log.msg("fetch %s fail" %(item['stockid']), log.INFO)
+            return
         yield item
