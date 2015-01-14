@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import re
 import pandas as pd
 import numpy as np
 from StringIO import StringIO
@@ -60,13 +59,15 @@ class OtcHisStockSpider(CrawlSpider):
                         'mon': timestamp.month,
                         'stock': stockid
                 }
+                item = OtcHisStockItem()
+                item.update({'stockid': stockid})
                 request = Request(
                     URL,
+                    meta={
+                        'item': item
+                    },
                     callback=self.parse,
                     dont_filter=True)
-                item = OtcHisStockItem()
-                item['stockid'] = stockid
-                request.meta['item'] = item
                 requests.append(request)
         return requests
 

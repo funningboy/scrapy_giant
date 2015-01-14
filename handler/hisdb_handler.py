@@ -36,14 +36,6 @@ class TwseHisDBHandler(object):
     def trader(self):
         return self._trader
 
-    def transform_all_data(self, starttime, endtime, stockids=[], traderids=[], order='totalvolume', limit=10):
-        """ transfrom stock/trader data as pandas panel """
-        stockdt = self._stock.query(starttime, endtime, stockids)
-        stockdt = self._stock.to_pandas(stockdt)
-        traderdt = self._trader.query(starttime, endtime, stockids, traderids, 'stock', order, limit)
-        traderdt = self._trader.to_pandas(traderdt)
-        return pd.concat([stockdt, traderdt], axis=2).fillna(0)
-
 class OtcHisDBHandler(TwseHisDBHandler):
 
     def __init__(self):
@@ -68,6 +60,7 @@ class TwseStockHisDBHandler(object):
     @property
     def ids(self):
         return self._ids
+
     @ids.setter
     def ids(self, ids):
         self._ids = ids

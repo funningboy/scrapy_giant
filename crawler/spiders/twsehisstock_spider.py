@@ -61,13 +61,15 @@ class TwseHisStockSpider(CrawlSpider):
                         'mon': timestamp.month,
                         'stock': stockid
                 }
+                item = TwseHisStockItem()
+                item.update({'stockid': stockid})
                 request = Request(
                     URL,
+                    meta= {
+                        'item': item
+                    },
                     callback=self.parse,
                     dont_filter=True)
-                item = TwseHisStockItem()
-                item['stockid'] = stockid
-                request.meta['item'] = item
                 requests.append(request)
         return requests
 

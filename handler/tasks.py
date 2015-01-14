@@ -18,7 +18,7 @@ hisdb_tasks = {
 
 # as pipeline to alg service
 @shared_task
-def run_hisstock_query(hisdb, starttime, endtime, stockids=[], order='totalvolume', limit=10):
+def query_hisstock(hisdb, starttime, endtime, stockids=[], order='totalvolume', limit=10):
     dbhandler = hisdb_tasks[hisdb]()
     dbhandler.stock.ids = stockids
     cursor = dbhandler.stock.query(
@@ -27,11 +27,16 @@ def run_hisstock_query(hisdb, starttime, endtime, stockids=[], order='totalvolum
         stockids=stockids,
         order=order,
         limit=limit)
+    return cursor
+
+@shared_task
+def trans_hisstock(hisdb, cursor):
+    dbhandler = hisdb_tasks[hisdb]()
     return dbhandler.stock.to_pandas(cursor)
 
 # as pipeline to alg service
 @shared_task
-def run_histoptrader_query(hisdb, starttime, endtime, stockids=[],
+def query_histoptrader(hisdb, starttime, endtime, stockids=[],
                            traderids=[], base='stock', order='totalvolume', limit=10):
     dbhandler = hisdb_tasks[hisdb]()
     dbhandler.stock.ids = stockids
@@ -44,14 +49,10 @@ def run_histoptrader_query(hisdb, starttime, endtime, stockids=[],
         base=base,
         order=order,
         limit=limit)
+    return cursor
+
+@shared_task
+def trans_histoptrader(hisdb, cursor):
+    dbhandler = hisdb_tasks[hisdb]()
     return dbhandler.trader.to_pandas(cursor)
 
-# as pipeline to alg service
-@shared_task
-def run_transform_all_data(hisdb, starttime, endtime, stockids=[],
-                           traderids=[], base='stock', order='totalvolume', limit=10):
-    dbhandler = hisdb_tasks[hisdb]()
-    dbhandler.stock.ids = stockids
-    dbhandler.trader.ids = traderids
-    panel = dbhandler.transform_all_data(starttime, endtime, stockids, traderids, limit)
-    return panel

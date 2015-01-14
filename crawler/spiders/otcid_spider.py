@@ -27,7 +27,6 @@ class OtcIDSpider(CrawlSpider):
         self.start_urls = [URL]
 
     def parse(self, response):
-        """ override level 0 """
         log.msg("URL: %s" % (response.url), level=log.DEBUG)
         sel = Selector(response)
         item = OtcIdItem()

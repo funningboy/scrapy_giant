@@ -32,20 +32,8 @@ def hisstock_detail(request, hisdb, stockid, starttime, endtime,
     idhandler = iddb_tasks[hisdb]()
     start_yy, start_mm, start_dd = int(starttime[0:4]), int(starttime[4:6]), int(starttime[6:8])
     end_yy, end_mm, end_dd = int(endtime[0:4]), int(endtime[4:6]), int(endtime[6:8])
-    # 1st
-    stockitem = dbhandler.stock.query(
-        starttime=datetime(start_yy, start_mm, start_dd),
-        endtime=datetime(end_yy, end_mm, end_dd),
-        stockids=[stockid])
-    # 2nd
-    traderitem = dbhandler.trader.query(
-        starttime=datetime(start_yy, start_mm, start_dd),
-        endtime=datetime(end_yy, end_mm, end_dd),
-        stockids=[stockid],
-        traderids=traderids,
-        base='stock',
-        order=order,
-        limit=limit)
+    stockitem = query_hisstock()
+    traderitem = query_histoptrader()
     return render(request,'handler/stockdetail.html', {'stockitem': stockitem, 'traderitem': traderitem})
 
 def histrader_list(request):

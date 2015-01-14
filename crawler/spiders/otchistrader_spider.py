@@ -5,14 +5,16 @@ import pandas as pd
 import numpy as np
 from StringIO import StringIO
 import string
+import cv2
 
-import scrapy
 from scrapy.selector import Selector
 from scrapy.spider import BaseSpider
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy import Request, FormRequest
+from scrapy.http.cookies import CookieJar
 from scrapy import log
 from crawler.items import OtcHisTraderItem
+from crawler.spiders.otchistrader_captcha import OtcHisTraderCaptcha1
 
 from handler.iddb_handler import OtcIdDBHandler
 
@@ -28,6 +30,10 @@ class OtcHisTraderSpider(CrawlSpider):
         (u'買進股數', u'buyvolume'),
         (u'賣出股數', u'sellvolume')
     ]
+    content = {
+        'stk_code': '',
+        'auth_num': ''
+    }
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -49,43 +55,105 @@ class OtcHisTraderSpider(CrawlSpider):
                 'broker_trading/brokerBS.php?l=zh-tw&stk_code=%(stock)s') % {
                     'stock': stockid
             }
-            request = Request(
-                URL,
-                callback=self.parse,
-                dont_filter=True)
             item = OtcHisTraderItem()
             item['stockid'] = stockid
-            request.meta['item'] = item
+            self.content.update({'stk_code': stockid})
+            request = Request(
+                URL,
+                meta={
+                    'item': item,
+                    'content': self.content
+                },
+                callback=self.parse,
+                dont_filter=True)
             requests.append(request)
         return requests
 
     def parse(self, response):
-        """ override level 0 """
-        item = response.meta['item']
+        # find captcha path
         sel = Selector(response)
-        try:
-            date = sel.xpath(".//input[@id='stk_date']/@value").extract()[0]
-        except:
-            log.msg("fetch %s fail" %(item['stockid']), log.INFO)
-            return
-        URL = (
-            'http://www.gretai.org.tw/web/stock/aftertrading/' +
-            'broker_trading/download_ALLCSV.php?' +
-            'curstk=%(stock)s&stk_date=%(date)s') % {
-            'stock': item['stockid'],
-            'date': date
-        }
-        yy, mm, dd = date[:-4], date[-4:-2], date[-2:]
-        item['date'] = "%s-%s-%s" % (int(yy) + 1911, mm, dd)
+        URL = 'http://www.gretai.org.tw/web/inc/authnum.php'
         request = Request(
             URL,
-            callback=self.parse_after_page_find,
+            meta={
+                'item': response.meta['item'],
+                'content': response.meta['content']
+            },
+            callback=self.parse_after_captcha_find,
             dont_filter=True)
-        request.meta['item'] = item
         yield request
 
+    def parse_after_captcha_find(self, response):
+        # use captcha alg
+        arr = np.asarray(bytearray(response.body), dtype=np.uint8)
+        img = cv2.imdecode(arr, -1)
+        text = OtcHisTraderCaptcha1(False).run(img)
+        # fake for debug only
+        #text = raw_input('test:')
+        #print text
+        response.meta['content'].update({
+            'auth_num': text
+        })
+        # register next response handler after sumbit form
+        URL = 'http://bsr.twse.com.tw/bshtm/bsMenu.aspx'
+        request = FormRequest(
+            URL,
+            meta={
+                'item': response.meta['item'],
+                'content': response.meta['content']
+            },
+            formdata=response.meta['content'],
+            callback=self.parse_after_form_submit,
+            dont_filter=True)
+        yield request
+
+    def parse_after_form_submit(self, response):
+        sel = Selector(response)
+        find = sel.xpath('/html/body/center/div[3]/div[2]/div[4]/div[2]/div[2]/button[1]/text()')
+        if find:
+            # register next response handler after csv was found
+            cookieJar = response.meta.setdefault('cookie_jar', CookieJar())
+            cookieJar.extract_cookies(response, response.request)
+            URL = (
+                'http://www.gretai.org.tw/web/stock/aftertrading/' +
+                'broker_trading/download_ALLCSV.php?' +
+                'curstk=%(stock)s&stk_date=%(date)s') % {
+                'stock': item['stockid'],
+                'date': date
+            }
+
+            URL = 'http://bsr.twse.com.tw/bshtm/bsContent.aspx?v=t'
+            request = Request(
+                URL,
+                meta = {
+                    'dont_merge_cookies': True,
+                    'cookie_jar': cookieJar,
+                    'item': response.meta['item']
+                },
+                callback=self.parse_after_page_find,
+                dont_filter=True)
+            cookieJar.add_cookie_header(request)
+            yield request
+        else:
+            err = sel.xpath('//*[@id="Label_ErrorMsg"]/font/text()').extract()[0]
+            if err == u'驗證碼錯誤!':
+                URL = 'http://bsr.twse.com.tw/bshtm/bsMenu.aspx'
+                # iter loop until csv was found
+                request = Request(
+                    URL,
+                    meta={
+                        'item': response.meta['item'],
+                        'content': response.meta['content']
+                    },
+                    callback=self.parse,
+                    dont_filter=True)
+                yield request
+            else:
+                item = response.meta['item']
+                log.msg("fetch %s null" % (item['stockid']), level=log.INFO)
+
     def parse_after_page_find(self, response):
-        """ level 2
+        """
         data struct
         {
             'date':
@@ -147,3 +215,5 @@ class OtcHisTraderSpider(CrawlSpider):
         log.msg("fetch %s pass" %(item['stockid']), log.INFO)
         log.msg("item[0] %s ..." % (item['traderlist'][0]), level=log.DEBUG)
         yield item
+
+#    def parse_after_csv_find(self):
