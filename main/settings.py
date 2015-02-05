@@ -10,10 +10,6 @@ here = lambda *x: join(abspath(dirname(__file__)), *x)
 PROJECT_ROOT = here("..")
 root = lambda *x: join(abspath(PROJECT_ROOT), *x)
 
-## djcelery ...
-#import djcelery
-#djcelery.setup_loader()
-
 import mongoengine
 #from mongoengine.django.sessions import MongoSession
 from celery.schedules import crontab
@@ -100,7 +96,7 @@ LANGUAGE_CODE = 'en-us'
 #>>> s = Site()
 #>>> s.save()
 #python ./manage.py tellsiteid
-SITE_ID=u'547970281fd21c5c1b49cc9e'
+SITE_ID=u'54c270e91fd21c1f3deba545'
 #SITE_ID=1
 
 # If you set this to False, Django will make some optimizations so as not

@@ -11,7 +11,6 @@ from scrapy.selector import Selector
 from scrapy.spider import BaseSpider
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy import Request, FormRequest
-from scrapy.http.cookies import CookieJar
 from scrapy import log
 from crawler.items import OtcHisTraderItem
 from crawler.spiders.otchistrader_captcha import OtcHisTraderCaptcha1
@@ -23,6 +22,7 @@ __all__ = ['OtcHisTraderSpider']
 class OtcHisTraderSpider(CrawlSpider):
     name = 'otchistrader'
     allowed_domains = ['http://www.gretai.org.tw']
+    download_delay = 2
     _headers = [
         (u'序號', u'index'),
         (u'券商', u'traderid'),
@@ -30,10 +30,6 @@ class OtcHisTraderSpider(CrawlSpider):
         (u'買進股數', u'buyvolume'),
         (u'賣出股數', u'sellvolume')
     ]
-    content = {
-        'stk_code': '',
-        'auth_num': ''
-    }
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -46,111 +42,108 @@ class OtcHisTraderSpider(CrawlSpider):
         kwargs = {
             'debug': self.settings.getbool('GIANT_DEBUG'),
             'limit': self.settings.getint('GIANT_LIMIT'),
+#            'slice': self.settings.getint('GIANT_SLICE'),
             'opt': 'otc'
         }
-        requests = []
-        for stockid in OtcIdDBHandler().stock.get_ids(**kwargs):
-            URL = (
-                'http://www.gretai.org.tw/web/stock/aftertrading/' +
-                'broker_trading/brokerBS.php?l=zh-tw&stk_code=%(stock)s') % {
-                    'stock': stockid
-            }
+        for i,stockid in enumerate(OtcIdDBHandler().stock.get_ids(**kwargs)):
+            URL = 'http://www.gretai.org.tw/web/stock/aftertrading/broker_trading/brokerBS.php?l=zh-tw'
             item = OtcHisTraderItem()
-            item['stockid'] = stockid
-            self.content.update({'stk_code': stockid})
+            item.update({
+                'stockid': stockid,
+                'count': 0
+            })
             request = Request(
                 URL,
                 meta={
                     'item': item,
-                    'content': self.content
+                    'cookiejar': i
                 },
                 callback=self.parse,
                 dont_filter=True)
-            requests.append(request)
-        return requests
+            yield request
 
     def parse(self, response):
-        # find captcha path
+        # find captcha url path
+        item = response.meta['item']
         sel = Selector(response)
         URL = 'http://www.gretai.org.tw/web/inc/authnum.php'
         request = Request(
-            URL,
+           URL,
             meta={
-                'item': response.meta['item'],
-                'content': response.meta['content']
+                'item': item,
+                'cookiejar': response.meta['cookiejar']
             },
             callback=self.parse_after_captcha_find,
             dont_filter=True)
         yield request
 
     def parse_after_captcha_find(self, response):
-        # use captcha alg
+        item = response.meta['item']
+        # use captcha alg as text decode
         arr = np.asarray(bytearray(response.body), dtype=np.uint8)
         img = cv2.imdecode(arr, -1)
         text = OtcHisTraderCaptcha1(False).run(img)
-        # fake for debug only
         #text = raw_input('test:')
         #print text
-        response.meta['content'].update({
-            'auth_num': text
-        })
-        # register next response handler after sumbit form
-        URL = 'http://bsr.twse.com.tw/bshtm/bsMenu.aspx'
+        content = {
+            'auth_num': text,
+            'stk_code': item['stockid']
+        }
+        URL = 'http://www.gretai.org.tw/web/stock/aftertrading/broker_trading/brokerBS.php?l=zh-tw'
         request = FormRequest(
             URL,
             meta={
-                'item': response.meta['item'],
-                'content': response.meta['content']
+                'item': item,
+                'cookiejar': response.meta['cookiejar'],
+                'content': content
             },
-            formdata=response.meta['content'],
+            formdata=content,
             callback=self.parse_after_form_submit,
             dont_filter=True)
         yield request
 
     def parse_after_form_submit(self, response):
+        item, content = response.meta['item'], response.meta['content']
         sel = Selector(response)
-        find = sel.xpath('/html/body/center/div[3]/div[2]/div[4]/div[2]/div[2]/button[1]/text()')
-        if find:
-            # register next response handler after csv was found
-            cookieJar = response.meta.setdefault('cookie_jar', CookieJar())
-            cookieJar.extract_cookies(response, response.request)
+        err = sel.xpath('/html/body/center/div[3]/div[2]/div[4]/div/p/text()').extract()
+        if err:
+            if re.match(ur'.*驗證碼錯誤.*', err[0], re.UNICODE):
+                URL = 'http://www.gretai.org.tw/web/stock/aftertrading/broker_trading/brokerBS.php?l=zh-tw'
+                item['count'] += 1
+                request = Request(
+                   URL,
+                   meta={
+                       'item': item,
+                        'cookiejar': response.meta['cookiejar']
+                   },
+                   callback=self.parse,
+                   dont_filter=True)
+                yield request
+            else:
+                log.msg("fetch %s null" % (item['stockid']), level=log.INFO)
+                return
+        else:
+            date = sel.xpath('.//tr[1]/td[2]/text()').extract()[0]
+            stk_date = re.findall(r'\d+', date)
             URL = (
                 'http://www.gretai.org.tw/web/stock/aftertrading/' +
                 'broker_trading/download_ALLCSV.php?' +
-                'curstk=%(stock)s&stk_date=%(date)s') % {
+                'curstk=%(stock)s&stk_date=%(date)s&auth=%(auth)s') % {
                 'stock': item['stockid'],
-                'date': date
+                'date': ''.join(stk_date),
+                'auth': content['auth_num']
             }
-
-            URL = 'http://bsr.twse.com.tw/bshtm/bsContent.aspx?v=t'
+            yy, mm, dd = map(int, stk_date)
+            item['date'] = "%s-%s-%s" % (yy+1911, mm, dd)
             request = Request(
                 URL,
                 meta = {
-                    'dont_merge_cookies': True,
-                    'cookie_jar': cookieJar,
-                    'item': response.meta['item']
+                    'item': item,
+                    'cookiejar': response.meta['cookiejar']
                 },
                 callback=self.parse_after_page_find,
                 dont_filter=True)
-            cookieJar.add_cookie_header(request)
             yield request
-        else:
-            err = sel.xpath('//*[@id="Label_ErrorMsg"]/font/text()').extract()[0]
-            if err == u'驗證碼錯誤!':
-                URL = 'http://bsr.twse.com.tw/bshtm/bsMenu.aspx'
-                # iter loop until csv was found
-                request = Request(
-                    URL,
-                    meta={
-                        'item': response.meta['item'],
-                        'content': response.meta['content']
-                    },
-                    callback=self.parse,
-                    dont_filter=True)
-                yield request
-            else:
-                item = response.meta['item']
-                log.msg("fetch %s null" % (item['stockid']), level=log.INFO)
 
     def parse_after_page_find(self, response):
         """
@@ -190,9 +183,6 @@ class OtcHisTraderSpider(CrawlSpider):
             frame = pd.read_csv(
                 StringIO(response.body), delimiter=',',
                 na_values=['--'], header=None, skiprows=[0, 1, 2], encoding=None, dtype=np.object)
-            if frame.empty:
-                log.msg("fetch %s empty" %(item['stockid']), log.INFO)
-                return
         except:
             log.msg("fetch %s fail" %(item['stockid']), log.INFO)
             return
@@ -212,8 +202,6 @@ class OtcHisTraderSpider(CrawlSpider):
                     'sellvolume': nwelem[4] if nwelem[4] else 0
                 })
                 item['traderlist'].append(sub)
-        log.msg("fetch %s pass" %(item['stockid']), log.INFO)
+        log.msg("fetch %s pass at %d times" %(item['stockid'], item['count']), log.INFO)
         log.msg("item[0] %s ..." % (item['traderlist'][0]), level=log.DEBUG)
         yield item
-
-#    def parse_after_csv_find(self):

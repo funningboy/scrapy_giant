@@ -20,6 +20,7 @@ __all__ = ['OtcHisStockSpider']
 class OtcHisStockSpider(CrawlSpider):
     name = 'otchisstock'
     allowed_domains = ['http://www.gretai.org.tw']
+    download_delay = 2
     _headers = [
         (u'日期', u'date'),
         (u'成交仟股', u'volume'),
@@ -44,32 +45,34 @@ class OtcHisStockSpider(CrawlSpider):
             'limit': self.settings.getint('GIANT_LIMIT'),
             'opt': 'otc'
         }
-        requests = []
-        for stockid in OtcIdDBHandler().stock.get_ids(**kwargs):
+        for i,stockid in enumerate(OtcIdDBHandler().stock.get_ids(**kwargs)):
             for mon in range(2, -1, -1):
                 timestamp = datetime.utcnow() - relativedelta(months=mon)
                 if mon == 0:
                     if timestamp.day == 1 and timestamp.hour <= 14:
                         continue
                 URL = (
-                    'http://www.gretai.org.tw/ch/stock/aftertrading/' +
-                    'daily_trading_info/st43_download.php?d=%(year)d/%(mon)02d&' +
-                    'stkno=%(stock)s') % {
+                    'http://www.gretai.org.tw/web/stock/aftertrading/' +
+                    'daily_trading_info/st43_download.php?l=zh-tw&d=%(year)3d/%(mon)02d&' +
+                    'stkno=%(stock)s&s=0,asc,0') % {
                         'year': timestamp.year - 1911,
                         'mon': timestamp.month,
                         'stock': stockid
                 }
                 item = OtcHisStockItem()
-                item.update({'stockid': stockid})
+                item.update({
+                    'stockid': stockid,
+                    'count': 0
+                })
                 request = Request(
                     URL,
                     meta={
-                        'item': item
+                        'item': item,
+                        'cookiejar': i
                     },
                     callback=self.parse,
                     dont_filter=True)
-                requests.append(request)
-        return requests
+                yield request
 
     def parse(self, response):
         """
@@ -119,6 +122,6 @@ class OtcHisStockSpider(CrawlSpider):
                 else:
                     sub[self._headers[indx][1]] = elem
             item['data'].append(sub)
-        log.msg("fetch %s pass" % (item['stockid']), log.INFO)
+        log.msg("fetch %s pass at %d times" % (item['stockid'], item['count']), log.INFO)
         log.msg("item[0] %s ..." % (item['data'][0]), level=log.DEBUG)
         yield item

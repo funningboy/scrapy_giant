@@ -107,10 +107,10 @@ class TestThreadService(TestRunScrapyService):
         self.assertTrue(results.successful())
 
         args = [
-            ('twsehistrader', 'INFO', './log/twsehistrader.log', True, False),
-            ('twsehisstock', 'INFO', './log/twsehisstock.log', True, False),
-            ('otchistrader', 'INFO', './log/otchistrader.log', True, False),
-            ('otchisstock', 'INFO', './log/otchisstock.log', True, False)
+            ('twsehistrader', 'INFO', './log/twsehistrader.log', True, True),
+            ('twsehisstock', 'INFO', './log/twsehisstock.log', True, True),
+            ('otchistrader', 'INFO', './log/otchistrader.log', True, True),
+            ('otchisstock', 'INFO', './log/otchisstock.log', True, True)
         ]
         tasks = group([
             run_scrapy_service.subtask(args[0]),

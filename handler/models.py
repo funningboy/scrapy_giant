@@ -4,7 +4,6 @@ from datetime import datetime
 
 from mongoengine import *
 
-
 class TraderData(EmbeddedDocument):
     avgbuyprice = FloatField(min_value=0, max_value=9999)
     buyvolume = IntField(min_value=0, max_value=9999999)
@@ -35,6 +34,7 @@ class StockHisColl(Document):
     toplist = ListField(EmbeddedDocumentField(TraderInfo))
     data = EmbeddedDocumentField(StockData)
     meta = {
+        'db_alias': 'stockhisdb',
         'allow_inheritance': True,
         'indexes': [('stockid', 'stocknm', 'date')]
     }

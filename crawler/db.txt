@@ -42,5 +42,14 @@ HisFrame
 
 RealFrame
  {
-
+    'stockid':
+    'stocknm':
+    'data': {
+        'time':
+        'open':
+        'high':
+        'low':
+        'close':
+        'volume':
+    }
  }

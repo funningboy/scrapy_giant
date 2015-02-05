@@ -21,6 +21,7 @@ __all__ = ['TwseHisStockSpider']
 class TwseHisStockSpider(CrawlSpider):
     name = 'twsehisstock'
     allowed_domains = ['http://www.twse.com.tw']
+    download_delay = 0.5
     _headers = [
         (u'日期', u'date'),
         (u'成交股數', u'volume'),
@@ -46,7 +47,7 @@ class TwseHisStockSpider(CrawlSpider):
             'opt': 'twse'
         }
         requests = []
-        for stockid in TwseIdDBHandler().stock.get_ids(**kwargs):
+        for i,stockid in enumerate(TwseIdDBHandler().stock.get_ids(**kwargs)):
             for mon in range(4, -1, -1):
                 timestamp = datetime.utcnow() - relativedelta(months=mon)
                 if mon == 0:
@@ -62,11 +63,15 @@ class TwseHisStockSpider(CrawlSpider):
                         'stock': stockid
                 }
                 item = TwseHisStockItem()
-                item.update({'stockid': stockid})
+                item.update({
+                    'stockid': stockid,
+                    'count': 0
+                })
                 request = Request(
                     URL,
                     meta= {
-                        'item': item
+                        'item': item,
+                        'cookiejar': i
                     },
                     callback=self.parse,
                     dont_filter=True)
@@ -115,6 +120,6 @@ class TwseHisStockSpider(CrawlSpider):
                 else:
                     sub[self._headers[indx][1]] = elem.replace(',', '')
             item['data'].append(sub)
-        log.msg("fetch %s pass" % (item['stockid']), log.INFO)
+        log.msg("fetch %s pass at %d times" % (item['stockid'], item['count']), log.INFO)
         log.msg("item[0]: %s ..." % (item['data'][0]), level=log.DEBUG)
         yield item

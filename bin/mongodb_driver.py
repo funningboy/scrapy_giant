@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 # ref : https://github.com/mongodb/mongo-python-driver/blob/master/test/high_availability/ha_tools.py
+# ref : http://api.mongodb.org/python/current/examples/gevent.html
+# from gevent import monkey; monkey.patch_socket()
 
 import subprocess
 import signal
@@ -9,10 +11,8 @@ import time
 import os
 import re
 from datetime import datetime
-from bin.logger import Logger
-
-# ref : http://api.mongodb.org/python/current/examples/gevent.html
-# from gevent import monkey; monkey.patch_socket()
+import logging
+Logger = logging.getLogger()
 
 __all__ = ['update_service', 'has_service',
            'start_service', 'close_service', 'close_services',
@@ -28,6 +28,8 @@ class MongoDBDriver(object):
     _host = os.environ.get('HOSTNAME', 'localhost')
     _port = int(os.environ.get('DBPORT', '27017'))
     _mongod = os.environ.get('MONGOD', 'mongod')
+    _dbname = os.environ.get('DBNAME', 'test')
+
 #    _set_name = os.environ.get('SETNAME', 'repl0')
 
     @classmethod

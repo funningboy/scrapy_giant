@@ -19,6 +19,7 @@ from collections import defaultdict
 from crawler.spiders.twsehistrader_captcha import TwseHisTraderCaptcha0, TwseHisTraderCaptcha1
 from crawler.spiders.pytesser import *
 
+import unittest
 
 class TestTwseHisTraderCaptcha(object):
 
@@ -69,6 +70,7 @@ class TestTwseHisTraderCaptcha(object):
             for i in xrange(loop):
                 img = self._read_captcha_img(url)
                 text = rule_cb(img)
+                print text
                 if len(text) == 5:
                     record.append(text)
                 time.sleep(2)
@@ -118,22 +120,27 @@ class TestTwseHisTraderCaptcha(object):
                 time.sleep(2)
                 return self.fetch_trader_info(rule_cb, stockid, debug, loop+1, max_loop-1)
 
-def test_captcha(debug=False):
-    cap = TestTwseHisTraderCaptcha()
-    record = defaultdict(list)
-    tests = [
-        TwseHisTraderCaptcha0(debug),
-#        TwseHisTraderCaptcha1(debug)
-    ]
-    for test in tests:
-        print test.__class__.__name__
-        runtime = cap.fetch_trader_info(test.run, '2317', debug)
-        if runtime:
-            record[runtime].append((test.__class__.__name__))
-    print json.dumps(record, sort_keys=True, indent=4, separators=(',', ': '))
 
-def main():
-    test_captcha(True)
+class TestCaptcha(unittest.TestCase):
+
+    def test_run(self):
+        debug = False
+        cap = TestTwseHisTraderCaptcha()
+        record = defaultdict(list)
+        tests = [
+            TwseHisTraderCaptcha0(debug),
+    #        TwseHisTraderCaptcha1(debug),
+    #       TwseHisTraderCaptcha2(debug)
+        ]
+        for test in tests:
+            print test.__class__.__name__
+            # as thread
+            for stockid in ['2317', '2330', '2412']:
+                runtime = cap.fetch_trader_info(test.run, stockid, debug)
+                if runtime:
+                    record[runtime].append((test.__class__.__name__))
+        print json.dumps(record, sort_keys=True, indent=4, separators=(',', ': '))
 
 if __name__ == '__main__':
-    main()
+    unittest.main()
+

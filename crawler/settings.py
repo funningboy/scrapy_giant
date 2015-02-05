@@ -17,29 +17,37 @@ BOT_NAME = 'crawler'
 SPIDER_MODULES = ['crawler.spiders']
 NEWSPIDER_MODULE = 'crawler.spiders'
 
-DOWNLOAD_DELAY = 1    # 1s of delay #0.25
-COOKIES_DEBUG  = True
-OOKIES_ENABLED = True
+#SCHEDULER_ORDER = 'BFO'
+
+#DOWNLOAD_DELAY = 0.5    # specified spider delay
+DOWNLOAD_TIMEOUT = 15
+RANDOMIZE_DOWNLOAD_DELAY = True
+
+COOKIES_ENABLED = True
+COOKIES_DEBUG  = False
 
 ## some sane limits by default (override if needed)
 #CLOSESPIDER_PAGECOUNT = 1000
-CLOSESPIDER_TIMEOUT = 3600
-CLOSESPIDER_ERRORCOUNT = 100
+#CLOSESPIDER_TIMEOUT = 3600
+#CLOSESPIDER_ERRORCOUNT = 100
 #CLOSESPIDER_ITEMCOUNT = 100
 
-CONCURRENT_REQUESTS = 8 # 8
-CONCURRENT_REQUESTS_PER_DOMAIN = 8 #8
-CONCURRENT_REQUESTS_PER_IP = 8 # 8
+CONCURRENT_REQUESTS = 4
+CONCURRENT_REQUESTS_PER_DOMAIN = 4
+CONCURRENT_REQUESTS_PER_IP = 4
 
-RETRY_ENABLED = False
-COOKIES_ENABLED = False
+RETRY_ENABLED = True
+DNSCACHE_ENABLED = True
 
+REDIRECT_ENABLED = False
 LOG_ENABLED = True
-LOG_LEVEL = 'DEBUG'
+LOG_LEVEL = 'INFO'
 
 # our ginat internal debug set
-GIANT_DEBUG = False
+GIANT_DEBUG = True
 GIANT_LIMIT = 0
+
+PROXY_LIST = 'crawler/list.txt'
 
 ITEM_PIPELINES = {
     'crawler.pipelines.base_pipeline.BasePipeline': 800,
@@ -53,5 +61,10 @@ ITEM_PIPELINES = {
     'crawler.pipelines.otchisstock_pipeline.OtcHisStockPipeline': 800
 }
 
+#DOWNLOADER_MIDDLEWARES = {
+#    'scrapy.contrib.downloadermiddleware.downloadtimeout.DownloadTimeoutMiddleware':100,
+#    'scrapy.contrib.downloadermiddleware.httpproxy.HttpProxyMiddleware': 110,
+##    'crawler.randomproxy.RandomProxy': 100,
+#}
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'giant (+http://www.yourdomain.com)'

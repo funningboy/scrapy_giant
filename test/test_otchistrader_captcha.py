@@ -15,11 +15,13 @@ from collections import Counter
 import json
 import cookielib
 import time
+import re
 from datetime import datetime
 from collections import defaultdict
 from crawler.spiders.otchistrader_captcha import OtcHisTraderCaptcha0, OtcHisTraderCaptcha1
 from crawler.spiders.pytesser import *
 
+import unittest
 
 class TestOtcHisTraderCaptcha(object):
 
@@ -35,11 +37,7 @@ class TestOtcHisTraderCaptcha(object):
         try:
             URL = '/web/stock/aftertrading/broker_trading/brokerBS.php?l=zh-tw'
             opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self._cj))
-            opener.addheaders = [
-                ('User-Agent', 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.11) Gecko/20101012 Firefox/3.6.11'),
-            ]
             response = opener.open(self._domain + URL)
-            print self._cj
             return self._domain + '/web/inc/authnum.php'
         except Exception:
             print 'error find captch path'
@@ -51,7 +49,6 @@ class TestOtcHisTraderCaptcha(object):
             response = opener.open(url)
             arr = np.asarray(bytearray(response.read()), dtype=np.uint8)
             img = cv2.imdecode(arr, -1)
-            print self._cj
             return img
         except Exception:
             print 'error read captch img'
@@ -84,22 +81,21 @@ class TestOtcHisTraderCaptcha(object):
                     'auth_num': raw_input('debug:')
                 })
             #print json.dumps(self._form, sort_keys=True, indent=4, separators=(',', ': '))
-            print self._cj
             opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self._cj))
             data = urllib.urlencode(self._form)
             URL = '/web/stock/aftertrading/broker_trading/brokerBS.php?l=zh-tw'
             response = opener.open(self._domain + URL, data)
             root = etree.parse(StringIO(response.read()), etree.HTMLParser())
-            find = root.xpath('/html/body/center/div[3]/div[2]/div[4]/div[2]/div[2]/button[1]/text()')
-            print find
-            if find:
-                yy, mm, dd = map(int, datetime.utcnow().strftime('%Y-%m-%d').split('-'))
-                yy = yy - 1911
+            find = root.xpath('/html/body/center/div[3]/div[2]/div[4]/div/p/text()')
+            if not find:
+                date = root.xpath('.//tr[1]/td[2]/text()')[0]
+                stk_date = ''.join(re.findall(r'\d+', date))
                 URL = (
                     '/web/stock/aftertrading/broker_trading/download_ALLCSV.php?' +
-                    'curstk=%(stk)s&auth=%(auth)s') % {
+                    'curstk=%(stk)s&auth=%(auth)s&stk_date=%(date)s') % {
                         'stk': self._form['stk_code'],
-                        'auth': self._form['auth_num']
+                        'auth': self._form['auth_num'],
+                        'date': stk_date
                 }
                 opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self._cj))
                 response = opener.open(self._domain + URL)
@@ -107,9 +103,8 @@ class TestOtcHisTraderCaptcha(object):
                     frame = pd.read_csv(
                         StringIO(response.read()), delimiter=',',
                         na_values=['--'], header=None, skiprows=[0, 1, 2], encoding=None, dtype=np.object)
-                    if frame.index > 1:
-                        print frame
-                        return True
+                    print frame
+                    return True
                 except:
                     pass
         except Exception:
@@ -123,25 +118,29 @@ class TestOtcHisTraderCaptcha(object):
                 return loop
             else:
                 time.sleep(2)
-                self.fetch_trader_info(rule_cb, stockid, debug, loop+1, max_loop-1)
+                return self.fetch_trader_info(rule_cb, stockid, debug, loop+1, max_loop-1)
 
-def test_captcha(debug=False):
-    cap = TestOtcHisTraderCaptcha()
-    record = defaultdict(list)
-    tests = [
-#        OtcHisTraderCaptcha0(debug),
-        OtcHisTraderCaptcha1(debug)
-    ]
-    for test in tests:
-        print test.__class__.__name__
-        runtime = cap.fetch_trader_info(test.run, '5371', debug)
-        if runtime:
-            record[runtime].append((test.__class__.__name__))
-    print json.dumps(record, sort_keys=True, indent=4, separators=(',', ': '))
 
-def main():
-    test_captcha(True)
+class TestCaptcha(unittest.TestCase):
+
+    def test_run(self):
+        debug = False
+        cap = TestOtcHisTraderCaptcha()
+        record = defaultdict(list)
+        tests = [
+    #        OtcHisTraderCaptcha0(debug),
+            OtcHisTraderCaptcha1(debug),
+    #       OtcHisTraderCaptcha2(debug)
+        ]
+        for test in tests:
+            print test.__class__.__name__
+            for stockid in ['5371', '1565', '3105']:
+                runtime = cap.fetch_trader_info(test.run, stockid, debug)
+                if runtime:
+                    record[runtime].append((test.__class__.__name__))
+        print json.dumps(record, sort_keys=True, indent=4, separators=(',', ': '))
+
 
 if __name__ == '__main__':
-    main()
+    unittest.main()
 

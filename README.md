@@ -67,6 +67,7 @@ backend=mongodb
 ```
 rabbitmqctl cluster MASTER SLAVE
 rabbitmqctl start_app
+rabbitmq-server
 # rabbitmq-server -detached
 # rabbitmqctl stop
 #sudo netstat -tulpn | grep :27017
@@ -92,4 +93,4 @@ Redis vs RabbitMQ
 http://blog.langoor.mobi/django-celery-redis-vs-rabbitmq-message-broker/
 run as celery task
 ```
-
+nosetests --nocapture test 

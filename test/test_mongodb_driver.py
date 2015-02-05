@@ -108,7 +108,6 @@ class TestMongoDBDriver(unittest.TestCase):
 
             # map the new key, value after "map reduce" proc
             results = db.collection.map_reduce(imap, ireduce, 'results')
-            results = list(results)
             cursor = results.find({'_id': {'$eq': 'sean'}}).sort('_id', 1).limit(1)
             self.assertTrue(isinstance(cursor[0]['value'], dict))
             mp = cursor[0]['value']

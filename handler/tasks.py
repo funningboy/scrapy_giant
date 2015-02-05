@@ -32,7 +32,8 @@ def query_hisstock(hisdb, starttime, endtime, stockids=[], order='totalvolume', 
 @shared_task
 def trans_hisstock(hisdb, cursor):
     dbhandler = hisdb_tasks[hisdb]()
-    return dbhandler.stock.to_pandas(cursor)
+    panel = dbhandler.stock.to_pandas(cursor)
+    return panel
 
 # as pipeline to alg service
 @shared_task
@@ -54,5 +55,5 @@ def query_histoptrader(hisdb, starttime, endtime, stockids=[],
 @shared_task
 def trans_histoptrader(hisdb, cursor):
     dbhandler = hisdb_tasks[hisdb]()
-    return dbhandler.trader.to_pandas(cursor)
-
+    panel = dbhandler.trader.to_pandas(cursor)
+    return panel

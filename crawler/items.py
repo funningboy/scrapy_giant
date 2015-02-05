@@ -13,6 +13,7 @@ class TwseHisTraderItem(scrapy.Item):
     date = scrapy.Field()
     stockid = scrapy.Field()
     stocknm = scrapy.Field()
+    count = scrapy.Field()
     open = scrapy.Field()
     high = scrapy.Field()
     low = scrapy.Field()
@@ -26,7 +27,7 @@ class TwseHisTraderItem(scrapy.Item):
 #       price = scrapy.Field()
 #       buyvolume = scrapy.Field()
 #       sellvolume = scrapy.Field()
-#    }]
+#    }...]
     toplist = scrapy.Field()
 
 class TwseIdItem(scrapy.Item):
@@ -36,12 +37,32 @@ class TwseIdItem(scrapy.Item):
 #    stocknm = scrapy.Field()
 #    onmarket = scrapy.Field()
 #    industry = scrapy.Field()
-#  }]
+#  }...]
 
 class TwseHisStockItem(scrapy.Item):
     url = scrapy.Field()
     stockid = scrapy.Field()
     stocknm = scrapy.Field()
+    count = scrapy.Field()
+    data = scrapy.Field()
+#   data:[{
+#       date = scrapy.Field()
+#       exhvolume = scrapy.Field()
+#       exhprice = scrapy.Field()
+#       open = scrapy.Field()
+#       high = scrapy.Field()
+#       low = scrapy.Field()
+#       close = scrapy.Field()
+#       offset = scrapy.Field()
+#       volume = scrapy.Field()
+#       }, ...
+#   ]
+
+class TwseRelStockItem(scrapy.Item):
+    url = scrapy.Field()
+    stockid = scrapy.Field()
+    stocknm = scrapy.Field()
+    count = scrapy.Field()
     data = scrapy.Field()
 #   data:[{
 #       date = scrapy.Field()
@@ -63,4 +84,7 @@ class OtcHisStockItem(TwseHisStockItem):
     pass
 
 class OtcIdItem(TwseIdItem):
+    pass
+
+class OtcRelStockItem(TwseRelStockItem):
     pass
