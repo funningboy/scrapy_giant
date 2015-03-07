@@ -1,4 +1,3 @@
-{% load staticfiles %}
 
 			AmCharts.ready(function () {
 				generateChartData();

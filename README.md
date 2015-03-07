@@ -82,8 +82,10 @@ python manage.py shell
 
 ```
 
-0.6 unittest run
+0.6 as django unittest run
 ```
+nosetests --nocapture test/test_start.py
+nosetests --nocapture test/test_... 
 python manage.py test bin
 python manage.py test handler
 ```
@@ -93,4 +95,4 @@ Redis vs RabbitMQ
 http://blog.langoor.mobi/django-celery-redis-vs-rabbitmq-message-broker/
 run as celery task
 ```
-nosetests --nocapture test 
+

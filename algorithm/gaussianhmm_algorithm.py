@@ -21,12 +21,14 @@ from algorithm.report import Report
 class GaussianHmmLib(TradingAlgorithm):
     """
     ref: http://scikit-learn.org/0.14/auto_examples/applications/plot_hmm_stock_analysis.html
+    bear market: smaller mean, higher variant
+    bull market: higher mean, smaller variant
     """
 
-    def __init__(self, dbquery, *args, **kwargs):
+    def __init__(self, dbhandler, *args, **kwargs):
         super(GaussianHmmLib, self).__init__(*args, **kwargs)
-        self.dbquery = dbquery
-        self.mstockid = self.dbquery._stockmap.keys()[0]
+        self.dbhandler = dbhandler
+        self.mstockid = self.dbhandler.stock.ids[0]
         self.map = {
             'dates': np.array([]),
             'close_v': np.array([], dtype=float),
@@ -34,24 +36,24 @@ class GaussianHmmLib(TradingAlgorithm):
         }
         self.hidden_states = None
 
-#    def initialize(self):
-#        self.invested = False
-#
-#    def handle_data(self, data):
-#        self.map['dates'].append(data[self.mstockid].dt)
-#        self.map['close_v'].append(data[self.mstockid].price)
-#        self.map['volume'].append(data[self.mstockid].volume)
-#
-#    def post_run(self, n_components=5):
-#        self.map['volume'] = self.map['volume'][1:]
-#        diff = self.map['close_v'][1:] - self.map['close_v'][:-1]
-#        X = np.column_stack([diff, self.map['volume']])
-#        model = GaussianHMM(n_components, covariance_type="diag", n_iter=1000)
-#        model.fit([X])
-#        self.hidden_states = model.predict(X)
+    def initialize(self):
+        self.invested = False
+
+    def handle_data(self, data):
+        self.map['dates'].append(data[self.mstockid].dt)
+        self.map['close_v'].append(data[self.mstockid].price)
+        self.map['volume'].append(data[self.mstockid].volume)
+
+    def post_run(self, n_components=5):
+        self.map['volume'] = self.map['volume'][1:]
+        diff = self.map['close_v'][1:] - self.map['close_v'][:-1]
+        X = np.column_stack([diff, self.map['volume']])
+        model = GaussianHMM(n_components, covariance_type="diag", n_iter=1000)
+        model.fit([X])
+        self.hidden_states = model.predict(X)
 
 
-def main(debug=False, limit=0):
+def main(opt='twse', debug=False, limit=0):
     proc = start_service(debug)
     # set time window
     starttime = datetime.utcnow() - timedelta(days=300)
@@ -64,18 +66,20 @@ def main(debug=False, limit=0):
     # set debug or normal mode
     kwargs = {
         'debug': debug,
-        'limit': limit
+        'limit': limit,
+        'opt': opt
     }
-    for stockid in TwseIdDBQuery().get_stockids(**kwargs):
-        dbquery = TwseHisDBQuery()
-        data = dbquery.get_all_data(
-            starttime=starttime, endtime=endtime,
-            stockids=[stockid], traderids=[])
+    idhandler = TwseIdDBHandler() if kwargs['opt'] == 'twse' else OtcIdDBHandler()
+    for stockid in idhandler.stock.get_ids(**kwargs):
+        dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
+        dbhandler.stock.ids = [stockid]
+        data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
         if data.empty:
             continue
-        hmm = GaussianHmmLib(dbquery=dbquery)
+        hmm = GaussianHmmLib(dbhandler=dbhandler)
         hmm.run(data)
         hmm.post_run()
+        #hmm.
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='test GaussianHmm algorithm')

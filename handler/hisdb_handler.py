@@ -36,6 +36,14 @@ class TwseHisDBHandler(object):
     def trader(self):
         return self._trader
 
+    def transform_all_data(self, starttime, endtime, stockids=[], traderids=[], order='totalvolume', limit=10):
+        """ transfrom stock/trader data as pandas panel """
+        stockdt = self._stock.query(starttime, endtime, stockids, 'totalvolume', limit)
+        stockdt = self._stock.to_pandas(stockdt)
+        traderdt = self._trader.query(starttime, endtime, stockids, traderids, 'stock', order, limit)
+        traderdt = self._trader.to_pandas(traderdt)
+        return pd.concat([stockdt, traderdt], axis=2).fillna(0)
+
 class OtcHisDBHandler(TwseHisDBHandler):
 
     def __init__(self):
@@ -103,6 +111,7 @@ class TwseStockHisDBHandler(object):
                 var key =  { stockid : this.stockid };
                 var value = {
                     totalvolume: this.data.volume,
+                    totaldiff: this.data.high - this.data.low,
                     data: [{
                         date: this.date,
                         open: this.data.open,
@@ -120,6 +129,7 @@ class TwseStockHisDBHandler(object):
           function (key, values) {
                 var redval = {
                     totalvolume: 0,
+                    totaldiff: 0,
                     data: []
                 };
                 if (values.length == 0) {
@@ -127,6 +137,7 @@ class TwseStockHisDBHandler(object):
                 }
                 for (var i=0; i < values.length; i++) {
                     redval.totalvolume += values[i].totalvolume;
+                    redval.totaldiff += values[i].totaldiff;
                     redval.data = values[i].data.concat(redval.data);
                 }
                 return redval;
@@ -134,7 +145,7 @@ class TwseStockHisDBHandler(object):
         """
         ids = stockids
         mkey = 'stockid'
-        assert(order in ['totalvolume'])
+        assert(order in ['totalvolume', 'totaldiff'])
         cursor = self._coll.objects(Q(date__gte=starttime) & Q(date__lte=endtime) & Q(stockid__in=stockids))
         results = cursor.map_reduce(
             map_f,
@@ -372,7 +383,7 @@ class TwseTraderHisDBHandler(object):
             cursor = list(cursor)
             return [it.traderid for it in cursor]
         else:
-            cursor = mapcoll.objects(Q(base=base) & Q(traderid__in=ids) & Q(alias__in==aliases))
+            cursor = mapcoll.objects(Q(base=base) & Q(traderid__in=ids) & Q(alias__in=aliases))
             cursor = list(cursor)
             return [it.stockid for it in cursor]
 

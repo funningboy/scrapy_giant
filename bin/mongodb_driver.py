@@ -11,8 +11,8 @@ import time
 import os
 import re
 from datetime import datetime
-import logging
-Logger = logging.getLogger()
+import logging as Logger
+#Logger = logging.getLogger()
 
 __all__ = ['update_service', 'has_service',
            'start_service', 'close_service', 'close_services',

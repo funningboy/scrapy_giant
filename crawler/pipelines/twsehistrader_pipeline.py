@@ -39,7 +39,7 @@ class TwseHisTraderPipeline(BasePipeline):
     def _update_item(self, item, top=100):
         # create raw pdframe
         frame = pd.DataFrame.from_dict(item['traderlist']).dropna()
-        # sort and divided pdframe
+        # sort and divided pdframe, and trans unicode to each item type
         stream = []
         grouped = frame.groupby('traderid', sort=False)
         for trdid, group in grouped:

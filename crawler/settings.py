@@ -39,12 +39,12 @@ CONCURRENT_REQUESTS_PER_IP = 4
 RETRY_ENABLED = True
 DNSCACHE_ENABLED = True
 
-REDIRECT_ENABLED = False
+REDIRECT_ENABLED = True
 LOG_ENABLED = True
 LOG_LEVEL = 'INFO'
 
 # our ginat internal debug set
-GIANT_DEBUG = True
+GIANT_DEBUG = False
 GIANT_LIMIT = 0
 
 PROXY_LIST = 'crawler/list.txt'
@@ -54,17 +54,20 @@ ITEM_PIPELINES = {
     # tesehis trader/stock
     'crawler.pipelines.twseid_pipeline.TwseIdPipeline': 800,
     'crawler.pipelines.twsehistrader_pipeline.TwseHisTraderPipeline': 800,
+    'crawler.pipelines.twsehistrader_pipeline2.TwseHisTraderPipeline2': 800,
     'crawler.pipelines.twsehisstock_pipeline.TwseHisStockPipeline': 800,
     # otchis trader/stock
     'crawler.pipelines.otcid_pipeline.OtcIdPipeline': 800,
     'crawler.pipelines.otchistrader_pipeline.OtcHisTraderPipeline': 800,
-    'crawler.pipelines.otchisstock_pipeline.OtcHisStockPipeline': 800
+    'crawler.pipelines.otchisstock_pipeline.OtcHisStockPipeline': 800,
+    # trader
+    'crawler.pipelines.traderid_pipeline.TraderIdPipeline': 800
 }
 
-#DOWNLOADER_MIDDLEWARES = {
-#    'scrapy.contrib.downloadermiddleware.downloadtimeout.DownloadTimeoutMiddleware':100,
-#    'scrapy.contrib.downloadermiddleware.httpproxy.HttpProxyMiddleware': 110,
-##    'crawler.randomproxy.RandomProxy': 100,
-#}
+DOWNLOADER_MIDDLEWARES = {
+    'scrapy.contrib.downloadermiddleware.downloadtimeout.DownloadTimeoutMiddleware':100,
+    'scrapy.contrib.downloadermiddleware.httpproxy.HttpProxyMiddleware': 110,
+#    'crawler.randomproxy.RandomProxy': 100,
+}
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'giant (+http://www.yourdomain.com)'

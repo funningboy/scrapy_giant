@@ -56,7 +56,11 @@ class BaseAlgDetailColl(Document):
 class SuperManSummaryColl(BaseAlgSummaryColl):
     pass
 
-
 class SuperManDetailColl(BaseAlgDetailColl):
     pass
 
+class DarkManSummaryColl(BaseAlgSummaryColl):
+    pass
+
+class DarkManDetailColl(BaseAlgDetailColl):
+    pass

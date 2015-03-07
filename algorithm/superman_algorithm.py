@@ -60,7 +60,7 @@ class SuperManAlgorithm(TradingAlgorithm):
         # sample for 5days period
         if len(self.pool) == 5:
             self.sample.append(self.pool[-1])
-            self.pool = []
+            self.pool.pop(0)
         self.pool.append((
             data[self.mstockid].dt,
             data[self.mstockid].price,
@@ -152,7 +152,7 @@ def run(opt='twse', debug=False, limit=0):
     for stockid in idhandler.stock.get_ids(**kwargs):
         dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
         dbhandler.stock.ids = [stockid]
-        data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 10)
+        data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
         if data.empty:
             continue
         supman = SuperManAlgorithm(dbhandler=dbhandler)
@@ -161,6 +161,9 @@ def run(opt='twse', debug=False, limit=0):
             continue
         report.collect(stockid, results)
         print stockid
+
+    if report.report.empty:
+        return
 
     # report summary
     stream = report.summary(dtype='html')
@@ -177,6 +180,7 @@ if __name__ == '__main__':
     parser.add_argument('--random', dest='random', action='store_true', help='random')
     parser.add_argument('--limit', dest='limit', action='store', type=int, default=0, help='limit')
     args = parser.parse_args()
-    proc = start_main_service(args.debug)
+#    proc = start_main_service(args.debug)
+    proc = start_main_service(True)
     run('twse', args.debug, args.limit)
     close_main_service(proc, args.debug)

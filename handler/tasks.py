@@ -17,6 +17,10 @@ hisdb_tasks = {
 }
 
 # as pipeline to alg service
+# chain(
+# query_hisstock.s(*args),
+# trans_hisstock.s()
+#).apply_async().get()
 @shared_task
 def query_hisstock(hisdb, starttime, endtime, stockids=[], order='totalvolume', limit=10):
     dbhandler = hisdb_tasks[hisdb]()
@@ -27,7 +31,7 @@ def query_hisstock(hisdb, starttime, endtime, stockids=[], order='totalvolume', 
         stockids=stockids,
         order=order,
         limit=limit)
-    return cursor
+    return hisdb, cursor
 
 @shared_task
 def trans_hisstock(hisdb, cursor):
@@ -36,6 +40,10 @@ def trans_hisstock(hisdb, cursor):
     return panel
 
 # as pipeline to alg service
+# chain(
+# query_histoptrader.s(*args),
+# trans_histoptrader.s()
+#).apply_async().get()
 @shared_task
 def query_histoptrader(hisdb, starttime, endtime, stockids=[],
                            traderids=[], base='stock', order='totalvolume', limit=10):
@@ -50,7 +58,7 @@ def query_histoptrader(hisdb, starttime, endtime, stockids=[],
         base=base,
         order=order,
         limit=limit)
-    return cursor
+    return hisdb, cursor
 
 @shared_task
 def trans_histoptrader(hisdb, cursor):

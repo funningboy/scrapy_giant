@@ -109,6 +109,9 @@ def run(opt='twse', debug=False, limit=0):
         report.collect(stockid, results)
         print stockid
 
+    if report.report.empty:
+        return
+
     # report summary
     stream = report.summary(dtype='html')
     report.write(stream, 'dualema.html')

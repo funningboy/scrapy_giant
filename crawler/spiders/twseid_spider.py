@@ -11,18 +11,19 @@ from crawler.items import TwseIdItem
 # TWSE id : http://isin.twse.com.tw/isin/C_public.jsp?strMode=2
 # ref https://github.com/samho5888/pyStockGravity/blob/master/src/StockIdDb.py
 
-__all__ = ['TwseIDSpider']
+__all__ = ['TwseIdSpider']
 
-class TwseIDSpider(CrawlSpider):
+class TwseIdSpider(CrawlSpider):
     name = 'twseid'
     allowed_domains = ['http://isin.twse.com.tw']
+    download_delay = 0.5
 
     @classmethod
     def from_crawler(cls, crawler):
         return cls(crawler)
 
     def __init__(self, crawler):
-        super(TwseIDSpider, self).__init__()
+        super(TwseIdSpider, self).__init__()
         URL = 'http://isin.twse.com.tw/isin/C_public.jsp?strMode=2'
         self.start_urls = [URL]
 
@@ -42,7 +43,7 @@ class TwseIDSpider(CrawlSpider):
             sub['stockid'] = m.group(1) if m else None
             sub['stocknm'] = m.group(2) if m else None
             yy, mm, dd = its[2].split('/') if its[2] else [None]*3
-            sub['onmarket'] = "%s-%s-%s" % (yy, mm, dd)
+            sub['onmarket'] = u"%s-%s-%s" % (yy, mm, dd)
             sub['industry'] = its[4] if its[4] else None
             item['data'].append(sub)
         log.msg("item[0] %s ..." % (item['data'][0]), level=log.DEBUG)

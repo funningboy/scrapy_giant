@@ -172,12 +172,12 @@ class OtcHisTraderSpider(CrawlSpider):
         # populate top content
         item['url'] = response.url
         item['date'] = item['date']
-        item['stockid'], item['stocknm'] = item['stockid'], ""
-        item['open'] = 0
-        item['high'] = 0
-        item['low'] = 0
-        item['close'] = 0
-        item['volume'] = 0
+        item['stockid'], item['stocknm'] = item['stockid'], None
+        item['open'] = u'0'
+        item['high'] = u'0'
+        item['low'] = u'0'
+        item['close'] = u'0'
+        item['volume'] = u'0'
         # use as pandas frame to dict
         try:
             frame = pd.read_csv(
@@ -194,12 +194,12 @@ class OtcHisTraderSpider(CrawlSpider):
                 sub = {}
                 m = re.search(r'([0-9a-zA-Z]+)(\W+)?', nwelem[1].decode('cp950').replace(u'\u3000', u'').replace(u' ', u''))
                 sub.update({
-                    'index': nwelem[0] if nwelem[0] else -1,
+                    'index': nwelem[0] if nwelem[0] else u'-1',
                     'traderid': m.group(1) if m and m.group(1) else None,
-                    'tradernm': m.group(2) if m and m.group(2) else "",
-                    'price': nwelem[2] if nwelem[2] else 0,
-                    'buyvolume': nwelem[3] if nwelem[3] else 0,
-                    'sellvolume': nwelem[4] if nwelem[4] else 0
+                    'tradernm': m.group(2) if m and m.group(2) else None,
+                    'price': nwelem[2] if nwelem[2] else u'0',
+                    'buyvolume': nwelem[3] if nwelem[3] else u'0',
+                    'sellvolume': nwelem[4] if nwelem[4] else u'0'
                 })
                 item['traderlist'].append(sub)
         log.msg("fetch %s pass at %d times" %(item['stockid'], item['count']), log.INFO)

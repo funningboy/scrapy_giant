@@ -115,10 +115,10 @@ class OtcHisStockSpider(CrawlSpider):
                     except Exception:
                         continue
                     yy = int(yy) + 1911
-                    sub[self._headers[indx][1]] = "%s-%s-%s" % (yy, mm, dd)
+                    sub[self._headers[indx][1]] = u"%s-%s-%s" % (yy, mm, dd)
                     sub['stockid'] = item['stockid']
                 elif indx == 1:
-                    sub[self._headers[indx][1]] = int(elem) * 1000
+                    sub[self._headers[indx][1]] = u"%d" % (int(elem) * 1000)
                 else:
                     sub[self._headers[indx][1]] = elem
             item['data'].append(sub)

@@ -39,6 +39,13 @@ class TwseIdItem(scrapy.Item):
 #    industry = scrapy.Field()
 #  }...]
 
+class TraderIdItem(scrapy.Item):
+    data = scrapy.Field()
+# data:[{
+#   traderid = scrapy.Field()
+#   tradernm = scrapy.Field()
+# }...]
+
 class TwseHisStockItem(scrapy.Item):
     url = scrapy.Field()
     stockid = scrapy.Field()

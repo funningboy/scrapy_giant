@@ -35,7 +35,7 @@ class TwseHisStockPipeline(BasePipeline):
         return self._decode_item(jstream)
 
     def _update_item(self, item):
-        # use pd frame as sorted item
+        # use pd frame as sorted item and trans unicode to each item type
         frame = pd.DataFrame.from_dict(item['data']).dropna()
         def _encode_datetime(it):
             yy, mm, dd = it.split('-')

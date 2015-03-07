@@ -16,6 +16,14 @@ class Report(object):
         self._report = pd.DataFrame()
         self._pool = OrderedDict()
 
+    @property
+    def report(self):
+        return self._report
+
+    @property
+    def pool(self):
+        return self._pool
+
     def collect(self, stockid, results):
         # the latest date info
         item = OrderedDict({

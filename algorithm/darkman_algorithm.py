@@ -93,8 +93,8 @@ def run(opt='twse', debug=False, limit=0):
     # 1590:u'花旗環球', 1440:u'美林'
     idhandler = TwseIdDBHandler() if kwargs['opt'] == 'twse' else OtcIdDBHandler()
     for traderid in idhandler.trader.get_ids(**kwargs):
-        dbhandler = TwseHisdbhandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
-        topdt = dbhandler.trader.gettoptrader_data(starttime, endtime, [traderid], 'trader', 'buy', 10)
+        dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
+        topdt = dbhandler.trader.query(starttime, endtime, [], [traderid], 'trader', 'totalvolume', 10)
         report = Report(
             algname=DarkManAlgorithm.__name__,
             sort=[('buy_count', -1), ('sell_count', -1), ('ending_value', -1), ('close', -1)], limit=20)
@@ -103,10 +103,10 @@ def run(opt='twse', debug=False, limit=0):
             'limit': limit,
             'opt': opt
         }
-        stockids = dbhandler.trader.map_alias([traderid], 'trader', ['topbuy%d' % (i) for i in range(5)])
+        stockids = dbhandler.trader.map_alias([traderid], 'trader', ['top%d' % (i) for i in range(5)])
         for stockid in stockids:
-            dbhandler = TwseHisdbhandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
-            data = dbhandler.transform_all_data(starttime, endtime, [traderid], [stockid], 10)
+            dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
+            data = dbhandler.transform_all_data(starttime, endtime, [traderid], [stockid], 'totalvolume', 10)
             if data.empty:
                 continue
             darkman = DarkManAlgorithm(dbhandler=dbhandler)
@@ -115,6 +115,9 @@ def run(opt='twse', debug=False, limit=0):
                 continue
             report.collect(stockid, results)
             print traderid, stockid
+
+        if report.report.empty:
+            continue
 
         # report summary
         stream = report.summary(dtype='html')
@@ -131,6 +134,7 @@ if __name__ == '__main__':
     parser.add_argument('--random', dest='random', action='store_true', help='random')
     parser.add_argument('--limit', dest='limit', action='store', type=int, default=0, help='limit')
     args = parser.parse_args()
-    proc = start_main_service(args.debug)
+#    proc = start_main_service(args.debug)
+    proc = start_main_service(True)
     run('twse', args.debug, args.limit)
     close_main_service(proc, args.debug)
