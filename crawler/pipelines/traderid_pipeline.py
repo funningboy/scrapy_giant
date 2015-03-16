@@ -20,7 +20,7 @@ class TraderIdPipeline(BasePipeline):
         super(TraderIdPipeline, self).__init__()
         self._name = 'traderid'
         self._settings = crawler.settings
-        self._id = TraderIdDBHandler()
+        self._id = TwseIdDBHandler()
 
     def process_item(self, item, spider):
         if spider.name not in [self._name]:
@@ -39,4 +39,4 @@ class TraderIdPipeline(BasePipeline):
         return item
 
     def _write_item(self, item):
-        self._id.insert(item)
+        self._id.trader.insert(item)

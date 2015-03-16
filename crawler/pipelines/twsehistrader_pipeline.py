@@ -29,7 +29,7 @@ class TwseHisTraderPipeline(BasePipeline):
         if spider.name not in [self._name]:
             return item
         item = self._clear_item(item)
-        item = self._update_item(item, 9999 if not self._settings.getbool('GIANT_DEBUG') else 3)
+        item = self._update_item(item, 9999 if not self._settings.getbool('GIANT_DEBUG') else 10)
         self._write_item(item)
 
     def _clear_item(self, item):

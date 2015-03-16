@@ -29,25 +29,32 @@ class GaussianHmmLib(TradingAlgorithm):
         super(GaussianHmmLib, self).__init__(*args, **kwargs)
         self.dbhandler = dbhandler
         self.mstockid = self.dbhandler.stock.ids[0]
-        self.map = {
+        self.train = {
             'dates': np.array([]),
             'close_v': np.array([], dtype=float),
             'volume': np.array([], dtype=int)
         }
+        self.test = {}
         self.hidden_states = None
 
     def initialize(self):
         self.invested = False
 
     def handle_data(self, data):
-        self.map['dates'].append(data[self.mstockid].dt)
-        self.map['close_v'].append(data[self.mstockid].price)
-        self.map['volume'].append(data[self.mstockid].volume)
+        self.train['dates'].append(data[self.mstockid].dt)
+        self.train['close_v'].append(data[self.mstockid].price)
+        self.train['volume'].append(data[self.mstockid].volume)
+
+    def train_data(self):
+        pass
+
+    def test_data(self):
+        pass
 
     def post_run(self, n_components=5):
-        self.map['volume'] = self.map['volume'][1:]
-        diff = self.map['close_v'][1:] - self.map['close_v'][:-1]
-        X = np.column_stack([diff, self.map['volume']])
+        self.train['volume'] = self.train['volume'][1:]
+        diff = self.train['close_v'][1:] - self.train['close_v'][:-1]
+        X = np.column_stack([diff, self.train['volume']])
         model = GaussianHMM(n_components, covariance_type="diag", n_iter=1000)
         model.fit([X])
         self.hidden_states = model.predict(X)
@@ -82,7 +89,7 @@ def main(opt='twse', debug=False, limit=0):
         #hmm.
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='test GaussianHmm algorithm')
+    parser = argparse.ArgumentParser(description='train GaussianHmm algorithm')
     parser.add_argument('--debug', dest='debug', action='store_true', help='debug mode')
     parser.add_argument('--random', dest='random', action='store_true', help='random')
     parser.add_argument('--limit', dest='limit', action='store', type=int, default=0, help='limit')

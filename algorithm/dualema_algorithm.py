@@ -32,16 +32,12 @@ class DualEMATaLib(TradingAlgorithm):
     def __init__(self, dbhandler, *args, **kwargs):
         super(DualEMATaLib, self).__init__(*args, **kwargs)
         self.dbhandler = dbhandler
-        self.mstockid = self.dbhandler.stock.ids[0]
+        self.sids = self.dbhandler.stock.ids
 
     def initialize(self, short_window=20, long_window=40):
-        # Add 2 mavg transforms, one with a long window, one
-        # with a short window.
         self.short_ema_trans = EMA(timeperiod=short_window)
         self.long_ema_trans = EMA(timeperiod=long_window)
         self.real_obv_trans = OBV()
-
-        # To keep track of whether we invested in the stock or not
         self.invested = False
 
     def handle_data(self, data):
@@ -56,29 +52,27 @@ class DualEMATaLib(TradingAlgorithm):
 
         # buy/sell rule
         if (self.short_ema > self.long_ema).all() and not self.invested:
-            self.order(self.mstockid, 1000)
+            self.order(self.sids[0], 1000)
             self.invested = True
             self.buy = True
         elif (self.short_ema < self.long_ema).all() and self.invested:
-            self.order(self.mstockid, -1000)
+            self.order(self.sids[0], -1000)
             self.invested = False
             self.sell = True
 
         # save to recorder
         signals = {
-            'open': data[self.mstockid].open,
-            'high': data[self.mstockid].high,
-            'low': data[self.mstockid].low,
-            'close': data[self.mstockid].close,
-            'volume': data[self.mstockid].volume,
-            'short_ema': self.short_ema[self.mstockid],
-            'long_ema': self.long_ema[self.mstockid],
+            'open': data[self.sids[0]].open,
+            'high': data[self.sids[0]].high,
+            'low': data[self.sids[0]].low,
+            'close': data[self.sids[0]].close,
+            'volume': data[self.sids[0]].volume,
+            'short_ema': self.short_ema[self.sids[0]],
+            'long_ema': self.long_ema[self.sids[0]],
             'buy': self.buy,
             'sell': self.sell
         }
-
         self.record(**signals)
-
 
 def run(opt='twse', debug=False, limit=0):
     """ as doctest run """
@@ -87,7 +81,6 @@ def run(opt='twse', debug=False, limit=0):
     endtime = datetime.utcnow()
     # sort factor
     report = Report(
-        algname=DualEMATaLib.__name__,
         sort=[('buy_count', False), ('sell_count', False), ('volume', False)], limit=20)
     # set debug or normal mode
     kwargs = {
@@ -99,15 +92,14 @@ def run(opt='twse', debug=False, limit=0):
     for stockid in idhandler.stock.get_ids(**kwargs):
         dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
         dbhandler.stock.ids = [stockid]
-        data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 10)
-        if data.empty:
+        try:
+            data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
+            dualema = DualEMATaLib(dbhandler=dbhandler)
+            results = dualema.run(data).fillna(0)
+            report.collect(stockid, results)
+            print "%s pass" %(stockid)
+        except:
             continue
-        dualema = DualEMATaLib(dbhandler=dbhandler)
-        results = dualema.run(data).fillna(0)
-        if results.empty:
-            continue
-        report.collect(stockid, results)
-        print stockid
 
     if report.report.empty:
         return
@@ -120,21 +112,27 @@ def run(opt='twse', debug=False, limit=0):
         stream = report.iter_report(stockid, dtype='html')
         report.write(stream, "dualema_%s.html" % (stockid))
 
-        # plt
-        fig = plt.figure()
-        ax1 = fig.add_subplot(211, ylabel='portfolio value')
-        results.portfolio_value.plot(ax=ax1)
+    # plot
+    for stockid in report.iter_stockid():
+        try:
+            perf = report.pool[stockid]
+            fig = plt.figure()
+            ax1 = fig.add_subplot(211, ylabel='portfolio value')
+            perf.portfolio_value.plot(ax=ax1)
 
-        ax2 = fig.add_subplot(212)
-        results[['short_ema', 'long_ema']].plot(ax=ax2)
+            ax2 = fig.add_subplot(212)
+            perf[['short_ema', 'long_ema']].plot(ax=ax2)
 
-        ax2.plot(results.ix[results.buy].index, results.short_ema[results.buy],
-                 '^', markersize=10, color='m')
-        ax2.plot(results.ix[results.sell].index, results.short_ema[results.sell],
-                 'v', markersize=10, color='k')
-        plt.legend(loc=0)
-        plt.gcf().set_size_inches(18, 8)
-
+            ax2.plot(perf.ix[perf.buy].index, perf.short_ema[perf.buy],
+                     '^', markersize=10, color='m')
+            ax2.plot(perf.ix[perf.sell].index, perf.short_ema[perf.sell],
+                     'v', markersize=10, color='k')
+            plt.legend(loc=0)
+            plt.gcf().set_size_inches(18, 8)
+            plt.savefig("dualema_%s.png" %(stockid))
+            #plt.show()
+        except:
+            continue
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='test dualema algorithm')

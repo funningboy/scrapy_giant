@@ -64,3 +64,9 @@ class DarkManSummaryColl(BaseAlgSummaryColl):
 
 class DarkManDetailColl(BaseAlgDetailColl):
     pass
+
+class CustomerDetailColl():
+    pass
+
+class CustomerSummaryColl():
+    pass

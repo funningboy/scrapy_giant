@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 # http://www.wantgoo.com/stock/agentdata.aspx?StockNo=2330
 import re
 import string
@@ -8,15 +9,15 @@ from scrapy.spider import BaseSpider
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy import Request, FormRequest
 from scrapy import log
-from crawler.items import TwseHisTraderItem
+from crawler.items import OtcHisTraderItem
 
-from handler.iddb_handler import TwseIdDBHandler
+from handler.iddb_handler import OtcIdDBHandler
 
 
-__all__ = ['TwseHisTraderSpider2']
+__all__ = ['OtcHisTraderSpider2']
 
-class TwseHisTraderSpider2(CrawlSpider):
-    name = 'twsehistrader2'
+class OtcHisTraderSpider2(CrawlSpider):
+    name = 'otchistrader2'
     allowed_domains = ['http://www.wantgoo.com']
     download_delay = 1
     _headers = [
@@ -32,17 +33,17 @@ class TwseHisTraderSpider2(CrawlSpider):
         return cls(crawler)
 
     def __init__(self, crawler):
-        super(TwseHisTraderSpider2, self).__init__()
+        super(OtcHisTraderSpider2, self).__init__()
 
     def start_requests(self):
         kwargs = {
             'debug': self.settings.getbool('GIANT_DEBUG'),
             'limit': self.settings.getint('GIANT_LIMIT'),
 #            'slice': self.settings.getint('GIANT_SLICE'),
-            'opt': 'twse'
+            'opt': 'otc'
         }
-        for i,stockid in enumerate(TwseIdDBHandler().stock.get_ids(**kwargs)):
-            item = TwseHisTraderItem()
+        for i,stockid in enumerate(OtcIdDBHandler().stock.get_ids(**kwargs)):
+            item = OtcHisTraderItem()
             item.update({
                 'stockid': stockid,
                 'count': 0
@@ -99,14 +100,14 @@ class TwseHisTraderSpider2(CrawlSpider):
         elems = sel.xpath('.//table[@id="ctl00_ContentPlaceHolder1_GridView2"]//td/font/text()').extract()
         for i in xrange(0, len(elems)-20, 4):
             tradernm = elems[i].replace('-', '').replace(u'\u3000', u'').replace(u' ', u'')
-            traderid = u"%s" %(TwseIdDBHandler().trader.get_id(tradernm))
+            traderid = u"%s" %(OtcIdDBHandler().trader.get_id(tradernm))
             sub = {
                 'index': u'0',
                 'traderid': traderid if traderid else None,
                 'tradernm': tradernm if tradernm else None,
                 'price': elems[i+3] if elems[i+3] else u'0',
-                'buyvolume': u"%d" % (float(elems[i+1])*1000) if elems[i+1] else u'0',
-                'sellvolume': u"%d" % (float(elems[i+2])*1000) if elems[i+2] else u'0'
+                'buyvolume': u"%d" % (float(elems[i+1])) if elems[i+1] else u'0',
+                'sellvolume': u"%d" % (float(elems[i+2])) if elems[i+2] else u'0'
             }
             item['traderlist'].append(sub)
         log.msg("fetch %s pass at %d times" %(item['stockid'], item['count']), log.INFO)

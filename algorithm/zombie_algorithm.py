@@ -132,15 +132,14 @@ def run(opt='twse', debug=False, limit=0):
     for stockid in idhandler.stock.get_ids(**kwargs):
         dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
         dbhandler.stock.ids = [stockid]
-        data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
-        if data.empty:
+        try:
+            data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
+            zombie = ZombieAlgorithm(dbhandler=dbhandler)
+            results = zombie.run(data).fillna(0)
+            report.collect(stockid, results)
+            print "%s" %(stockid)
+        except:
             continue
-        zombie = ZombieAlgorithm(dbhandler=dbhandler)
-        results = zombie.run(data).fillna(0)
-        if results.empty:
-            continue
-        report.collect(stockid, results)
-        print stockid
 
     if report.report.empty:
         return

@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import pytz
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
 from datetime import datetime, timedelta
 from collections import deque
 
@@ -26,9 +28,6 @@ from algorithm.report import Report
 class RandForestAlgorithm(TradingAlgorithm):
     """
     http://scikit-learn.org/stable/auto_examples/randomized_search.html
-    label samples : -2:(T(-1)>=1.03*T(0)), -1:(T(-1)<1.03*T(0)&&T(-1)>T(0)), 0:(T(-1)==T(0)), 1, 2
-    features : 1:T(1)>T(0) 0:T(1)=T(0) -1:
-    gradient/weight
     """
 
     def __init__(self, dbhandler, *args, **kwargs):
@@ -71,6 +70,60 @@ class RandForestAlgorithm(TradingAlgorithm):
                 }
                 self.record(**signals)
 
+
+class RandForestAlgorithm2(TradingAlgorithm):
+    """
+    label samples : -2:(T(-1)>=1.03*T(0)), -1:(T(-1)<1.03*T(0)&&T(-1)>T(0)), 0:(T(-1)==T(0)), 1, 2
+    features : 1:T(1)>T(0) 0:T(1)=T(0) -1:
+    """
+
+    def __init__(self, dbhandler, *args, **kwargs):
+        super(RandForestAlgorithm, self).__init__(*args, **kwargs)
+        self.dbhandler = dbhandler
+        self.sids = self.dbhandler.stock.ids
+
+    def initialize(self):
+        self.clf = RandomForestClassifier(n_estimators=20)
+        self.window = deque(maxlen=70)
+        self.X = deque(maxlen=150)
+        self.Y = deque(maxlen=150)
+        self.add_transform(MovingAverage, 'mavg', ['price', 'volume'], window_length=7)
+        self.add_transform(MovingStandardDev, 'stddev', window_length=7)
+
+    def _enocde(self, p, c):
+         ratio = p.close/c.close
+         if ratio >= 1.03: return -2
+         elif ratio < 1.03 and ratio >= 1.01: return -1
+         elif ratio <= 0.99 and ratio > 0.97: return 1
+         elif ratio < 0.97: return 2
+         else: return 0
+
+    def handle_data(self, data):
+        self.window.append(data[self.sids[0]].price)
+
+        if len(self.window) == 70:
+            # as train & target seqs
+            # ex up(1,2): [0, 0 , 0, ...1, 1], down(0,-1): [1, 1, 1, .. 0, 0]
+            self.X.append([self._encode(self.window[i], self.window[i+1]) for i in range(0,67)])
+            self.Y.append([self._encode(self.window[i], self.window[i+1]) for i in range(67,-1)])
+
+            if len(self.Y) >= 50:
+                self.clf.fit(self.X, self.Y)
+                self.prediction = self.clf.predict(changes[1:])
+                self.order_target_percent(self.sids[0], self.prediction)
+                # save to recorder
+                signals = {
+                    'open': data[self.sids[0]].open,
+                    'high': data[self.sids[0]].high,
+                    'low': data[self.sids[0]].low,
+                    'close': data[self.sids[0]].close,
+                    'volume': data[self.sids[0]].volume,
+                    'mavg7': data[self.sids[0]].mavg.price,
+                    'prediction': self.prediction
+                }
+                self.record(**signals)
+
+
 def run(opt='twse', debug=False, limit=0):
     """ as doctest run """
     # set time window
@@ -106,27 +159,31 @@ def run(opt='twse', debug=False, limit=0):
         stream = report.iter_report(stockid, dtype='html')
         report.write(stream, "randforest_%s.html" % (stockid))
 
+    # plot
     for stockid in report.iter_stockid():
-        perf = report.pool[stockid]
-        fig = plt.figure()
-        ax1 = fig.add_subplot(211)
-        perf.portfolio_value.plot(ax=ax1)
-        ax1.set_ylabel('portfolio value in $')
+        try:
+            perf = report.pool[stockid]
+            fig = plt.figure()
+            ax1 = fig.add_subplot(211)
+            perf.portfolio_value.plot(ax=ax1)
+            ax1.set_ylabel('portfolio value in $')
 
-        ax2 = fig.add_subplot(212)
-        perf[['close', 'mavg7']].plot(ax=ax2)
+            ax2 = fig.add_subplot(212)
+            perf[['close', 'mavg7']].plot(ax=ax2)
 
-        perf_trans = perf.ix[[t != [] for t in perf.transactions]]
-        buys = perf_trans.ix[[t[0]['amount'] > 0 for t in perf_trans.transactions]]
-        sells = perf_trans.ix[[t[0]['amount'] < 0 for t in perf_trans.transactions]]
-        ax2.plot(buys.index, perf.close.ix[buys.index],
-                 '^', markersize=10, color='m')
-        ax2.plot(sells.index, perf.close.ix[sells.index],
-                 'v', markersize=10, color='k')
-        ax2.set_ylabel('price in $')
-        plt.legend(loc=0)
-        plt.savefig("randforest_%s.png" %(stockid))
-        #plt.show()
+            perf_trans = perf.ix[[t != [] for t in perf.transactions]]
+            buys = perf_trans.ix[[t[0]['amount'] > 0 for t in perf_trans.transactions]]
+            sells = perf_trans.ix[[t[0]['amount'] < 0 for t in perf_trans.transactions]]
+            ax2.plot(buys.index, perf.close.ix[buys.index],
+                     '^', markersize=10, color='m')
+            ax2.plot(sells.index, perf.close.ix[sells.index],
+                     'v', markersize=10, color='k')
+            ax2.set_ylabel('price in $')
+            plt.legend(loc=0)
+            plt.savefig("randforest_%s.png" %(stockid))
+            #plt.show()
+        except:
+            continue
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='test randforest algorithm')
