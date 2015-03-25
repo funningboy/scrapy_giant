@@ -2,6 +2,7 @@
 
 import pytz
 import matplotlib.pyplot as plt
+import traceback
 
 from zipline.algorithm import TradingAlgorithm
 from zipline.utils.factory import *
@@ -19,7 +20,7 @@ from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
 from algorithm.report import Report
 
 
-class DualEMATaLib(TradingAlgorithm):
+class DualEMAAlgorithm(TradingAlgorithm):
     """ Dual Moving Average Crossover algorithm.
 
     This algorithm buys apple once its short moving average crosses
@@ -30,13 +31,13 @@ class DualEMATaLib(TradingAlgorithm):
     """
 
     def __init__(self, dbhandler, *args, **kwargs):
-        super(DualEMATaLib, self).__init__(*args, **kwargs)
+        super(DualEMAAlgorithm, self).__init__(*args, **kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
 
-    def initialize(self, short_window=20, long_window=40):
-        self.short_ema_trans = EMA(timeperiod=short_window)
-        self.long_ema_trans = EMA(timeperiod=long_window)
+    def initialize(self):
+        self.short_ema_trans = EMA(timeperiod=20)
+        self.long_ema_trans = EMA(timeperiod=40)
         self.real_obv_trans = OBV()
         self.invested = False
 
@@ -90,15 +91,16 @@ def run(opt='twse', debug=False, limit=0):
     }
     idhandler = TwseIdDBHandler() if kwargs['opt'] == 'twse' else OtcIdDBHandler()
     for stockid in idhandler.stock.get_ids(**kwargs):
-        dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
-        dbhandler.stock.ids = [stockid]
         try:
+            dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
+            dbhandler.stock.ids = [stockid]
             data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
-            dualema = DualEMATaLib(dbhandler=dbhandler)
+            dualema = DualEMAAlgorithm(dbhandler=dbhandler)
             results = dualema.run(data).fillna(0)
             report.collect(stockid, results)
             print "%s pass" %(stockid)
         except:
+            print traceback.format_exc()
             continue
 
     if report.report.empty:
@@ -137,9 +139,9 @@ def run(opt='twse', debug=False, limit=0):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='test dualema algorithm')
     parser.add_argument('--debug', dest='debug', action='store_true', default=False, help='debug mode')
-    parser.add_argument('--random', dest='random', action='store_true', help='random')
+    parser.add_argument('--opt', dest='opt', action='store', type=str, default='twse', help='twse/otc')
     parser.add_argument('--limit', dest='limit', action='store', type=int, default=0, help='limit')
     args = parser.parse_args()
     proc = start_main_service(args.debug)
-    run('twse', args.debug, args.limit)
+    run(args.opt, args.debug, args.limit)
     close_main_service(proc, args.debug)

@@ -4,9 +4,7 @@ from datetime import datetime
 
 from mongoengine import *
 
-class BaseAlgSummaryColl(Document):
-    """ all fileds should be sync with summary alg results
-    """
+class AlgorithmSummaryColl(Document):
     stockid = StringField()
     stocknm = StringField()
     date = DateTimeField(default=datetime.utcnow())
@@ -28,9 +26,7 @@ class BaseAlgSummaryColl(Document):
     }
 
 
-class BaseAlgDetailColl(Document):
-    """ all fields should be sync with detail alg results
-    """
+class AlgorithmDetailColl(Document):
     date = DateTimeField(default=datetime.utcnow())
     buy = BooleanField()
     sell = BooleanField()
@@ -51,22 +47,3 @@ class BaseAlgDetailColl(Document):
         'allow_inheritance': True,
         'indexes': [('date')]
     }
-
-
-class SuperManSummaryColl(BaseAlgSummaryColl):
-    pass
-
-class SuperManDetailColl(BaseAlgDetailColl):
-    pass
-
-class DarkManSummaryColl(BaseAlgSummaryColl):
-    pass
-
-class DarkManDetailColl(BaseAlgDetailColl):
-    pass
-
-class CustomerDetailColl():
-    pass
-
-class CustomerSummaryColl():
-    pass

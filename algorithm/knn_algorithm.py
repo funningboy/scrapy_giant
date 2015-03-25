@@ -27,21 +27,19 @@ class kdtKnnAlgorithm(TradingAlgorithm):
     def __init__(self, dbhandler, *args, **kwargs):
         super(KdtKnnAlgorithm, self).__init__(*args, **kwargs)
         self.dbhandler = dbhandler
-        # main stockid, no reference stockids
-        self.mstockid = self.dbhandler.stock.ids[0]
+        self.sids = self.dbhandler.stock.ids
+        self.leafsize = int(kwargs.pop('leafsize')) or 10
+        self.k = int(kwargs.pop('k')) or 3
 
     def initialize(self):
 
     def handle_data(self, data):
-        data[self.mstockid].price -
-        data[self.mstockid].dt
 
     def post_run(self):
         knn = neighbors.KNeighborsClassifier()
         knn.fit(train.data, train.target)
         knn.score(test.data, test.target)
 
-        pass
 
 def run(opt='twse', debug=False, limit=0):
     """ as doctest run """
@@ -50,7 +48,6 @@ def run(opt='twse', debug=False, limit=0):
     endtime = datetime.utcnow()
     # sort factor
     report = Report(
-        algname=SuperManAlgorithm.__name__,
         sort=[('buy_count', False), ('sell_count', False), ('volume', False)], limit=20)
     # set debug or normal mode
     kwargs = {
@@ -63,34 +60,30 @@ def run(opt='twse', debug=False, limit=0):
         dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
         dbhandler.stock.ids = [stockid]
         data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
-        if data.empty:
-            continue
         supman = SuperManAlgorithm(dbhandler=dbhandler)
         results = supman.run(data).fillna(0)
-        if results.empty:
-            continue
         report.collect(stockid, results)
-        print stockid
+        print "%s pass" %(stockid)
 
     if report.report.empty:
         return
 
     # report summary
     stream = report.summary(dtype='html')
-    report.write(stream, 'superman.html')
+    report.write(stream, 'kdtknn.html')
 
     for stockid in report.iter_stockid():
         stream = report.iter_report(stockid, dtype='html', has_other=True, has_sideband=True)
-        report.write(stream, "superman_%s.html" % (stockid))
+        report.write(stream, "kdtknn_%s.html" % (stockid))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='test superman algorithm')
     parser.add_argument('--debug', dest='debug', action='store_true', default=False, help='debug mode')
-    parser.add_argument('--random', dest='random', action='store_true', help='random')
+    parser.add_argument('--opt', dest='opt', action='store_true', default='twse', help='random')
     parser.add_argument('--limit', dest='limit', action='store', type=int, default=0, help='limit')
     args = parser.parse_args()
 #    proc = start_main_service(args.debug)
     proc = start_main_service(True)
-    run('twse', args.debug, args.limit)
+    run(args.opt, args.debug, args.limit)
     close_main_service(proc, args.debug)

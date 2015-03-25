@@ -9,6 +9,7 @@ from scrapy import log
 from crawler.items import TwseIdItem
 
 # TWSE id : http://isin.twse.com.tw/isin/C_public.jsp?strMode=2
+# 權證ID rule http://isin.twse.com.tw/isin/C_public.jsp?strMode=2
 # ref https://github.com/samho5888/pyStockGravity/blob/master/src/StockIdDb.py
 
 __all__ = ['TwseIdSpider']

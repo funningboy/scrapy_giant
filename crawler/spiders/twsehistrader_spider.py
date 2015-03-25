@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # http://fanli7.net/a/bianchengyuyan/C__/20131106/440079.html
 # https://github.com/scrapy/scrapy/blob/master/tests/test_downloadermiddleware_redirect.py
+# only run for warrant
 import re
 import pandas as pd
 import numpy as np
@@ -47,7 +48,10 @@ class TwseHisTraderSpider(CrawlSpider):
             'opt': 'twse'
         }
         URL = 'http://bsr.twse.com.tw/bshtm/bsMenu.aspx'
-        for i,stockid in enumerate(TwseIdDBHandler().stock.get_ids(**kwargs)):
+        idhandler = TwseIdDBHandler()
+        for i,stockid in enumerate(idhandler.stock.get_ids(**kwargs)):
+            if not idhandler.is_warrant(stockid):
+                continue
             item = TwseHisTraderItem()
             item.update({
                 'stockid': stockid,

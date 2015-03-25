@@ -106,8 +106,8 @@ class OtcHisTraderSpider2(CrawlSpider):
                 'traderid': traderid if traderid else None,
                 'tradernm': tradernm if tradernm else None,
                 'price': elems[i+3] if elems[i+3] else u'0',
-                'buyvolume': u"%d" % (float(elems[i+1])) if elems[i+1] else u'0',
-                'sellvolume': u"%d" % (float(elems[i+2])) if elems[i+2] else u'0'
+                'buyvolume': u"%d" % (float(elems[i+1])*1000) if elems[i+1] else u'0',
+                'sellvolume': u"%d" % (float(elems[i+2])*1000) if elems[i+2] else u'0'
             }
             item['traderlist'].append(sub)
         log.msg("fetch %s pass at %d times" %(item['stockid'], item['count']), log.INFO)

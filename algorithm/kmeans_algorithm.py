@@ -159,10 +159,9 @@ def run(opt='twse', debug=False, limit=0):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='test superman algorithm')
     parser.add_argument('--debug', dest='debug', action='store_true', default=False, help='debug mode')
-    parser.add_argument('--random', dest='random', action='store_true', help='random')
+    parser.add_argument('--opt', dest='opt', action='twse/otc', default='twse', help='random')
     parser.add_argument('--limit', dest='limit', action='store', type=int, default=0, help='limit')
     args = parser.parse_args()
-#    proc = start_main_service(args.debug)
-    proc = start_main_service(True)
-    run('twse', args.debug, args.limit)
+    proc = start_main_service(args.debug)
+    run(args.opt, args.debug, args.limit)
     close_main_service(proc, args.debug)

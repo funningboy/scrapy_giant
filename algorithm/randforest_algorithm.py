@@ -4,6 +4,7 @@ import pytz
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import traceback
 
 from datetime import datetime, timedelta
 from collections import deque
@@ -31,22 +32,24 @@ class RandForestAlgorithm(TradingAlgorithm):
     """
 
     def __init__(self, dbhandler, *args, **kwargs):
+        self.n_estimators = kwargs.pop('n_estimators', 20)
+        self.maxlen = kwargs.pop('maxlen', 70)
         super(RandForestAlgorithm, self).__init__(*args, **kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
 
     def initialize(self):
-        self.clf = RandomForestClassifier(n_estimators=20)
-        self.window = deque(maxlen=70)
-        self.X = deque(maxlen=150)
-        self.Y = deque(maxlen=150)
+        self.clf = RandomForestClassifier(n_estimators=self.n_estimators)
+        self.window = deque(maxlen=self.maxlen)
+        self.X = deque(maxlen=self.maxlen*2)
+        self.Y = deque(maxlen=self.maxlen*2)
         self.add_transform(MovingAverage, 'mavg', ['price', 'volume'], window_length=7)
         self.add_transform(MovingStandardDev, 'stddev', window_length=7)
 
     def handle_data(self, data):
         self.window.append(data[self.sids[0]].price)
 
-        if len(self.window) == 70:
+        if len(self.window) == self.maxlen:
             changes = np.diff(self.window) > 0
 
             # as train & target seqs
@@ -54,7 +57,7 @@ class RandForestAlgorithm(TradingAlgorithm):
             self.X.append(changes[:-1])
             self.Y.append(changes[-1])
 
-            if len(self.Y) >= 50:
+            if len(self.Y) >= self.maxlen*2//3:
                 self.clf.fit(self.X, self.Y)
                 self.prediction = self.clf.predict(changes[1:])
                 self.order_target_percent(self.sids[0], self.prediction)
@@ -78,20 +81,22 @@ class RandForestAlgorithm2(TradingAlgorithm):
     """
 
     def __init__(self, dbhandler, *args, **kwargs):
+        self.n_estimators = kwargs.pop('n_estimators', 20)
+        self.maxlen = kwargs.pop('maxlen', 70)
         super(RandForestAlgorithm, self).__init__(*args, **kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
 
     def initialize(self):
-        self.clf = RandomForestClassifier(n_estimators=20)
-        self.window = deque(maxlen=70)
-        self.X = deque(maxlen=150)
-        self.Y = deque(maxlen=150)
+        self.clf = RandomForestClassifier(n_estimators=self.n_estimators)
+        self.window = deque(maxlen=self.maxlen)
+        self.X = deque(maxlen=self.maxlen*2)
+        self.Y = deque(maxlen=self.maxlen*2)
         self.add_transform(MovingAverage, 'mavg', ['price', 'volume'], window_length=7)
         self.add_transform(MovingStandardDev, 'stddev', window_length=7)
 
-    def _enocde(self, p, c):
-         ratio = p.close/c.close
+    def _enocde(self, pre, cur):
+         ratio = pre.close/cur.close
          if ratio >= 1.03: return -2
          elif ratio < 1.03 and ratio >= 1.01: return -1
          elif ratio <= 0.99 and ratio > 0.97: return 1
@@ -101,13 +106,13 @@ class RandForestAlgorithm2(TradingAlgorithm):
     def handle_data(self, data):
         self.window.append(data[self.sids[0]].price)
 
-        if len(self.window) == 70:
+        if len(self.window) == self.maxlen:
             # as train & target seqs
             # ex up(1,2): [0, 0 , 0, ...1, 1], down(0,-1): [1, 1, 1, .. 0, 0]
-            self.X.append([self._encode(self.window[i], self.window[i+1]) for i in range(0,67)])
-            self.Y.append([self._encode(self.window[i], self.window[i+1]) for i in range(67,-1)])
+            self.X.append([self._encode(self.window[i], self.window[i+1]) for i in range(0, self.maxlen-3)])
+            self.Y.append([self._encode(self.window[i], self.window[i+1]) for i in range(self.maxlen-3, -1)])
 
-            if len(self.Y) >= 50:
+            if len(self.Y) >= self.maxlen*2//3:
                 self.clf.fit(self.X, self.Y)
                 self.prediction = self.clf.predict(changes[1:])
                 self.order_target_percent(self.sids[0], self.prediction)
@@ -140,13 +145,17 @@ def run(opt='twse', debug=False, limit=0):
     }
     idhandler = TwseIdDBHandler() if kwargs['opt'] == 'twse' else OtcIdDBHandler()
     for stockid in idhandler.stock.get_ids(**kwargs):
-        dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
-        dbhandler.stock.ids = [stockid]
-        data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
-        supman = RandForestAlgorithm(dbhandler=dbhandler)
-        results = supman.run(data).fillna(0)
-        report.collect(stockid, results)
-        print "%s pass" %(stockid)
+        try:
+            dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
+            dbhandler.stock.ids = [stockid]
+            data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
+            supman = RandForestAlgorithm(dbhandler=dbhandler)
+            results = supman.run(data).fillna(0)
+            report.collect(stockid, results)
+            print "%s pass" %(stockid)
+        except:
+            print traceback.format_exc()
+            continue
 
     if report.report.empty:
         return
@@ -188,10 +197,9 @@ def run(opt='twse', debug=False, limit=0):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='test randforest algorithm')
     parser.add_argument('--debug', dest='debug', action='store_true', default=False, help='debug mode')
-    parser.add_argument('--random', dest='random', action='store_true', help='random')
+    parser.add_argument('--opt', dest='opt', action='store', type=str, default='twse', help='twse/otc')
     parser.add_argument('--limit', dest='limit', action='store', type=int, default=0, help='limit')
     args = parser.parse_args()
-#    proc = start_main_service(args.debug)
-    proc = start_main_service(True)
-    run('twse', args.debug, args.limit)
+    proc = start_main_service(args.debug)
+    run(args.opt, args.debug, args.limit)
     close_main_service(proc, args.debug)

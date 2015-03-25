@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+# only run for warrant
 import re
 import pandas as pd
 import numpy as np
@@ -45,7 +45,10 @@ class OtcHisTraderSpider(CrawlSpider):
 #            'slice': self.settings.getint('GIANT_SLICE'),
             'opt': 'otc'
         }
-        for i,stockid in enumerate(OtcIdDBHandler().stock.get_ids(**kwargs)):
+        idhandler = OtcIdDBHandler()
+        for i,stockid in enumerate(idhandler.stock.get_ids(**kwargs)):
+            if not idhandler.is_warrant(stockid):
+                continue
             URL = 'http://www.gretai.org.tw/web/stock/aftertrading/broker_trading/brokerBS.php?l=zh-tw'
             item = OtcHisTraderItem()
             item.update({

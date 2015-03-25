@@ -2,7 +2,6 @@
 
 from datetime import datetime, timedelta
 import numpy as np
-import pylab as pl
 import pytz
 import matplotlib.pyplot as plt
 
@@ -13,12 +12,12 @@ from zipline.utils.factory import *
 
 from bin.mongodb_driver import *
 from bin.start import *
-from query.hisdb_query import *
-from query.iddb_query import *
+from handler.hisdb_handler import TwseHisDBHandler, OtcHisDBHandler
+from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
 from algorithm.report import Report
 
 
-class GaussianHmmLib(TradingAlgorithm):
+class GaussianHmmLib:
     """
     ref: http://scikit-learn.org/0.14/auto_examples/applications/plot_hmm_stock_analysis.html
     bear market: smaller mean, higher variant
@@ -26,50 +25,77 @@ class GaussianHmmLib(TradingAlgorithm):
     """
 
     def __init__(self, dbhandler, *args, **kwargs):
-        super(GaussianHmmLib, self).__init__(*args, **kwargs)
         self.dbhandler = dbhandler
-        self.mstockid = self.dbhandler.stock.ids[0]
-        self.train = {
-            'dates': np.array([]),
-            'close_v': np.array([], dtype=float),
-            'volume': np.array([], dtype=int)
-        }
-        self.test = {}
-        self.hidden_states = None
+        self.sids = self.dbhandler.stock.ids
+        self.n_components = int(kwargs.pop('n_components')) or 5
+        self.n_iter = int(kwargs.pop('n_iter')) or 1000
 
-    def initialize(self):
-        self.invested = False
+    def run(self, data):
+        self.dates = data[self.sids[0]]['price'].values
+        self.close_v = data[self.sids[0]]['close_v'].values
+        self.volume = data[self.sids[0]]['volume'].values[1:]
 
-    def handle_data(self, data):
-        self.train['dates'].append(data[self.mstockid].dt)
-        self.train['close_v'].append(data[self.mstockid].price)
-        self.train['volume'].append(data[self.mstockid].volume)
+        # take diff of close value
+        # this makes len(diff) = len(close_t) - 1
+        # therefore, others quantity also need to be shifted
+        self.diff = self.close_v[1:] - self.close_v[:-1]
 
-    def train_data(self):
-        pass
+        # pack diff and volume for training
+        self.X = np.column_stack([self.diff, self.volume])
 
-    def test_data(self):
-        pass
+        # make an HMM instance and execute fit
+        self.model = GaussianHMM(self.n_components, covariance_type="diag", n_iter=self.n_iter)
+        self.model.fit([self.X], n_iter=self.n_iter)
 
-    def post_run(self, n_components=5):
-        self.train['volume'] = self.train['volume'][1:]
-        diff = self.train['close_v'][1:] - self.train['close_v'][:-1]
-        X = np.column_stack([diff, self.train['volume']])
-        model = GaussianHMM(n_components, covariance_type="diag", n_iter=1000)
-        model.fit([X])
-        self.hidden_states = model.predict(X)
+        # predict the optimal sequence of internal hidden state
+        self.hidden_states = self.model.predict(self.X)
+
+    def report(self):
+        # print trained parameters and plot
+        print "Transition matrix"
+        print self.model.transmat_
+        print ""
+
+        print "means and vars of each hidden state"
+        for i in xrange(self.n_components):
+            print "%dth hidden state" % i
+            print "mean = ", self.model.means_[i]
+            print "var = ", np.diag(self.model.covars_[i])
+            print ""
+
+        years = YearLocator()   # every year
+        months = MonthLocator()  # every month
+        yearsFmt = DateFormatter('%Y')
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        for i in xrange(self.n_components):
+            # use fancy indexing to plot data in each state
+            idx = (self.hidden_states == i)
+            ax.plot_date(self.dates[idx], self.close_v[idx], 'o', label="%dth hidden state" % i)
+        ax.legend()
+
+        # format the ticks
+        ax.xaxis.set_major_locator(years)
+        ax.xaxis.set_major_formatter(yearsFmt)
+        ax.xaxis.set_minor_locator(months)
+        ax.autoscale_view()
+
+        # format the coords message box
+        ax.fmt_xdata = DateFormatter('%Y-%m-%d')
+        ax.fmt_ydata = lambda x: '$%1.2f' % x
+        ax.grid(True)
+
+        fig.autofmt_xdate()
+        plt.savefig("gaussianhmm_%s.png" %(self.sids[0]))
+#        plt.show()
 
 
-def main(opt='twse', debug=False, limit=0):
-    proc = start_service(debug)
+def run(opt='twse', debug=False, limit=0):
+    """ as doctest run """
     # set time window
     starttime = datetime.utcnow() - timedelta(days=300)
     endtime = datetime.utcnow()
-    # sort factor
-    report = Report(
-        algname=GaussianHmmLib.__name__,
-        sort=[('buy_count', False), ('sell_count', False), ('volume', False)], limit=20)
-
     # set debug or normal mode
     kwargs = {
         'debug': debug,
@@ -81,17 +107,15 @@ def main(opt='twse', debug=False, limit=0):
         dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
         dbhandler.stock.ids = [stockid]
         data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
-        if data.empty:
-            continue
         hmm = GaussianHmmLib(dbhandler=dbhandler)
         hmm.run(data)
-        hmm.post_run()
-        #hmm.
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='train GaussianHmm algorithm')
     parser.add_argument('--debug', dest='debug', action='store_true', help='debug mode')
-    parser.add_argument('--random', dest='random', action='store_true', help='random')
+    parser.add_argument('--opt', dest='opt', action='store_true', help='twse/otc')
     parser.add_argument('--limit', dest='limit', action='store', type=int, default=0, help='limit')
     args = parser.parse_args()
-    main(debug=True if args.debug else False, limit=args.limit)
+    proc = start_main_service(args.debug)
+    run(args.opt, args.debug, args.limit)
+    close_main_service(proc, args.debug)

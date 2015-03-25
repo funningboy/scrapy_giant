@@ -94,5 +94,6 @@ ref:
 Redis vs RabbitMQ
 http://blog.langoor.mobi/django-celery-redis-vs-rabbitmq-message-broker/
 run as celery task
+trader/stock data align 
 ```
 

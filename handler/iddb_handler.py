@@ -105,6 +105,9 @@ class StockIdDBHandler(object):
         cursor = list(cursor)
         return True if cursor else False
 
+    def is_warrant(self, stockid):
+        return len(stockid) >= 6
+
     def insert(self, item):
         for it in item:
             cursor = self._coll.objects(Q(stockid=it['stockid']))

@@ -156,7 +156,7 @@ class TwseStockHisDBHandler(object):
             pool = list(filter(lambda x: x.key[mkey]==id, results))
             pool = sorted(pool, key=lambda x: x.value[order], reverse=True)[:limit]
             for it in pool:
-                coll = self._mapcoll().save()
+                coll = self._mapcoll()
                 for data in sorted(it.value['data'], key=lambda x: x['date']):
                     map = {
                         'date': data['date'],
@@ -331,7 +331,7 @@ class TwseTraderHisDBHandler(object):
             pool = list(filter(lambda x: x.key[mkey]==id, results))
             pool = sorted(pool, key=lambda x: x.value[order], reverse=True)[:limit]
             for i, it in enumerate(pool):
-                coll = self._mapcoll().save()
+                coll = self._mapcoll()
                 for data in sorted(it.value['data'], key=lambda x: x['date']):
                     map = {
                         'ratio': data['ratio'],
@@ -368,7 +368,7 @@ class TwseTraderHisDBHandler(object):
                 }
                 data.append(map)
             if index and data:
-                id = it.stockid if bases[0] == 'stock' else it.traderid
+                id = it.traderid if bases[0] == 'stock' else it.stockid
                 item.update({
                     id: pd.DataFrame(data, index=index).fillna(0)
                  })

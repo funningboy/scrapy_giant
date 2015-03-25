@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 from __future__ import absolute_import
 
 #from main.celery import app
@@ -16,6 +17,11 @@ hisdb_tasks = {
     'otc': OtcHisDBHandler
 }
 
+iddb_tasks = {
+    'twse': TwseIdDBHandler,
+    'otc': OtcIdDBHandler
+}
+
 # as pipeline to alg service
 # chain(
 # query_hisstock.s(*args),
@@ -25,12 +31,8 @@ hisdb_tasks = {
 def query_hisstock(hisdb, starttime, endtime, stockids=[], order='totalvolume', limit=10):
     dbhandler = hisdb_tasks[hisdb]()
     dbhandler.stock.ids = stockids
-    cursor = dbhandler.stock.query(
-        starttime=starttime,
-        endtime=endtime,
-        stockids=stockids,
-        order=order,
-        limit=limit)
+    args = (starttime, endtime, stockids, order, limit)
+    cursor = dbhandler.stock.query(*args)
     return hisdb, cursor
 
 @shared_task
@@ -45,19 +47,12 @@ def trans_hisstock(hisdb, cursor):
 # trans_histoptrader.s()
 #).apply_async().get()
 @shared_task
-def query_histoptrader(hisdb, starttime, endtime, stockids=[],
-                           traderids=[], base='stock', order='totalvolume', limit=10):
+def query_histoptrader(hisdb, starttime, endtime, stockids=[], traderids=[], base='stock', order='totalvolume', limit=10):
     dbhandler = hisdb_tasks[hisdb]()
     dbhandler.stock.ids = stockids
     dbhandler.trader.ids = traderids
-    cursor = dbhandler.trader.query(
-        starttime=starttime,
-        endtime=endtime,
-        stockids=stockids,
-        traderids=traderids,
-        base=base,
-        order=order,
-        limit=limit)
+    args = (starttime, endtime, stockids, traderids, base, order, limit)
+    cursor = dbhandler.trader.query(*args)
     return hisdb, cursor
 
 @shared_task
