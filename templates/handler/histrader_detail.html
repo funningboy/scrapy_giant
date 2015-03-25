@@ -1,0 +1,364 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+{% load staticfiles %}
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <title> - traderdetail - </title>
+        <style type='text/css'>
+            body {
+                font-family: Verdana;
+                font-size: 12px;
+                padding: 10px;
+            }
+            #chartdiv1 {
+                width : 100%;
+                height : 300px;
+                font-size : 11px;
+                float: left;
+            }
+            #chartdiv2 {
+                width : 100%;
+                height : 300px;
+                font-size : 11px;
+                float: left;
+            }
+            #chartdiv3 {
+                width : 100%;
+                height : 300px;
+                font-size : 11px;
+                float: left;
+            }
+        </style>
+        <script type='text/javascript'>//<![CDATA[ 
+            window.onload=function(){
+                AmCharts.ready(function () {
+                        generateChartData();
+                        checkChartData();
+                        generateCollectiveData();
+                        createPieChart();
+                        createColumnChart();
+                        callbackPieChart();
+                        });
+
+                var pieChart1;
+                var pieChart3;
+                var stockChart2
+                var chartData = [];
+                var collectiveData = [];
+                var index = 0;
+
+                function generateChartData() {
+                    var traderitem = [];
+
+                    // populate trader data as init
+                    {% for item in traderitem %}
+                    var data = [];
+                    {% for it in item.datalist %}
+                    data.push({
+                            "ratio": {{ it.ratio }},
+                            "price": {{ it.price }},
+                            "buyvolume": {{ it.buyvolume }},
+                            "sellvolume": {{ it.sellvolume }},
+                            "date" :new Date("{{ it.date.isoformat }}")
+                            });
+                    {% endfor %} 
+                    traderitem.push({
+                            "index": index++,
+                            "traderid": "{{ item.traderid }}",
+                            "stockid": "{{ item.stockid }}",
+                            "tradernm": "{{ item.tradernm }}",
+                            "stocknm": "{{ item.stocknm }}",
+                            "totalvolume": {{ item.totalvolume }},
+                            "totalhit": {{ item.totalhit }},
+                            "datalist": data
+                            });
+                    {% endfor %}
+
+                    // populate stock data as update
+                    {% for item in stockitem %}
+                    var ndata = [];
+                    var match = jQuery.grep(traderitem, function(e){ return e.stockid == "{{ item.stockid }}"; }); 
+                    if (match.length == 0) {
+                        console.log("match is empty"); 
+                    }
+                    {% for it in item.datalist %}
+                    ndata.push({
+                            "date": new Date("{{ it.date.isoformat }}"),
+                            "stockopen": {{ it.open }},
+                            "stockclose": {{ it.close }},
+                            "stockhigh": {{ it.high }},
+                            "stocklow": {{ it.low }},
+                            "stockprice": {{ it.close }},
+                            "stockvolume": {{ it.volume }},
+                            "traderprice": 0,
+                            "traderbuyvolume": 0,
+                            "tradersellvolume": 0,
+                            "event": ""
+                            });
+                    {% endfor %}
+                    for (var ii in match[0].datalist) {
+                        var result = jQuery.grep(ndata, function(e){ return e.date.getTime() == match[0].datalist[ii].date.getTime(); }); 
+                        if (result.length != 0) {
+                            result[0].traderprice = match[0].datalist[ii].price;
+                            result[0].traderbuyvolume = match[0].datalist[ii].buyvolume;
+                            result[0].tradersellvolume = match[0].datalist[ii].sellvolume;
+                        } else {
+                            console.log("trader data is over stock data");
+                        }
+                    }
+                    var unit = {
+                        "stockidnm": "{{ item.stockid }}-{{ item.stocknm }}",
+                        "traderidnm": match[0].traderid + '-' + match[0].tradernm,
+                        "stockvolume": match[0].totalvolume,
+                        "url": "",
+                        "description": "",
+                        "data": ndata
+                    }
+                    chartData.push(unit);
+                    {% endfor %}
+                }
+
+                function checkChartData(){
+                    // check created data is ok
+
+                }
+
+                function generateCollectiveData(){
+                    // aggregate collective data
+                    for (var x in chartData) {
+                        var dataPoint = chartData[x];
+                        if ( 0 == x ) {
+                            for (var y in dataPoint.data) {
+                                collectiveData.push({
+                                        "date": dataPoint.data[y].date,
+                                        "traderbuyvolume": dataPoint.data[y].traderbuyvolume,
+                                        "tradersellvolume": dataPoint.data[y].tradersellvolume,
+                                        "tradersumvolume": dataPoint.data[y].tradersumvolume,
+                                        "traderprice": dataPoint.data[y].traderprice * dataPoint.data[y].tradersumvolume,
+                                        "stockvolume": 0,
+                                        "stockprice": 0 
+                                        });
+                            }
+                        }
+                        else {
+                            for (var y in dataPoint.data) {
+                                collectiveData[y].traderbuyvolume += dataPoint.data[y].traderbuyvolume;
+                                collectiveData[y].tradersellvolume += dataPoint.data[y].tradersellvolume;
+                                collectiveData[y].tradersumvolume += dataPoint.data[y].tradersumvolume;
+                                collectiveData[y].traderprice += dataPoint.data[y].traderprice * dataPoint.data[y].tradersumvolume;
+                            }
+                        }
+                    }
+                    for (var x in collectiveData) {
+                        collectiveData[x].traderprice = Math.floor(collectiveData[x].traderprice / collectiveData[x].tradersumvolume);
+                    }
+                }
+
+                function createPieChart(){
+                    // create pie chart
+                    pieChart1 = AmCharts.makeChart("chartdiv1", {
+                            "type": "pie",
+                            "dataProvider": chartData,
+                            "valueField": "stockvolume",
+                            "titleField": "stockidnm",
+                            "labelText": "[[title]]: [[value]]",
+                            "legend": {
+                            "markerType": "circle",
+                            "position": "right",
+                            "marginRight": 80, 
+                            "autoMargins": false
+                            },
+                            "pullOutOnlyOne": true
+                            });
+
+                    pieChart3 = AmCharts.makeChart("chartdiv3", {
+                            "type": "pie",
+                            "dataProvider": chartData,
+                            "valueField": "stockhit",
+                            "titleField": "stockidnm",
+                            "labelText": "[[title]]: [[value]]",
+                            "legend": {
+                            "markerType": "circle",
+                            "position": "right",
+                            "marginRight": 80, 
+                            "autoMargins": false
+                            },
+                            "pullOutOnlyOne": true
+                            });
+                }
+
+                function createColumnChart(){
+                    // create column chart
+                    stockChart2 = AmCharts.makeChart("chartdiv2", {
+                            "type": "serial",
+                            "theme": "none",
+                            "pathToImages": "http://www.amcharts.com/lib/3/images/",    
+                            "dataProvider": collectiveData,  
+                            "legend": {
+                            "equalWidths": false,
+                            "useGraphSettings": true
+                            },
+                            "valueAxes": [{
+                            "id": "volumeAxis",
+                            "axisAlpha": 0,
+                            "gridAlpha": 0,
+                            "position": "left",
+                            "title": "volume",        
+                            "stackType": "regular"
+                            }, 
+                            {
+                            "id": "priceAxis",
+                            "axisAlpha": 0,
+                            "gridAlpha": 0,
+                            "inside": true,
+                            "position": "right",
+                            "title": "price"
+                            }],
+                            "graphs": [{
+                                "balloonText": "[[value]]",
+                                "dashLengthField": "dashLength",
+                                "fillAlphas": 0.7,
+                                "legendPeriodValueText": "[[value]]",
+                                "legendValueText": "v: [[value]]",
+                                "title": "traderbuyvolume",
+                                "type": "column",
+                                "valueField": "traderbuyvolume",
+                                "valueAxis": "volumeAxis"
+                            },
+                            {
+                                "balloonText": "[[value]]",
+                                "dashLengthField": "dashLength",
+                                "fillAlphas": 0.7,
+                                "legendPeriodValueText": "[[value]]",
+                                "legendValueText": "v: [[value]]",
+                                "title": "tradersellvolume",
+                                "type": "column",
+                                "valueField": "tradersellvolume",
+                                "valueAxis": "volumeAxis"
+                            },             
+                            {
+                                "balloonText": "[[value]]",
+                                "dashLengthField": "dashLength",
+                                "fillAlphas": 0.7,
+                                "legendPeriodValueText": "[[value]]",
+                                "legendValueText": "v: [[value]]",
+                                "title": "stockvolume",
+                                "type": "column",
+                                "newStack": true, 
+                                "valueField": "stockvolume",
+                                "valueAxis": "volumeAxis"
+                            },
+                            {
+                                "balloonText": "p:[[value]]",
+                                "bullet": "round",
+                                "bulletBorderAlpha": 1,
+                                "useLineColorForBulletBorder": true,
+                                "bulletColor": "#FFFFFF",
+                                "bulletSizeField": "townSize",
+                                "dashLengthField": "dashLength",
+                                "descriptionField": "event",
+                                "labelPosition": "right",
+                                "labelText": "[[event]]",
+                                "legendValueText": "p: [[value]]",
+                                "title": "traderprice",
+                                "fillAlphas": 0,
+                                "valueField": "traderprice",
+                                "valueAxis": "priceAxis"
+                            },
+                            {
+                                "balloonText": "p: [[value]]",
+                                "bullet": "round",
+                                "bulletBorderAlpha": 1,
+                                "useLineColorForBulletBorder": true,
+                                "bulletColor": "#FFFFFF",
+                                "bulletSizeField": "townSize",
+                                "dashLengthField": "dashLength",
+                                "descriptionField": "event",
+                                "labelPosition": "right",
+                                "labelText": "[[event]]",
+                                "legendValueText": "p: [[value]]",
+                                "title": "stockprice",
+                                "fillAlphas": 0,
+                                "valueField": "stockprice",
+                                "valueAxis": "priceAxis"
+                            }],  
+                            "chartCursor": {
+                                "categoryBalloonDateFormat": "WW",
+                                "cursorAlpha": 0.1,
+                                "cursorColor":"#000000",
+                                "fullWidth":true,
+                                "valueBalloonsEnabled": false,
+                                "zoomable": false
+                            },
+                            "dataDateFormat": "YYYY-MM-DD",
+                            "categoryField": "date",
+                            "categoryAxis": {
+                                "dateFormats": [{
+                                    "period": "DD",
+                                    "format": "DD"
+                                }, {
+                                    "period": "WW",
+                                    "format": "MMM DD"
+                                }, {
+                                    "period": "MM",
+                                    "format": "MMM"
+                                }, {
+                                    "period": "YYYY",
+                                    "format": "YYYY"
+                                }],
+                                "parseDates": true,
+                                "autoGridCount": false,
+                                "axisColor": "#555555",
+                                "gridAlpha": 0.1,
+                                "gridColor": "#FFFFFF",
+                                "gridCount": 50
+                            },
+                            "exportConfig": {
+                                "menuBottom": "20px",
+                                "menuRight": "22px",
+                                "menuItems": [{
+                                    "icon": 'http://www.amcharts.com/lib/3/images/export.png',
+                                    "format": 'png'
+                                }]
+                            },
+                            "chartScrollbar": {},  
+                            "chartCursor": {
+                                "cursorPosition": "mouse"
+                            },
+                    });                            
+                }
+                function callbackPieChart(){
+                    pieChart1.addListener("pullOutSlice", function (event) {
+                            stockChart2.dataProvider = event.dataItem.dataContext.data;
+                            stockChart2.validateData();
+                            stockChart2.animateAgain();
+                            });
+
+                    pieChart1.addListener("pullInSlice", function (event) {
+                            stockChart2.dataProvider = collectiveData;
+                            stockChart2.validateData();
+                            stockChart2.animateAgain();
+                            });
+                }
+
+            }//]]>  
+        </script>
+    </head>
+    <body>
+        <script type="text/javascript" src="http://www.amcharts.com/lib/3/amcharts.js"></script>
+        <script type="text/javascript" src="http://www.amcharts.com/lib/3/pie.js"></script>
+        <script type="text/javascript" src="http://www.amcharts.com/lib/3/serial.js"></script>
+        <script type="text/javascript" src="http://www.amcharts.com/lib/3/themes/none.js"></script>
+        <script src="http://www.amcharts.com/lib/3/themes/none.js" type="text/javascript"></script>
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
+        <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+        <script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+        <div id="chartdiv1"></div>
+        <div id="chartdiv2"></div>
+
+    </body>
+
+
+</html>
+
+
