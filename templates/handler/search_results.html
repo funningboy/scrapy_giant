@@ -1,0 +1,16 @@
+<p>You searched for: <strong>{{ query }}</strong></p>
+{% if stockitem %}
+<p>Found {{ stockitem|length }} </p>
+<ul>
+    {% for item in stockitem %}
+        {% for it in item.datalist %}
+        <li>{{ it.open }}</li>
+        <li>{{ it.volume }}</li>
+        {% endfor %}
+    {% endfor %}
+</ul>
+{% else %}
+<p>No books matched your search
+criteria.</p>
+{% endif %}
+<p>{{ data.name }}</p>

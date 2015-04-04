@@ -1,17 +1,34 @@
 # -*- coding: utf-8 -*-
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 
-from handler.tasks import query_hisstock, query_histoptrader
 from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
 from handler.hisdb_handler import TwseHisDBHandler, OtcHisDBHandler
 from handler.tasks import *
 
+def test(request):
+    return render(request, 'handler/dualema_1314.html')
 
-def hisstock_list(request, hisdb, starttime, endtime, order='totalvolume', limit=10):
+def search_form(request):
+    return render(request, 'handler/search_form.html')
+
+def search(request):
+    if 'q' in request.GET and request.GET['q']:
+        q = request.GET['q']
+        starttime = datetime.utcnow() - timedelta(days=4)
+        endtime = datetime.utcnow() - timedelta(days=2)
+        args = (starttime, endtime, ['2317'])
+        stockitem = TwseHisDBHandler().stock.query(*args)
+        data = {'name': 'sean'}
+        return render(request, 'handler/search_results.html',
+                      {'stockitem': stockitem, 'data': data, 'query': q})
+    else:
+        return render(request, 'handler/search_form.html', {'error': True})
+
+def hisstock_list(request, hisdb, starttime, endtime, order='totalvolume', limit=100):
     dbhandler = hisdb_tasks[hisdb]()
     idhandler = iddb_tasks[hisdb]()
     starttime = datetime(int(starttime[0:4]), int(starttime[4:6]), int(starttime[6:8]))

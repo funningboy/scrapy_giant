@@ -276,6 +276,17 @@ CELERYBEAT_SCHEDULE = {
             _debug
         )
     },
+    'run_scrapy_service_twsehistrader2': {
+        'task': 'bin.tasks.run_scrapy_service',
+        'schedule': crontab(minute=40, hour='*/8'),
+        'args': (
+            'twsehistrader2',
+            'INFO',
+            "./log/%s_%s.log" % ('twsehistrader2', datetime.today().strftime("%Y%m%d_%H%M")),
+            True,
+            _debug
+        )
+    },
     'run_scrapy_service_twsehisstock': {
         'task': 'bin.tasks.run_scrapy_service',
         'schedule': crontab(minute=40, hour='*/8'),
@@ -294,6 +305,17 @@ CELERYBEAT_SCHEDULE = {
             'otchistrader',
             'INFO',
             "./log/%s_%s.log" % ('otchistrader', datetime.today().strftime("%Y%m%d_%H%M")),
+            True,
+            _debug
+        )
+    },
+    'run_scrapy_service_otchistrader2': {
+        'task': 'bin.tasks.run_scrapy_service',
+        'schedule': crontab(minute=40, hour='*/8'),
+        'args': (
+            'otchistrader2',
+            'INFO',
+            "./log/%s_%s.log" % ('otchistrader2', datetime.today().strftime("%Y%m%d_%H%M")),
             True,
             _debug
         )

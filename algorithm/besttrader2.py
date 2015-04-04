@@ -2,6 +2,8 @@
 
 import pytz
 import matplotlib.pyplot as plt
+import traceback
+
 from matplotlib.collections import LineCollection
 from sklearn import cluster, covariance, manifold
 
@@ -9,6 +11,7 @@ from zipline.algorithm import TradingAlgorithm
 from zipline.utils.factory import *
 
 from datetime import datetime, timedelta
+from collections import deque
 
 from bin.mongodb_driver import *
 from bin.start import *
@@ -25,6 +28,7 @@ class BestTraderAlgorithm2(TradingAlgorithm):
     """
 
     def __init__(self, dbhandler, *args, **kwargs):
+        self.maxlen =  kwargs.pop('maxlen', 70)
         super(BestTraderAlgorithm, self).__init__(*args, **kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
@@ -32,15 +36,15 @@ class BestTraderAlgorithm2(TradingAlgorithm):
 
     def initialize(self):
         self.edge_model = covariance.GraphLassoCV()
-        self.window = deque(max_len=30)
-        self.X = deque(maxlen=150)
-        self.Y = deque(maxlen=150)
+        self.window = deque(max_len=self.maxlen)
+        self.X = deque(maxlen=self.maxlen*2)
+        self.Y = deque(maxlen=self.maxlen*2)
 
     def handle_data(self, data):
 #        data[self.sids[0]].top0_buyvolume
 #        data[self.sids[0]].top0_sellvolume
 #        data[self.sids[0]].top0_price
-        self.window.append((data[self.sids[0].price, data[self.sids[0].top0_price))
+        self.window.append((data[self.sids[0]].price, data[self.sids[0]].top0_price))
 
         if len(self.window) == 30:
             # standardize the time series
@@ -86,16 +90,20 @@ def run(opt='twse', debug=False, limit=0):
         'opt': opt
     }
     # 1590:u'花旗環球', 1440:u'美林'
-    traderid = '1590'
+    traderid = '1440'
     idhandler = TwseIdDBHandler() if kwargs['opt'] == 'twse' else OtcIdDBHandler()
     for stockid in idhandler.stock.get_ids(**kwargs):
-        dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
-        dbhandler.stock.ids = [stockid]
-        data = dbhandler.transform_all_data(starttime, endtime, [stockid], [traderid], 'totalvolume', 10)
-        besttrader = BestTraderAlgorithm(dbhandler=dbhandler)
-        results = besttrader.run(data).fillna(0)
-        report.collect(stockid, results)
-        print "%s pass" %(stockid)
+        try:
+            dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
+            dbhandler.stock.ids = [stockid]
+            data = dbhandler.transform_all_data(starttime, endtime, [stockid], [traderid], 'totalvolume', 10)
+            besttrader = BestTraderAlgorithm(dbhandler=dbhandler)
+            results = besttrader.run(data).fillna(0)
+            report.collect(stockid, results)
+            print "%s pass" %(stockid)
+        except:
+            print traceback.format_exc()
+            continue
 
     if report.report.empty:
         return

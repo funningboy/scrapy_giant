@@ -112,10 +112,7 @@ class StockIdDBHandler(object):
         for it in item:
             cursor = self._coll.objects(Q(stockid=it['stockid']))
             cursor = list(cursor)
-            if len(cursor) == 0:
-                coll = self._coll().save()
-            else:
-                coll = cursor[0]
+            coll = self._coll() if len(cursor) == 0 else cursor[0]
             coll.stockid = it['stockid']
             coll.stocknm = it['stocknm']
             coll.onmarket = it['onmarket']
@@ -180,10 +177,7 @@ class TraderIdDBHandler(object):
         for it in item:
             cursor = self._coll.objects(Q(traderid=it['traderid']))
             cursor = list(cursor)
-            if len(cursor) == 0:
-                coll = self._coll().save()
-            else:
-                coll = cursor[0]
+            coll = self._coll() if len(cursor) == 0 else cursor[0]
             coll.traderid = it['traderid']
             coll.tradernm = it['tradernm']
             coll.save()

@@ -51,6 +51,8 @@
             function generateChartData() {
                 var data = [];
                 // populate stock data as init
+                //console.log{{ stockitem|length }} 
+                //traderitem|length
                 {% for item in stockitem %}
                 {% for it in item.datalist %}
                 data.push({

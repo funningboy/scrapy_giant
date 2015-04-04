@@ -11,17 +11,10 @@ from bin.mongodb_driver import MongoDBDriver
 
 __all__ ['']
 
-#class SuperManHandler():
+#class Handler():
 #
 #    def __init__(self):
-        host, port = MongoDBDriver._host, MongoDBDriver._port
-        connect('twsehisdb', host=host, port=port, alias='twsehisdb')
-        twsehiscoll = switch(TwseHisColl, 'twsehisdb')
-        self._stock = TwseStockHisDBHandler(twsehiscoll)
-        self._trader = TwseTraderHisDBHandler(twsehiscoll)
+#        host, port = MongoDBDriver._host, MongoDBDriver._port
+#        connect('twsealgdb', host=host, port=port, alias='twsehisdb')
+#        twsehiscoll = switch(TwseHisColl, 'twsealgdb')
 #
-#class ZombieHandler():
-#
-#    def __init__(self):
-
-class

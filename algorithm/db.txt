@@ -1,0 +1,3 @@
+date, algname, [
+ stockid, from, to, prf, ... /url callback run_algorithm
+]

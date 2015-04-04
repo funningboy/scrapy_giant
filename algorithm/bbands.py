@@ -28,12 +28,14 @@ from algorithm.report import Report
 
 class BBandsAlgorithm(TradingAlgorithm):
     """
+    sell after buy
     ref:
     http://pythonprogramming.net/advanced-matplotlib-graphing-charting-tutorial/
     """
 
     def __init__(self, dbhandler, *args, **kwargs):
         self.maxlen = kwargs.pop('maxlen', 70)
+        self.maxhold = kwargs.pop('maxhold', 5)
         super(BBandsAlgorithm, self).__init__(*args, **kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
@@ -41,6 +43,8 @@ class BBandsAlgorithm(TradingAlgorithm):
 
     def initialize(self):
         self.window = deque(maxlen=self.maxlen)
+        self.invested = False
+        self.hold = 0
 
     def handle_data(self, data):
         self.window.append((
@@ -61,6 +65,16 @@ class BBandsAlgorithm(TradingAlgorithm):
             rule_inbb = close[-1] >= middle[-1] * 0.8 and close[-1] <= middle[-1] * 1.2
             rule_hidd = close[-1] == open[-1]
 
+            if self.hold > 0:
+                self.hold = self.hold - 1
+
+            if rule_idx and rule_inbb and rule_hidd and self.invested == False:
+                self.order(self.sids[0], 1000)
+                self.invested = True
+                self.hold = self.maxhold
+            elif self.invested == True and self.hold == 0:
+                self.order(self.sids[0], -1000)
+
             # save to recorder
             signals = {
                 'open': open[-1],
@@ -77,7 +91,7 @@ class BBandsAlgorithm(TradingAlgorithm):
 
 def run(opt='twse', debug=False, limit=0):
     # set time window
-    maxlen = 70
+    maxlen = 30
     starttime = datetime.utcnow() - timedelta(days=300)
     endtime = datetime.utcnow()
     report = Report(
@@ -91,10 +105,12 @@ def run(opt='twse', debug=False, limit=0):
     }
     idhandler = TwseIdDBHandler() if kwargs['opt'] == 'twse' else OtcIdDBHandler()
     for stockid in idhandler.stock.get_ids(**kwargs):
-        dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
-        dbhandler.stock.ids = [stockid]
         try:
+            dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
+            dbhandler.stock.ids = [stockid]
             data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
+            if len(data[stockid].index) < maxlen:
+                continue
             bbands = BBandsAlgorithm(dbhandler=dbhandler, maxlen=maxlen)
             results = bbands.run(data).fillna(0)
             report.collect(stockid, results)

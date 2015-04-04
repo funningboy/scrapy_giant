@@ -14,8 +14,10 @@ scrapy_tasks = [
     'twseid',
     'otcid',
     'twsehistrader',
+    'twsehistrader2',
     'twsehisstock',
     'otchistrader',
+    'otchistrader2',
     'otchisstock'
 ]
 

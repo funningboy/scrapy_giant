@@ -131,6 +131,7 @@ class RandForestAlgorithm2(TradingAlgorithm):
 
 def run(opt='twse', debug=False, limit=0):
     """ as doctest run """
+    maxlen = 30
     # set time window
     starttime = datetime.utcnow() - timedelta(days=300)
     endtime = datetime.utcnow()
@@ -149,8 +150,10 @@ def run(opt='twse', debug=False, limit=0):
             dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
             dbhandler.stock.ids = [stockid]
             data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
-            supman = RandForestAlgorithm(dbhandler=dbhandler)
-            results = supman.run(data).fillna(0)
+            if len(data[stockid].index) < maxlen:
+                continue
+            randf = RandForestAlgorithm(dbhandler=dbhandler, maxlen=maxlen)
+            results = randf.run(data).fillna(0)
             report.collect(stockid, results)
             print "%s pass" %(stockid)
         except:

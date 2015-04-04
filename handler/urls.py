@@ -4,6 +4,10 @@ from django.conf.urls import patterns, url
 from handler import views
 
 urlpatterns = patterns('',
+    url(r'^search-form/$', views.search_form),
+    url(r'^search/$', views.search),
+    url(r'^test/$', views.test),
+
     # ex: /handler/hisstock/twse/2317/20140808/20141111
     # ex: /handler/hisstock/otc/5371/20140808/20141111
     url(r'^hisstock/(?P<hisdb>\w+)/(?P<stockid>\w+)/(?P<starttime>\d{8})/(?P<endtime>\d{8})/$',

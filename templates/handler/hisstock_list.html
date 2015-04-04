@@ -1,27 +1,49 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-http://tablesorter.com/docs/#Getting-Started
+<! https://github.com/bradleyayers/django-tables2/blob/master/django_tables2/templates/django_tables2/table.html>
 {% load staticfiles %}
+{% load i18n %}
 <html>
     <head>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
         <title> - stocklist - </title>
-        <table id="myTable" class="tablesorter">
-            <caption>My table caption</caption> 
-            <thead> 
+        {% if stockitem %} 
+        <table id="stocklist" class="tablesorter">
+            <thead>
                 <tr> 
-                    <th>open</th> 
-                    <th>high</th> 
-                    <th>Email</th> 
-                    <th>Due</th> 
-                    <th>Web Site</th> 
-                </tr> 
+                    <th></th> 
+                    <th>open</th>
+                    <th>close</th>
+                    <th>high</th>
+                    <th>low</th>
+                    <th>volume</th>
+               </tr> 
             </thead> 
-            <tbody> 
-                <tr> 
-                    <td>Smith</td> 
-                    <td>John</td> 
-                    <td>jsmith@gmail.com</td> 
-                    <td>$50.00</td> 
-                    <td>http://www.jsmith.com</td> 
-                </tr> 
-
+            <tbody>
+                {% for item in stockitem %}
+                <tr>
+                {% with item.datalist|last as it %}
+                <th><a href="xx">{{ item.stockid }}-{{ item.stocknm }}</a></th>
+                <th>{{ it.open }}</th>
+                <th>{{ it.close }}</th>
+                <th>{{ it.high }}</th>
+                <th>{{ it.low }}</th>
+                <th>{{ it.volume }}</th>
+                {% endwith %}
+                </tr>
+                {% endfor %}
+            </tbody> 
+        </table>
+        {% endif %}
+    </head>
+    <body>
+        <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+        <script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.4/js/jquery.tablesorter.js"></script>
+        <! use jquery.tablesorter>
+        <script>
+            $(document).ready(function() {
+                $("#stocklist").tablesorter(); 
+            } );
+        </script>
+    </body>
+</html>

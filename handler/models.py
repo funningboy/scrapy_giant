@@ -86,6 +86,7 @@ class StockMapData(EmbeddedDocument):
 
 
 class StockMapColl(Document):
+    url = StringField()
     stockid = StringField()
     stocknm = StringField()
     datalist = ListField(EmbeddedDocumentField(StockMapData))
@@ -100,6 +101,7 @@ class TraderMapData(EmbeddedDocument):
 
 
 class TraderMapColl(Document):
+    url = StringField()
     alias = StringField()
     traderid = StringField()
     tradernm = StringField()
@@ -107,7 +109,6 @@ class TraderMapColl(Document):
     stocknm = StringField()
     totalvolume = IntField(min_value=0, max_value=9999999)
     totalhit = IntField(min_value=0, max_value=9999999)
-    base = StringField()
     datalist = ListField(EmbeddedDocumentField(TraderMapData))
     meta = {
         'allow_inheritance': True,

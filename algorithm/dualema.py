@@ -78,6 +78,7 @@ class DualEMAAlgorithm(TradingAlgorithm):
 def run(opt='twse', debug=False, limit=0):
     """ as doctest run """
     # set time window
+    maxlen = 30
     starttime = datetime.utcnow() - timedelta(days=300)
     endtime = datetime.utcnow()
     # sort factor
@@ -95,6 +96,8 @@ def run(opt='twse', debug=False, limit=0):
             dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
             dbhandler.stock.ids = [stockid]
             data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
+            if len(data[stockid].index) < maxlen:
+                continue
             dualema = DualEMAAlgorithm(dbhandler=dbhandler)
             results = dualema.run(data).fillna(0)
             report.collect(stockid, results)
