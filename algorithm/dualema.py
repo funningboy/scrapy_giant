@@ -41,6 +41,9 @@ class DualEMAAlgorithm(TradingAlgorithm):
         self.real_obv_trans = OBV()
         self.invested = False
 
+    def __repr__(self):
+        return ""
+
     def handle_data(self, data):
         self.short_ema = self.short_ema_trans.handle_data(data)
         self.long_ema = self.long_ema_trans.handle_data(data)
@@ -95,6 +98,7 @@ def run(opt='twse', debug=False, limit=0):
         try:
             dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
             dbhandler.stock.ids = [stockid]
+            dbhandler.trader.ids = []
             data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
             if len(data[stockid].index) < maxlen:
                 continue
@@ -112,6 +116,8 @@ def run(opt='twse', debug=False, limit=0):
     # report summary
     stream = report.summary(dtype='html')
     report.write(stream, 'dualema.html')
+
+    print report.summary(dtype='dict')
 
     for stockid in report.iter_stockid():
         stream = report.iter_report(stockid, dtype='html')

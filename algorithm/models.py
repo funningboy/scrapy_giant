@@ -4,40 +4,27 @@ from datetime import datetime
 
 from mongoengine import *
 
-#class AlgorithmSummaryColl(Document):
-#    stockid = StringField()
-#    stocknm = StringField()
-#    date = DateTimeField(default=datetime.utcnow())
-#    buy = BooleanField()
-#    sell = BooleanField()
-#    buy_count = IntField(min_value=0, max_value=99999)
-#    sell_count = IntField(min_value=0, max_value=99999)
-#    portfolio_value = FloatField(min_value=0, max_value=999999999)
-#    ending_value = FloatField(min_value=0, max_value=999999999)
-#    ending_cash = FloatField(min_value=0, max_value=999999999)
-#    open = FloatField(min_value=0, max_value=9999)
-#    high = FloatField(min_value=0, max_value=9999)
-#    low = FloatField(min_value=0, max_value=9999)
-#    close = FloatField(min_value=0, max_value=9999)
-#    volume = IntField(min_value=0, max_value=9999999)
-#    meta = {
-#        'allow_inheritance': True,
-#        'indexes': [('stockid', 'stocknm', 'date')]
-#    }
-#
-#
-#class AlgorithmDetailColl(Document):
-#    from_date = DateTimeField(default=datetime.utcnow())
-#    to_date = DateTimeField()
-#    portfolio_value = FloatField(min_value=0, max_value=999999999)
-#    starting_cash = FloatField(min_value=0, max_value=999999999)
-#    starting_value = FloatField(min_value=0, max_value=999999999)
-#    ending_value = FloatField(min_value=0, max_value=999999999)
-#    ending_cash = FloatField(min_value=0, max_value=999999999)
-#    capital_used = IntField(min_value=0, max_value=9999999)
-#    period_close = DateTimeField(default=datetime.utcnow())
-#    period_open = DateTimeField(default=datetime.utcnow())
-#    meta = {
-#        'allow_inheritance': True,
-#        'indexes': [('date')]
-#    }
+class AlgorithmData(EmbeddedDocument):
+    stockid = StringField()
+    traderid = StringField()
+    portfolio_value = FloatField(min_value=0.0, max_value=999999999.0)
+    ending_value = FloatField(min_value=0.0, max_value=999999999.0)
+    ending_cash = FloatField(min_value=0.0, max_value=999999999.0)
+    buy_count = IntField(min_value=0, max_value=999)
+    sell_count = IntField(min_value=0, max_value=999)
+    meta = {
+        'indexes': [(
+            'stockid', 'traderid', 'date', 'algnm', 'portfolio_value',
+            'ending_value',  'buy_count', 'sell_count'
+        )]
+    }
+
+class AlgorithmColl(Document):
+    algnm = StringField()
+    date = DateTimeField(default=datetime.utcnow())
+    datalist = ListField(EmbeddedDocument(AlgorithmData))
+    meta = {
+        'db_alias': 'algdb',
+        'allow_inheritance': True,
+        'indexes': [('algnm', 'date')]
+    }

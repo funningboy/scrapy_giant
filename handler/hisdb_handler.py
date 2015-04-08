@@ -80,6 +80,9 @@ class TwseStockHisDBHandler(object):
         self._mapcoll.drop_collection()
         self._ids = []
 
+    def delet(self, item):
+        pass
+
     def insert(self, item):
         keys = ['open', 'high', 'low', 'close', 'volume']
         for it in item:
@@ -87,7 +90,7 @@ class TwseStockHisDBHandler(object):
             data = StockData(**dt)
             cursor = self._coll.objects(Q(date=it['date']) & Q(stockid=it['stockid']))
             cursor = list(cursor)
-            coll = self._coll().save() if len(cursor) == 0 else cursor[0]
+            coll = self._coll() if len(cursor) == 0 else cursor[0]
             coll.stockid = it['stockid']
             coll.date = it['date']
             coll.data = data
@@ -144,7 +147,7 @@ class TwseStockHisDBHandler(object):
         keys = ['date', 'open', 'high', 'low', 'close', 'price', 'volume']
         pool = sorted(results, key=lambda x: x.value[order], reverse=True)[:limit]
         for it in pool:
-            coll = self._mapcoll().save()
+            coll = self._mapcoll()
             for data in sorted(it.value['data'], key=lambda x: x['date']):
                 dt = {k:v for k, v in data.items() if k in keys}
                 coll.datalist.append(StockMapData(**dt))
@@ -192,6 +195,9 @@ class TwseTraderHisDBHandler(object):
         self._mapcoll.drop_collection()
         self._ids = []
 
+    def delet(self, item):
+        pass
+
     def insert(self, item):
         keys = ['avgbuyprice', 'buyvolume', 'avgsellprice', 'sellvolume', 'totalvolume']
         toplist = []
@@ -205,7 +211,7 @@ class TwseTraderHisDBHandler(object):
             toplist.append(TraderInfo(**td))
         cursor = self._coll.objects(Q(date=item['date']) & Q(stockid=item['stockid']))
         cursor = list(cursor)
-        coll = self._coll().save() if len(cursor) == 0 else cursor[0]
+        coll = self._coll() if len(cursor) == 0 else cursor[0]
         coll.stockid = item['stockid']
         coll.date = item['date']
         coll.toplist = toplist
@@ -299,7 +305,7 @@ class TwseTraderHisDBHandler(object):
             pool = list(filter(lambda x: x.key[mkey]==id, results))
             pool = sorted(pool, key=lambda x: x.value[order], reverse=True)[:limit]
             for i, it in enumerate(pool):
-                coll = self._mapcoll().save()
+                coll = self._mapcoll()
                 for data in sorted(it.value['data'], key=lambda x: x['date']):
                     dt = {k:v for k, v in data.items() if k in keys}
                     coll.datalist.append(TraderMapData(**dt))

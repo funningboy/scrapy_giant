@@ -9,6 +9,9 @@ from handler.tasks import *
 from algorithm.report import Report
 from algorithm.dualema import DualEMAAlgorithm
 from algorithm.randforest import RandForestAlgorithm
+from algorithm.bbands import BBandsAlgorithm
+from algorithm.kmeans import KmeansAlgorithm
+
 from celery.utils.log import get_task_logger
 logger = get_task_logger('algorithm')
 
@@ -16,26 +19,23 @@ logger = get_task_logger('algorithm')
 alg_tasks = {
     'dualema': DualEMAAlgorithm,
     'randforest': RandForestAlgorithm,
-#    'bbands': BBandsAlgorithm
+    'bbands': BBandsAlgorithm,
+    'besttrader': BestTraderAlgorithm,
+    'kmeans': KmeansAlgorithm
 }
 
 
 @shared_task
-def run_algorithm(hisdb, alg, starttime, endtime, ):
+def run_algorithm(hisdb, alg, starttime, endtime, stockids, traderids):
+    report = Report(
+        sort=[('buy_count', False), ('sell_count', False), ('volume', False)], limit=20)
     dbhandler = hisdb_tasks[hisdb]()
-    dbhandler.stockids =
-    dbhandler.traderids =
-    starttime = datetime(int(starttime[0:4]), int(starttime[4:6]), int(starttime[6:8]))
-    endtime = datetime(int(endtime[0:4]), int(endtime[4:6]), int(endtime[6:8]))
-    dd = endtime - starttime
-    maxlen = 30
-    if dd.days < maxlen:
-        return
-    args = (starttime, endtime, [stockid], order, limit)
+    dbhandler.stock.ids = stockids
+    dbhandler.trader.ids = traderids
+    args = (starttime, endtime, stockids, traderids, order, limit)
     data = dbhandler.transform_all_data(*args)
-    if len(data[stockid].index) < maxlen:
-        return
     alg = alg_task[alg](dbhandler=dbhandler)
-    results = alg.run(data).fillna(0)
-    return stockid, results
+    report.collect(stockid, results)
+
+    return alg.run(data).fillna(0)
 
