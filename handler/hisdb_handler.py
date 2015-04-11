@@ -9,11 +9,7 @@ from mongoengine import *
 from bin.start import switch
 from bin.mongodb_driver import MongoDBDriver
 from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
-from handler.models import (
-    TwseHisColl, OtcHisColl, StockData, TraderData,
-    TraderInfo, TraderMapColl, TraderMapData, StockMapColl, StockMapData
-)
-
+from handler.models import *
 # use mongoengine(high level mongodb drive) as ORM data backend for Django access
 
 __all__ = ['TwseHisDBHandler', 'OtcHisDBHandler']
@@ -38,12 +34,10 @@ class TwseHisDBHandler(object):
 
     def transform_all_data(self, starttime, endtime, stockids=[], traderids=[], order='totalvolume', limit=10):
         """ transfrom stock/trader data as pandas panel """
-        args = (starttime, endtime, stockids, order, limit)
+        args = (starttime, endtime, stockids, order, limit, self._stock.to_pandas)
         stockdt = self._stock.query(*args)
-        stockdt = self._stock.to_pandas(stockdt)
-        args = (starttime, endtime, list(stockdt.keys()), traderids, 'stock', order, limit)
+        args = (starttime, endtime, list(stockdt.keys()), traderids, 'stock', order, limit, self._trader.to_pandas)
         traderdt = self._trader.query(*args)
-        traderdt = self._trader.to_pandas(traderdt, 'stock')
         return pd.concat([stockdt, traderdt], axis=2).fillna(0)
 
 
@@ -80,11 +74,11 @@ class TwseStockHisDBHandler(object):
         self._mapcoll.drop_collection()
         self._ids = []
 
-    def delet(self, item):
+    def delete(self, item):
         pass
 
     def insert(self, item):
-        keys = ['open', 'high', 'low', 'close', 'volume']
+        keys = [k for k,v in StockData._fields.iteritems()]
         for it in item:
             dt = {k:v for k, v in it.items() if k in keys}
             data = StockData(**dt)
@@ -96,7 +90,7 @@ class TwseStockHisDBHandler(object):
             coll.data = data
             coll.save()
 
-    def query(self, starttime, endtime, stockids=[], order='totalvolume', limit=10):
+    def query(self, starttime, endtime, stockids=[], order='totalvolume', limit=10, callback=None):
         """ return orm
         <stockid>                               | <stockid> ...
                     open| high| low|close|volume|          | open | ...
@@ -144,7 +138,7 @@ class TwseStockHisDBHandler(object):
         cursor = self._coll.objects(Q(date__gte=starttime) & Q(date__lte=endtime) & Q(stockid__in=stockids))
         results = cursor.map_reduce(map_f, reduce_f, 'stockmap')
         results = list(results)
-        keys = ['date', 'open', 'high', 'low', 'close', 'price', 'volume']
+        keys = [k for k,v in StockMapData._fields.iteritems()]
         pool = sorted(results, key=lambda x: x.value[order], reverse=True)[:limit]
         for it in pool:
             coll = self._mapcoll()
@@ -155,11 +149,12 @@ class TwseStockHisDBHandler(object):
             coll.stocknm = self._iddbhandler.stock.get_name(it.key['stockid'])
             coll.url = ''
             coll.save()
-        return self._mapcoll.objects.all()
+        results = self._mapcoll.objects.all()
+        return callback(results) if callback else results
 
     def to_pandas(self, cursor):
         item = OrderedDict()
-        keys = ['open', 'high', 'low', 'close', 'price', 'volume']
+        keys = [k for k,v in StockMapData._fields.iteritems()]
         for it in cursor:
             index, data = [], []
             for ii in it.datalist:
@@ -195,11 +190,11 @@ class TwseTraderHisDBHandler(object):
         self._mapcoll.drop_collection()
         self._ids = []
 
-    def delet(self, item):
+    def delete(self, item):
         pass
 
     def insert(self, item):
-        keys = ['avgbuyprice', 'buyvolume', 'avgsellprice', 'sellvolume', 'totalvolume']
+        keys = [k for k,v in TraderData._fields.iteritems()]
         toplist = []
         for it in item['toplist']:
             dt = {k:v for k, v in it['data'].items() if k in keys}
@@ -218,7 +213,7 @@ class TwseTraderHisDBHandler(object):
         coll.save()
 
     def query(self, starttime, endtime, stockids=[], traderids=[],
-            base='stock', order='totalvolume', limit=10):
+            base='stock', order='totalvolume', limit=10, callback=None):
         """ get rank toplist volume stock/trader data
             <stockid>                                               <stockid>
                      | top0_v/p_<traderid> | top1 | ... top10 |          | top0_<traderid>
@@ -290,7 +285,7 @@ class TwseTraderHisDBHandler(object):
         ids = stockids if base == 'stock' else traderids
         mkey = 'stockid' if base == 'stock' else 'traderid'
         assert(order in ['totalvolume', 'totalhit'])
-        keys = ['ratio', 'price', 'buyvolume', 'sellvolume', 'date']
+        keys = [k for k,v in TraderMapData._fields.iteritems()]
         if stockids and traderids:
             cursor = self._coll.objects(
                 Q(date__gte=starttime) & Q(date__lte=endtime) &
@@ -317,7 +312,8 @@ class TwseTraderHisDBHandler(object):
                 coll.totalhit = it.value['totalhit']
                 coll.alias = "top%d" % (i)
                 coll.save()
-        return self._mapcoll.objects.all()
+        results = self._mapcoll.objects.all()
+        return callback(results) if callback else results
 
     def to_pandas(self, cursor, base='stock'):
         item = OrderedDict()

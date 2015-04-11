@@ -28,7 +28,6 @@ class BestTraderAlgorithm2(TradingAlgorithm):
     """
 
     def __init__(self, dbhandler, *args, **kwargs):
-        self.maxlen =  kwargs.pop('maxlen', 70)
         super(BestTraderAlgorithm, self).__init__(*args, **kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids

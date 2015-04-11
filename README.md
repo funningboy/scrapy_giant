@@ -79,7 +79,7 @@ export C_FORCE_ROOT=true
 celery -A main worker -l info
 python manage.py syncdb
 python manage.py shell
-
+celery scheduler
 ```
 
 0.6 as django unittest run

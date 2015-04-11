@@ -22,27 +22,26 @@ from algorithm.report import Report
 
 class DualEMAAlgorithm(TradingAlgorithm):
     """ Dual Moving Average Crossover algorithm.
-
-    This algorithm buys apple once its short moving average crosses
-    its long moving average (indicating upwards momentum) and sells
-    its shares once the averages cross again (indicating downwards
-    momentum).
-
+    buy:
+    sell:
     """
 
     def __init__(self, dbhandler, *args, **kwargs):
+        self._debug = kwargs.pop('debug', False)
+        self._buf_win = kwargs.pop('buf_win', 30)
+        self._short_ema_win = kwargs.pop('short_ema_win', 20)
+        self._long_ema_win = kwargs.pop('long_ema_win', 40)
+        self._buy_amount = kwargs.pop('buy_amount', 1000)
+        self._sell_amount = kwargs.pop('sell_amount', 1000)
         super(DualEMAAlgorithm, self).__init__(*args, **kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
 
     def initialize(self):
-        self.short_ema_trans = EMA(timeperiod=20)
-        self.long_ema_trans = EMA(timeperiod=40)
+        self.short_ema_trans = EMA(timeperiod=self._short_ema_win)
+        self.long_ema_trans = EMA(timeperiod=self._long_ema_win)
         self.real_obv_trans = OBV()
         self.invested = False
-
-    def __repr__(self):
-        return ""
 
     def handle_data(self, data):
         self.short_ema = self.short_ema_trans.handle_data(data)
@@ -56,11 +55,11 @@ class DualEMAAlgorithm(TradingAlgorithm):
 
         # buy/sell rule
         if (self.short_ema > self.long_ema).all() and not self.invested:
-            self.order(self.sids[0], 1000)
+            self.order(self.sids[0], self._buy_amount)
             self.invested = True
             self.buy = True
         elif (self.short_ema < self.long_ema).all() and self.invested:
-            self.order(self.sids[0], -1000)
+            self.order(self.sids[0], -self._sell_amount)
             self.invested = False
             self.sell = True
 
@@ -86,7 +85,7 @@ def run(opt='twse', debug=False, limit=0):
     endtime = datetime.utcnow()
     # sort factor
     report = Report(
-        sort=[('buy_count', False), ('sell_count', False), ('volume', False)], limit=20)
+        sort=[('buy_count', False), ('sell_count', False), ('portfolio_value', False)], limit=20)
     # set debug or normal mode
     kwargs = {
         'debug': debug,
@@ -117,14 +116,12 @@ def run(opt='twse', debug=False, limit=0):
     stream = report.summary(dtype='html')
     report.write(stream, 'dualema.html')
 
-    print report.summary(dtype='dict')
-
-    for stockid in report.iter_stockid():
+    for stockid in report.iter_symbol():
         stream = report.iter_report(stockid, dtype='html')
         report.write(stream, "dualema_%s.html" % (stockid))
 
     # plot
-    for stockid in report.iter_stockid():
+    for stockid in report.iter_symbol():
         try:
             perf = report.pool[stockid]
             fig = plt.figure()

@@ -22,6 +22,7 @@ def wap_scrapy_cmd(spider, loglevel, logfile, logen=True, debug=False):
         '--loglevel=%(loglevel)s ' +
         '--logfile=%(logfile)s ' +
         '-s LOG_ENABLED=%(logen)s ' +
+        '-s GIANT_LIMIT=%(debug)s ' +
         '-s GIANT_DEBUG=%(debug)s') % {
             'spider': spider,
             'loglevel': loglevel,

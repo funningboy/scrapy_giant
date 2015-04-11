@@ -23,54 +23,59 @@ class Report(object):
     def pool(self):
         return self._pool
 
-    def collect(self, stockid, results):
-        # collect and sort
+    def collect(self, symbol, results):
+        # ref:
+        # https://github.com/quantopian/zipline/blob/7892a6943f7b027be1e3c5a75eac61e7c4c0a027/zipline/finance/performance/period.py
+        # collect and sort results as df
         item = OrderedDict({
             'buy_count': results['buy'].sum() if 'buy' in results.columns else 0,
             'sell_count': results['sell'].sum() if 'sell' in results.columns else 0,
-            'portfolio_value': results['portfolio_value'].mean() if 'portfilio_value' in results.columns else 0,
-            'ending_value': results['ending_value'].sum() if 'ending_value' in results.columns else 0,
-            'ending_cash': results['ending_cash'].mean() if 'ending_cash' in results.columns else 0,
-            'volume': results['volume'].mean() if 'volume' in results.columns else 0
+            # zipline key
+            'portfolio_value': results['portfolio_value'][-1] if 'portfolio_value' in results.columns else 0,
+            'ending_value': results['ending_value'][-1] if 'ending_value' in results.columns else 0,
+            'ending_cash': results['ending_cash'][-1] if 'ending_cash' in results.columns else 0,
+            'capital_used': results['capital_used'][-1] if 'capital_used' in results.columns else 0,
+            'start_time': results.index[0] if len(results.index) > 0 else datetime.utcnow(),
+            'end_time': results.index[-1] if len(results.index) > 0 else datetime.utcnow()
         })
-        frame = pd.DataFrame.from_dict({stockid: item}).fillna(0)
+        frame = pd.DataFrame.from_dict({symbol: item}).fillna(0)
         self._report = pd.concat([self._report, frame.T], axis=0).fillna(0).sort(columns=list(self._sort), ascending=list(self._direct))[0:self._limit]
-        self._pool.update({stockid: results})
+        self._pool.update({symbol: results})
         rms = [it for it in self._pool if it not in self._report.index]
         for it in rms:
             del self._pool[it]
 
-    def iter_stockid(self):
-        for stockid in self._report.index:
-            yield stockid
+    def iter_symbol(self):
+        for symbol in self._report.index:
+            yield symbol
 
-    def iter_report(self, stockid, dtype='json'):
-        columns = self._pool[stockid].columns
+    def iter_report(self, symbol, dtype='json'):
+        columns = self._pool[symbol].columns
         if dtype == 'json':
-            return self._pool[stockid].to_json(columns=columns)
+            return self._pool[symbol].to_json()
         elif dtype == 'html':
-            return self._pool[stockid].to_html(columns=columns)
+            return self._pool[symbol].to_html(columns=columns)
         elif dtype == 'dict':
-            return self._pool[stockid].to_dict(columns=columns)
+            return self._pool[symbol].to_dict()
         else:
-            return self._pool[stockid]
+            return self._pool[symbol]
 
     def summary(self, dtype='json'):
         """
         dtype == 'json|html|pd.frame|dict' ...
         <algorithm name>
         <datetime>
-               portfolio_value | ... | open| high| low|close|volume|
-        2330    11             | ... | 100 | 101 | 99 | 100 | 100  |
-        2317    10             | ... | 100 | 102 | 98 | 99  | 99   |
+               portfolio_value | buy_count| sell_count|
+        2330    11             |      10   |   0      |
+        2317    10             |       1   |   1      |
         """
         columns = self._report.columns
         if dtype == 'json':
-            return self._report.to_json(columns=columns)
+            return self._report.to_json()
         elif dtype == 'html':
             return self._report.to_html(columns=columns)
         elif dtype == 'dict':
-            return self._report.to_dict(columns=columns)
+            return self._report.to_dict()
         else:
             return self._report
 

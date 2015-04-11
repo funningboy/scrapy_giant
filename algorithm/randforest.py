@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# ref:    http://scikit-learn.org/stable/auto_examples/randomized_search.html
 
 import pytz
 import matplotlib.pyplot as plt
@@ -27,29 +28,32 @@ from algorithm.report import Report
 
 
 class RandForestAlgorithm(TradingAlgorithm):
-    """
-    http://scikit-learn.org/stable/auto_examples/randomized_search.html
+    """ RandForest
+    buy:
+    sell:
     """
 
     def __init__(self, dbhandler, *args, **kwargs):
-        self.n_estimators = kwargs.pop('n_estimators', 20)
-        self.maxlen = kwargs.pop('maxlen', 70)
+        self._debug = kwargs.pop('debug', False)
+        self._buf_win = kwargs.pop('buf_win', 70)
+        self._n_estimators = kwargs.pop('n_estimators', 20)
+        self._mavg_win = kwargs.pop('mavg_win', 7)
         super(RandForestAlgorithm, self).__init__(*args, **kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
 
     def initialize(self):
-        self.clf = RandomForestClassifier(n_estimators=self.n_estimators)
-        self.window = deque(maxlen=self.maxlen)
-        self.X = deque(maxlen=self.maxlen*2)
-        self.Y = deque(maxlen=self.maxlen*2)
-        self.add_transform(MovingAverage, 'mavg', ['price', 'volume'], window_length=7)
-        self.add_transform(MovingStandardDev, 'stddev', window_length=7)
+        self.clf = RandomForestClassifier(n_estimators=self._n_estimators)
+        self.window = deque(maxlen=self._buf_win)
+        self.X = deque(maxlen=self._buf_win*2)
+        self.Y = deque(maxlen=self._buf_win*2)
+        self.add_transform(MovingAverage, 'mavg', ['price', 'volume'], window_length=self._mavg_win)
+        self.add_transform(MovingStandardDev, 'stddev', window_length=self._mavg_win)
 
     def handle_data(self, data):
         self.window.append(data[self.sids[0]].price)
 
-        if len(self.window) == self.maxlen:
+        if len(self.window) == self._buf_win:
             changes = np.diff(self.window) > 0
 
             # as train & target seqs
@@ -57,10 +61,11 @@ class RandForestAlgorithm(TradingAlgorithm):
             self.X.append(changes[:-1])
             self.Y.append(changes[-1])
 
-            if len(self.Y) >= self.maxlen*2//3:
+            if len(self.Y) >= self._buf_win*2//3:
                 self.clf.fit(self.X, self.Y)
                 self.prediction = self.clf.predict(changes[1:])
                 self.order_target_percent(self.sids[0], self.prediction)
+
                 # save to recorder
                 signals = {
                     'open': data[self.sids[0]].open,
@@ -81,19 +86,21 @@ class RandForestAlgorithm2(TradingAlgorithm):
     """
 
     def __init__(self, dbhandler, *args, **kwargs):
-        self.n_estimators = kwargs.pop('n_estimators', 20)
-        self.maxlen = kwargs.pop('maxlen', 70)
+        self._debug = kwargs.pop('debug', False)
+        self._buf_win = kwargs.pop('buf_win', 70)
+        self._n_estimators = kwargs.pop('n_estimators', 20)
+        self._mavg_win = kwargs.pop('mavg_win', 7)
         super(RandForestAlgorithm, self).__init__(*args, **kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
 
     def initialize(self):
-        self.clf = RandomForestClassifier(n_estimators=self.n_estimators)
-        self.window = deque(maxlen=self.maxlen)
-        self.X = deque(maxlen=self.maxlen*2)
-        self.Y = deque(maxlen=self.maxlen*2)
-        self.add_transform(MovingAverage, 'mavg', ['price', 'volume'], window_length=7)
-        self.add_transform(MovingStandardDev, 'stddev', window_length=7)
+        self.clf = RandomForestClassifier(n_estimators=self._n_estimators)
+        self.window = deque(maxlen=self._buf_win)
+        self.X = deque(maxlen=self._buf_win*2)
+        self.Y = deque(maxlen=self._buf_win*2)
+        self.add_transform(MovingAverage, 'mavg', ['price', 'volume'], window_length=self._mavg_win)
+        self.add_transform(MovingStandardDev, 'stddev', window_length=self._mavg_win)
 
     def _enocde(self, pre, cur):
          ratio = pre.close/cur.close
@@ -106,13 +113,13 @@ class RandForestAlgorithm2(TradingAlgorithm):
     def handle_data(self, data):
         self.window.append(data[self.sids[0]].price)
 
-        if len(self.window) == self.maxlen:
+        if len(self.window) == self._buf_win:
             # as train & target seqs
             # ex up(1,2): [0, 0 , 0, ...1, 1], down(0,-1): [1, 1, 1, .. 0, 0]
-            self.X.append([self._encode(self.window[i], self.window[i+1]) for i in range(0, self.maxlen-3)])
-            self.Y.append([self._encode(self.window[i], self.window[i+1]) for i in range(self.maxlen-3, -1)])
+            self.X.append([self._encode(self.window[i], self.window[i+1]) for i in range(0, self._buf_win-3)])
+            self.Y.append([self._encode(self.window[i], self.window[i+1]) for i in range(self._buf_win-3, -1)])
 
-            if len(self.Y) >= self.maxlen*2//3:
+            if len(self.Y) >= self._buf_win*2//3:
                 self.clf.fit(self.X, self.Y)
                 self.prediction = self.clf.predict(changes[1:])
                 self.order_target_percent(self.sids[0], self.prediction)
@@ -123,7 +130,7 @@ class RandForestAlgorithm2(TradingAlgorithm):
                     'low': data[self.sids[0]].low,
                     'close': data[self.sids[0]].close,
                     'volume': data[self.sids[0]].volume,
-                    'mavg7': data[self.sids[0]].mavg.price,
+                    'mavg%d' %(self._mavg_win): data[self.sids[0]].mavg.price,
                     'prediction': self.prediction
                 }
                 self.record(**signals)
@@ -137,7 +144,7 @@ def run(opt='twse', debug=False, limit=0):
     endtime = datetime.utcnow()
     # sort factor
     report = Report(
-        sort=[('buy_count', False), ('sell_count', False), ('volume', False)], limit=20)
+        sort=[('buy_count', False), ('sell_count', False), ('portfilio_value', False)], limit=20)
     # set debug or normal mode
     kwargs = {
         'debug': debug,
@@ -152,7 +159,7 @@ def run(opt='twse', debug=False, limit=0):
             data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
             if len(data[stockid].index) < maxlen:
                 continue
-            randf = RandForestAlgorithm(dbhandler=dbhandler, maxlen=maxlen)
+            randf = RandForestAlgorithm(dbhandler=dbhandler, buf_win=maxlen)
             results = randf.run(data).fillna(0)
             report.collect(stockid, results)
             print "%s pass" %(stockid)
@@ -167,12 +174,12 @@ def run(opt='twse', debug=False, limit=0):
     stream = report.summary(dtype='html')
     report.write(stream, 'randforest.html')
 
-    for stockid in report.iter_stockid():
+    for stockid in report.iter_symbol():
         stream = report.iter_report(stockid, dtype='html')
         report.write(stream, "randforest_%s.html" % (stockid))
 
     # plot
-    for stockid in report.iter_stockid():
+    for stockid in report.iter_symbol():
         try:
             perf = report.pool[stockid]
             fig = plt.figure()

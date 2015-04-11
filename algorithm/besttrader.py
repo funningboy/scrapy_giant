@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# ref: http://scikit-learn.org/stable/auto_examples/applications/plot_stock_market.html
+# https://www.quantopian.com/posts/working-with-history-dataframes
 
 import pytz
 import matplotlib.pyplot as plt
@@ -22,24 +24,25 @@ from algorithm.report import Report
 
 
 class BestTraderAlgorithm(TradingAlgorithm):
-    """
-    find the best correlation between trader and stocks
-    ref: http://scikit-learn.org/stable/auto_examples/applications/plot_stock_market.html
-    https://www.quantopian.com/posts/working-with-history-dataframes
+    """ find the best correlation between trader and stocks
+    buy:
+    sell:
     """
 
     def __init__(self, dbhandler, *args, **kwargs):
-        self.maxlen = kwargs.pop('maxlen', 10)
+        self._debug = kwargs.pop('debug', False)
+        self._buf_win = kwargs.pop('buf_win', 10)
         super(BestTraderAlgorithm, self).__init__(*args, **kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
         self.tids = self.dbhandler.trader.ids
         self.tops = self.dbhandler.trader.map_alias([self.sids[0]], 'stock', ["top%d" %i for i in range(10)])
         self.tops = {k:v for v,k in enumerate(self.tops)}
-        print self.tops
+        if self._debug:
+            print self.tops
 
     def initialize(self):
-        self.window = deque(maxlen=self.maxlen)
+        self.window = deque(maxlen=self._buf_win)
 
     def handle_data(self, data):
         buyvolume, sellvolume = 0,0
@@ -60,7 +63,8 @@ class BestTraderAlgorithm(TradingAlgorithm):
                 "top0_%s_price" % (self.tids[0]): price
             }
         except:
-            print "traderid(%s) not found in stockid(%s)" %(self.tids[0], self.sids[0])
+            if self._debug:
+                print "traderid(%s) not found in stockid(%s)" %(self.tids[0], self.sids[0])
             pass
 
         # save to recorder
@@ -87,7 +91,7 @@ def run(opt='twse', debug=False, limit=0):
     endtime = datetime.utcnow()
     # sort factor
     report = Report(
-        sort=[('buy_count', False), ('sell_count', False), ('volume', False)], limit=20)
+        sort=[('buy_count', False), ('sell_count', False), ('portfolio_value', False)], limit=20)
     # set debug or normal mode
     kwargs = {
         'debug': debug,
@@ -120,12 +124,12 @@ def run(opt='twse', debug=False, limit=0):
     stream = report.summary(dtype='html')
     report.write(stream, 'besttrader_%s.html' % (traderid))
 
-    for stockid in report.iter_stockid():
+    for stockid in report.iter_symbol():
         stream = report.iter_report(stockid, dtype='html')
         report.write(stream, "besttrader_%s_%s.html" % (traderid, stockid))
 
     # plot
-    for stockid in report.iter_stockid():
+    for stockid in report.iter_symbol():
         try:
             perf = report.pool[stockid]
             fig = plt.figure()
