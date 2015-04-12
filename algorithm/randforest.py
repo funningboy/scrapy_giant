@@ -144,7 +144,7 @@ def run(opt='twse', debug=False, limit=0):
     endtime = datetime.utcnow()
     # sort factor
     report = Report(
-        sort=[('buy_count', False), ('sell_count', False), ('portfilio_value', False)], limit=20)
+        sort=[('buy_count', False), ('sell_count', False), ('portfolio_value', False)], limit=20)
     # set debug or normal mode
     kwargs = {
         'debug': debug,
@@ -159,7 +159,7 @@ def run(opt='twse', debug=False, limit=0):
             data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
             if len(data[stockid].index) < maxlen:
                 continue
-            randf = RandForestAlgorithm(dbhandler=dbhandler, buf_win=maxlen)
+            randf = RandForestAlgorithm(dbhandler=dbhandler, buf_win=maxlen, debug=True)
             results = randf.run(data).fillna(0)
             report.collect(stockid, results)
             print "%s pass" %(stockid)

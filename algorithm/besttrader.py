@@ -87,7 +87,7 @@ def run(opt='twse', debug=False, limit=0):
     """ as doctest run """
     # set time window
     maxlen = 5
-    starttime = datetime.utcnow() - timedelta(days=10)
+    starttime = datetime.utcnow() - timedelta(days=15)
     endtime = datetime.utcnow()
     # sort factor
     report = Report(
@@ -109,7 +109,7 @@ def run(opt='twse', debug=False, limit=0):
             data = dbhandler.transform_all_data(starttime, endtime, [stockid], [traderid], 'totalvolume', 10)
             if len(data[stockid].index) < maxlen:
                 continue
-            besttrader = BestTraderAlgorithm(dbhandler=dbhandler)
+            besttrader = BestTraderAlgorithm(dbhandler=dbhandler, debug=True)
             results = besttrader.run(data).fillna(0)
             report.collect(stockid, results)
             print "%s pass" %(stockid)

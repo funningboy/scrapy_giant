@@ -243,6 +243,7 @@ LOGGING = {
 # Can be very useful. Celery does not seem to support scheduled task
 # but only periodic
 CELERYBEAT_SCHEDULE = {
+    # register all scrapy services
     'run_scrapy_service_twseid': {
         'task': 'bin.tasks.run_scrapy_service',
         'schedule': crontab(minute=0, hour='*/8'),
@@ -328,6 +329,40 @@ CELERYBEAT_SCHEDULE = {
             'INFO',
             "./log/%s_%s.log" % ('otchisstock', datetime.today().strftime("%Y%m%d_%H%M")),
             True,
+            _debug
+        )
+    },
+    # register run all algorithms
+    'run_algorithm_service_twsedulema': {
+        'task': 'algorithm.tasks.run_algorithm_service',
+        'schedule': crontab(minute=40, hour='*/8'),
+        'args':(
+            'twsedualem',
+            datetime.utcnow() - timedelta(days=300),
+            datetime.utcnow(),
+            50,
+            _debug
+        )
+    },
+    'run_algorithm_service_otcdulema': {
+        'task': 'algorithm.tasks.run_algorithm_service',
+        'schedule': crontab(minute=40, hour='*/8')
+        'args': (
+            'otcdualem',
+            datetime.utcnow() - timedelta(days=300),
+            datetime.utcnow(),
+            50,
+            _debug
+        )
+    },
+    'run_algorithm_serivce_twsebesttrader': {
+        'task': 'algorithm.tasks.run_algorithm_service',
+        'schedule': crontab(minute=40, hour='*/8')
+        'args':(
+            'twsebtrader',
+            datetime.utcnow() - timedelta(days=300),
+            datetime.utcnow(),
+            50,
             _debug
         )
     }

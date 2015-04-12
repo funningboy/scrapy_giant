@@ -27,8 +27,8 @@ iddb_tasks = {
 # trans_hisstock.s(*args)
 #).apply_async().get()
 @shared_task
-def trans_hisstock(hisdb, starttime, endtime, stockids=[], order='totalvolume', limit=10):
-    dbhandler = hisdb_tasks[hisdb]()
+def trans_hisstock(opt, starttime, endtime, stockids=[], order='totalvolume', limit=10):
+    dbhandler = hisdb_tasks[opt]()
     dbhandler.stock.ids = stockids
     args = (starttime, endtime, stockids, order, limit)
     cursor = dbhandler.stock.query(*args)
@@ -40,8 +40,8 @@ def trans_hisstock(hisdb, starttime, endtime, stockids=[], order='totalvolume', 
 # trans_histoptrader.s(*args)
 #).apply_async().get()
 @shared_task
-def trans_histoptrader(hisdb, starttime, endtime, stockids=[], traderids=[], base='stock', order='totalvolume', limit=10):
-    dbhandler = hisdb_tasks[hisdb]()
+def trans_histoptrader(opt, starttime, endtime, stockids=[], traderids=[], base='stock', order='totalvolume', limit=10):
+    dbhandler = hisdb_tasks[opt]()
     dbhandler.stock.ids = stockids
     dbhandler.trader.ids = traderids
     args = (starttime, endtime, stockids, traderids, base, order, limit)

@@ -49,7 +49,7 @@ class Report(object):
         for symbol in self._report.index:
             yield symbol
 
-    def iter_report(self, symbol, dtype='json'):
+    def iter_report(self, symbol, dtype=None):
         columns = self._pool[symbol].columns
         if dtype == 'json':
             return self._pool[symbol].to_json()
@@ -60,7 +60,7 @@ class Report(object):
         else:
             return self._pool[symbol]
 
-    def summary(self, dtype='json'):
+    def summary(self, dtype=None):
         """
         dtype == 'json|html|pd.frame|dict' ...
         <algorithm name>

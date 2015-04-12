@@ -42,6 +42,8 @@ class DualEMAAlgorithm(TradingAlgorithm):
         self.long_ema_trans = EMA(timeperiod=self._long_ema_win)
         self.real_obv_trans = OBV()
         self.invested = False
+        self.buy = False
+        self.sell = False
 
     def handle_data(self, data):
         self.short_ema = self.short_ema_trans.handle_data(data)
@@ -101,7 +103,7 @@ def run(opt='twse', debug=False, limit=0):
             data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
             if len(data[stockid].index) < maxlen:
                 continue
-            dualema = DualEMAAlgorithm(dbhandler=dbhandler)
+            dualema = DualEMAAlgorithm(dbhandler=dbhandler, debug=True)
             results = dualema.run(data).fillna(0)
             report.collect(stockid, results)
             print "%s pass" %(stockid)

@@ -48,6 +48,8 @@ class BBandsAlgorithm(TradingAlgorithm):
     def initialize(self):
         self.window = deque(maxlen=self._buf_win)
         self.invested = False
+        self.buy = False
+        self.sell = False
         self.buy_hold = 0
         self.sell_hold = 0
 
@@ -71,13 +73,18 @@ class BBandsAlgorithm(TradingAlgorithm):
             rule_hidd = close[-1] == open[-1]
 
             self.buy_hold = self.buy_hold - 1 if self.buy_hold > 0 else self.buy_hold
+            self.buy = False
+            self.sell = False
 
             if rule_idx and rule_inbb and rule_hidd and self.invested == False:
                 self.order(self.sids[0], self._buy_amount)
                 self.invested = True
+                self.buy = True
                 self.buy_hold = self._buy_hold
             elif self.invested == True and self.buy_hold == 0:
                 self.order(self.sids[0], -self._sell_amount)
+                self.invested = False
+                self.sell = True
 
             # save to recorder
             signals = {
@@ -88,7 +95,9 @@ class BBandsAlgorithm(TradingAlgorithm):
                 'volume': volume[-1],
                 'upper': upper[-1],
                 'middle': middle[-1],
-                'lower': lower[-1]
+                'lower': lower[-1],
+                'buy': self.buy,
+                'sell': self.sell
             }
             self.record(**signals)
 
@@ -115,7 +124,7 @@ def run(opt='twse', debug=False, limit=0):
             data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
             if len(data[stockid].index) < maxlen:
                 continue
-            bbands = BBandsAlgorithm(dbhandler=dbhandler, buf_win=maxlen)
+            bbands = BBandsAlgorithm(dbhandler=dbhandler, buf_win=maxlen, debug=True)
             results = bbands.run(data).fillna(0)
             report.collect(stockid, results)
             print "%s" %(stockid)
