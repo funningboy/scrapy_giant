@@ -15,83 +15,77 @@ from handler.models import StockMapColl, TraderMapColl
 
 from django.template import Context, Template
 
-class TestTwseHisStockQuery(TestTwseHisTrader, TestTwseHisStock):
+class TestTwseHisStockQuery(TestTwseHisTrader2, TestTwseHisStock):
 
     def test_on_run(self):
         super(TestTwseHisStockQuery, self).test_on_run()
-        t = timeit.Timer()
-        starttime = datetime.utcnow() - timedelta(days=4)
+        starttime = datetime.utcnow() - timedelta(days=10)
         endtime = datetime.utcnow()
+        t = timeit.Timer()
         args = ('twse', starttime, endtime, ['2317'], 'totalvolume', 10)
-        panel = chain(
-            query_hisstock.s(*args),
-            trans_hisstock.s()
-        ).apply_async().get()
-        print "run stock 300d query used %.4f(s)" % (t.timeit())
+        panel, dbhandler = trans_hisstock.delay(*args).get()
+        print "run stock 10d query used %.4f(s)" % (t.timeit())
         self.assertFalse(panel.empty)
         self.assertFalse(panel['2317'].empty)
 
-    def test_on_orm(self):
-        super(TestTwseHisStockQuery, self).test_on_run()
-#        response = self.client.get(reverse('proposal:proposal', kwargs={"proposal_id": "08-01-YS-01-001"}))
-#        self.assertEqual(response.status_code, 200)
 
-class TestTwseHisTraderQuery(TestTwseHisTrader, TestTwseHisStock):
+class TestTwseHisTraderQuery(TestTwseHisTrader2, TestTwseHisStock):
 
     def test_on_run(self):
         super(TestTwseHisTraderQuery, self).test_on_run()
-        t = timeit.Timer()
-        starttime = datetime.utcnow() - timedelta(days=300)
+        starttime = datetime.utcnow() - timedelta(days=10)
         endtime = datetime.utcnow()
+        t = timeit.Timer()
         args = ('twse', starttime, endtime, ['2317'], [], 'stock', 'totalvolume', 10)
-        panel = chain(
-            query_histoptrader.s(*args),
-            trans_histoptrader.s()
-        ).apply_async().get()
-        print "run stock 300d query used %.4f(s)" % (t.timeit())
+        panel, dbhandler = trans_histoptrader.delay(*args).get()
+        tops = dbhandler.trader.map_alias(['2317'], 'stock', ["top%d" %i for i in range(10)])
+        tops = {v:k for v,k in enumerate(tops)}
+        traderid = tops[0]
+        print "run trader->stock 10d query used %.4f(s)" % (t.timeit())
         self.assertFalse(panel.empty)
         self.assertFalse(panel['2317'].empty)
 
-    def test_on_orm(self):
-        super(TestTwseHisTraderQuery, self).test_on_run()
-        pass
+        t = timeit.Timer()
+        args = ('twse', starttime, endtime, [], [traderid], 'trader', 'totalvolume', 10)
+        panel, dbhandler = trans_histoptrader.delay(*args).get()
+        print "run trader->trader 10d query used %.4f(s)" % (t.timeit())
+        self.assertFalse(panel.empty)
+        self.assertFalse(panel[traderid].empty)
 
-class TestOtcHisStockQuery(TestOtcHisTrader, TestOtcHisStock):
+
+class TestOtcHisStockQuery(TestOtcHisTrader2, TestOtcHisStock):
 
     def test_on_run(self):
         super(TestOtcHisStockQuery, self).test_on_run()
-        t = timeit.Timer()
-        starttime = datetime.utcnow() - timedelta(days=4)
+        starttime = datetime.utcnow() - timedelta(days=10)
         endtime = datetime.utcnow()
+        t = timeit.Timer()
         args = ('otc', starttime, endtime, ['5371'])
-        panel = chain(
-            query_hisstock.s(*args),
-            trans_hisstock.s()
-        ).apply_async().get()
-        print "run stock 300d query used %.4f(s)" % (t.timeit())
+        print "run stock 10d query used %.4f(s)" % (t.timeit())
         self.assertFalse(panel.empty)
         self.assertFalse(panel['5371'].empty)
 
-    def test_on_orm(self):
-        super(TestOtcHisStockQuery, self).test_on_run()
-        pass
 
-class TestOtcHisTraderQuery(TestOtcHisTrader, TestOtcHisStock):
+class TestOtcHisTraderQuery(TestOtcHisTrader2, TestOtcHisStock):
 
     def test_on_run(self):
         super(TestOtcHisTraderQuery, self).test_on_run()
-        t = timeit.Timer()
-        starttime = datetime.utcnow() - timedelta(days=300)
+        starttime = datetime.utcnow() - timedelta(days=10)
         endtime = datetime.utcnow()
+        t = timeit.Timer()
         args = ('otc', starttime, endtime, ['5371'], [], 'stock', 'totalvolume', 10)
-        panel = chain(
-            query_histoptrader.s(*args),
-            trans_histoptrader.s()
-        ).apply_async().get()
-        print "run stock 300d query used %.4f(s)" % (t.timeit())
+        panel, dbhandler = trans_histoptrader.delay(*args).get()
+        tops = dbhandler.trader.map_alias(['5371'], 'stock', ["top%d" %i for i in range(10)])
+        tops = {v:k for v,k in enumerate(tops)}
+        traderid = tops[0]
+        print "run trader->stock 10d query used %.4f(s)" % (t.timeit())
         self.assertFalse(panel.empty)
         self.assertFalse(panel['5371'].empty)
 
-    def test_on_orm(self):
-        super(TestOtcHisTraderQuery, self).test_on_run()
-        pass
+        t = timeit.Timer()
+        args = ('twse', starttime, endtime, [], [traderid], 'trader', 'totalvolume', 10)
+        panel, dbhandler = trans_histoptrader.delay(*args).get()
+        print "run trader->trader 10d query used %.4f(s)" % (t.timeit())
+        self.assertFalse(panel.empty)
+        self.assertFalse(panel[traderid].empty)
+

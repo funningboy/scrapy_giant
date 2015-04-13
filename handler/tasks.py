@@ -33,7 +33,7 @@ def trans_hisstock(opt, starttime, endtime, stockids=[], order='totalvolume', li
     args = (starttime, endtime, stockids, order, limit)
     cursor = dbhandler.stock.query(*args)
     panel = dbhandler.stock.to_pandas(cursor)
-    return panel
+    return panel, dbhandler
 
 # as pipeline to panel
 # chain(
@@ -47,4 +47,4 @@ def trans_histoptrader(opt, starttime, endtime, stockids=[], traderids=[], base=
     args = (starttime, endtime, stockids, traderids, base, order, limit)
     cursor = dbhandler.trader.query(*args)
     panel = dbhandler.trader.to_pandas(cursor)
-    return panel
+    return panel, dbhandler

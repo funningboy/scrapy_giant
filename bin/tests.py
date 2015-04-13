@@ -48,6 +48,17 @@ class TestTwseHisTrader(TestRunScrapyService):
         print "scrapy twsehistrader used %.4f(s)/%d(u)" % (t.timeit(), len(ids))
         self.assertTrue(self.has_pass('./log/twsehistrader.log'))
 
+class TestTwseHisTrader2(TestRunScrapyService):
+
+    def test_on_run(self):
+        ids = TwseIdDBHandler().stock.get_ids(debug=True)
+        ids = list(ids)
+        t = timeit.Timer()
+        args = ('twsehistrader2', 'INFO', './log/twsehistrader2.log', True, True)
+        run_scrapy_service.delay(*args).get()
+        print "scrapy twsehistrader2 used %.4f(s)/%d(u)" % (t.timeit(), len(ids))
+        self.assertTrue(self.has_pass('./log/twsehistrader2.log'))
+
 class TestTwseHisStock(TestRunScrapyService):
 
     def test_on_run(self):
@@ -79,6 +90,17 @@ class TestOtcHisTrader(TestRunScrapyService):
         print "scrapy otchistrader used %.4f(s)/%d(u)" % (t.timeit(), len(ids))
         self.assertTrue(self.has_pass('./log/otchistrader.log'))
 
+class TestOtcHisTrader2(TestRunScrapyService):
+
+    def test_on_run(self):
+        ids = OtcIdDBHandler().stock.get_ids(debug=True)
+        ids = list(ids)
+        t = timeit.Timer()
+        args = ('otchistrader2', 'INFO', './log/otchistrader2.log', True, True)
+        run_scrapy_service.delay(*args).get()
+        print "scrapy otchistrader2 used %.4f(s)/%d(u)" % (t.timeit(), len(ids))
+        self.assertTrue(self.has_pass('./log/otchistrader2.log'))
+
 class TestOtcHisStock(TestRunScrapyService):
 
     def test_on_run(self):
@@ -98,8 +120,7 @@ class TestThreadService(TestRunScrapyService):
             ('otcid', 'INFO', './log/otcid.log', True, False)
         ]
         tasks = group([
-            run_scrapy_service.subtask(args[0]),
-            run_scrapy_service.subtask(args[1])
+            run_scrapy_service.subtask(args[i]) for i in range(2)
         ])
         results = tasks.apply_async()
         results.join()
@@ -108,15 +129,14 @@ class TestThreadService(TestRunScrapyService):
 
         args = [
             ('twsehistrader', 'INFO', './log/twsehistrader.log', True, True),
+            ('twsehistrader2', 'INFO', './log/twsehistrader2.log', True, True),
             ('twsehisstock', 'INFO', './log/twsehisstock.log', True, True),
             ('otchistrader', 'INFO', './log/otchistrader.log', True, True),
+            ('otchistrader2', 'INFO', './log/otchistrader2.log', True, True),
             ('otchisstock', 'INFO', './log/otchisstock.log', True, True)
         ]
         tasks = group([
-            run_scrapy_service.subtask(args[0]),
-            run_scrapy_service.subtask(args[1]),
-            run_scrapy_service.subtask(args[2]),
-            run_scrapy_service.subtask(args[3])
+            run_scrapy_service.subtask(args[i]) for i in range(6)
         ])
         t = timeit.Timer()
         results = tasks.apply_async()

@@ -47,7 +47,7 @@ class OtcHisTraderSpider(CrawlSpider):
         }
         idhandler = OtcIdDBHandler()
         for i,stockid in enumerate(idhandler.stock.get_ids(**kwargs)):
-            if not idhandler.is_warrant(stockid):
+            if not idhandler.stock.is_warrant(stockid):
                 continue
             URL = 'http://www.gretai.org.tw/web/stock/aftertrading/broker_trading/brokerBS.php?l=zh-tw'
             item = OtcHisTraderItem()

@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from os.path import join, abspath, dirname
 
 here = lambda *x: join(abspath(dirname(__file__)), *x)
@@ -96,7 +96,7 @@ LANGUAGE_CODE = 'en-us'
 #>>> s = Site()
 #>>> s.save()
 #python ./manage.py tellsiteid
-SITE_ID=u'54fc42661fd21c1141efd953'
+SITE_ID=u'552bcdab1fd21c70c4f82a6e'
 #SITE_ID=1
 
 # If you set this to False, Django will make some optimizations so as not
@@ -346,7 +346,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'run_algorithm_service_otcdulema': {
         'task': 'algorithm.tasks.run_algorithm_service',
-        'schedule': crontab(minute=40, hour='*/8')
+        'schedule': crontab(minute=40, hour='*/8'),
         'args': (
             'otcdualem',
             datetime.utcnow() - timedelta(days=300),
@@ -357,7 +357,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'run_algorithm_serivce_twsebesttrader': {
         'task': 'algorithm.tasks.run_algorithm_service',
-        'schedule': crontab(minute=40, hour='*/8')
+        'schedule': crontab(minute=40, hour='*/8'),
         'args':(
             'twsebtrader',
             datetime.utcnow() - timedelta(days=300),
