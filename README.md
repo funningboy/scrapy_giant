@@ -87,7 +87,7 @@ celery scheduler
 nosetests --nocapture test/test_start.py
 nosetests --nocapture test/test_... 
 python manage.py test bin
-python manage.py test handler
+python manage.py test handler/algorithm
 ```
 
 ref:
