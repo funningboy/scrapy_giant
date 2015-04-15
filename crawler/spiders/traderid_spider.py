@@ -11,7 +11,7 @@ __all__ = ['TraderIdSpider']
 class TraderIdSpider(CrawlSpider):
     name = 'traderid'
     allowed_domains = ['http://www.twse.com.tw']
-    download_delay = 0.5
+    download_delay = 2
 
     @classmethod
     def from_crawler(cls, crawler):

@@ -76,6 +76,10 @@ mongod --dbpath ./tmp --journal
 export DJANGO_SETTINGS_MODULE=main.settings 
 export DJANGO_PROJECT_DIR=`pwd`
 export C_FORCE_ROOT=true
+# for normal mode
+export ROOTPATH=./data
+# for test mode
+export ROOTPATH=./tmp
 celery -A main worker -l info
 python manage.py syncdb
 python manage.py shell

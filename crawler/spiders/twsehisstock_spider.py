@@ -21,7 +21,7 @@ __all__ = ['TwseHisStockSpider']
 class TwseHisStockSpider(CrawlSpider):
     name = 'twsehisstock'
     allowed_domains = ['http://www.twse.com.tw']
-    download_delay = 0.5
+    download_delay = 2
     _headers = [
         (u'日期', u'date'),
         (u'成交股數', u'volume'),

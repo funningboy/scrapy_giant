@@ -17,6 +17,6 @@ def algorithm_list(request, opt, alg, starttime, endtime, limit=50):
 
 def dualema_detail(request, opt, stockid, starttime, endtime, traderids=[], order='totalvolume', limit=10):
 
-#def besttrader_list()
-#
-#def besttrader_detail
+
+def dualema_detail
+def besttrader_detail

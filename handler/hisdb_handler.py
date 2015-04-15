@@ -55,9 +55,9 @@ class TwseStockHisDBHandler(object):
 
     def __init__(self, coll):
         host, port = MongoDBDriver._host, MongoDBDriver._port
-        connect('stockhisdb', host=host, port=port, alias='stockhisdb')
+        connect('stockmapdb', host=host, port=port, alias='stockmapdb')
         self._iddbhandler = TwseIdDBHandler()
-        self._mapcoll = switch(StockMapColl, 'stockhisdb')
+        self._mapcoll = switch(StockMapColl, 'stockmapdb')
         self._mapcoll.drop_collection()
         self._coll = coll
         self._ids = []
@@ -171,14 +171,17 @@ class TwseTraderHisDBHandler(object):
 
     def __init__(self, coll):
         host, port = MongoDBDriver._host, MongoDBDriver._port
-        connect('traderhisdb', host=host, port=port, alias='traderhisdb')
+        connect('tradermapdb', host=host, port=port, alias='tradermapdb')
         self._iddbhandler = TwseIdDBHandler()
-        self._mapcoll = switch(TraderMapColl, 'traderhisdb')
+        self._mapcoll = switch(TraderMapColl, 'tradermapdb')
         self._mapcoll.drop_collection()
         self._coll = coll
         self._ids = []
+        print id(self._mapcoll)
+        print self._mapcoll
+        print "eeee"
 
-    @property
+    @property 
     def ids(self):
         return self._ids
 
@@ -236,24 +239,27 @@ class TwseTraderHisDBHandler(object):
                     var totalvolume = this.toplist[i].data.totalvolume;
                     var buyvolume = this.toplist[i].data.buyvolume;
                     var sellvolume = this.toplist[i].data.sellvolume;
+                    var buyprice = this.toplist[i].data.avgbuyprice;
+                    var sellprice = this.toplist[i].data.avgsellprice;
                     var price = 0;
                     var totalhit = 0;
                     var ratio = 0;
-                    if (buyvolume > sellvolume) {
-                        price = this.toplist[i].data.avgbuyprice;
-                    } else if (buyvolume < sellvolume) {
-                        price = this.toplist[i].data.avgsellprice;
-                    } else if (buyvolume == sellvolume && totalvolume > 0){
-                        price = (this.toplist[i].data.avgbuyprice + this.toplist[i].data.avgsellprice) / 2;
-                    } else {
-                        price = 0;
-                    }
                     if (totalvolume >0) {
-                        totalhit = 1;
-                        ratio = totalvolume / this.data.volume * 100;
+                        price =  buyprice * buyvolume / totalvolume + sellprice * sellvolume / totalvolume;
                     } else {
-                        totalhit = 0;
-                        ratio = 0;
+                        price = this.data.price;
+                    }
+                    if (this.data.volume >0) {
+                        if (buyvolume > sellvolume) {
+                            ratio = buyvolume / this.data.volume * 100;
+                            totalhit = 1;
+                        } else if (sellvolume > buyvolume) {
+                            ratio = sellvolume / this.data.volume * 100;
+                            totalhit = 1;
+                        } else if (totalvolume >0) {
+                            ratio = totalvolume / this.data.volume / 2 * 100;
+                            totalhit = 1;
+                        }                     
                     }
                     var value = {
                         totalvolume: totalvolume,
@@ -337,16 +343,17 @@ class TwseTraderHisDBHandler(object):
             item.update({id: df})
         return pd.Panel(item)
 
-    def map_alias(self, ids=[], base='stock', aliases=['top0'], cursor=None):
+    def map_alias(self, ids=[], base='stock', aliases=['top0']):
         """ get alias map
         """
-        mapcoll = cursor if cursor else self._mapcoll
+        print id(self._mapcoll)
+        print self._mapcoll
         if base == 'stock':
-            cursor = mapcoll.objects(Q(stockid__in=ids) & Q(alias__in=aliases))
+            cursor = self._mapcoll.objects(Q(stockid__in=ids) & Q(alias__in=aliases))
             cursor = list(cursor)
             return [it.traderid for it in cursor]
         else:
-            cursor = mapcoll.objects(Q(traderid__in=ids) & Q(alias__in=aliases))
+            cursor = self._mapcoll.objects(Q(traderid__in=ids) & Q(alias__in=aliases))
             cursor = list(cursor)
             return [it.stockid for it in cursor]
 

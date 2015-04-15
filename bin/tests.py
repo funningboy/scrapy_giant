@@ -4,12 +4,14 @@
 # main.INSTALLED_APPS has included bin task
 
 import timeit
+import unittest
 import re
 from celery import group
 from main.tests import NoSQLTestCase
 from bin.tasks import *
 from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
 
+@unittest.skipIf(True, 'skip TestAdd')
 class TestAdd(NoSQLTestCase):
 
     def test_on_run(self):

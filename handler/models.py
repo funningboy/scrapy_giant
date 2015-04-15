@@ -93,7 +93,7 @@ class StockMapColl(Document):
     stocknm = StringField()
     datalist = ListField(EmbeddedDocumentField(StockMapData))
     meta = {
-        'db_alias': 'stockhisdb',
+        'db_alias': 'stockmapdb',
         'allow_inheritance': True,
         'indexes': [('stockid')]
     }
@@ -117,7 +117,7 @@ class TraderMapColl(Document):
     totalhit = IntField(min_value=0, max_value=9999999)
     datalist = ListField(EmbeddedDocumentField(TraderMapData))
     meta = {
-        'db_alias': 'stockhisdb',
+        'db_alias': 'tradermapdb',
         'allow_inheritance': True,
         'indexes': [('stockid', 'traderid', 'alias')]
     }

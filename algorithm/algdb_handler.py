@@ -15,7 +15,7 @@ from algorithm.dualema import DualEMAAlgorithm
 from algorithm.besttrader import BestTraderAlgorithm
 from algorithm.bbands import BBandsAlgorithm
 from algorithm.randforest import RandForestAlgorithm
-from algorithm.kdtree import KdtKnnAlgorithm
+#from algorithm.kdtree import KdtKnnAlgorithm
 
 # register all alg to algdb_handler via decorator
 __all__ = [

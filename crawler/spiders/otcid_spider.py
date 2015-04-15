@@ -16,7 +16,7 @@ __all__ = ['OtcIdSpider']
 class OtcIdSpider(CrawlSpider):
     name = 'otcid'
     allowed_domains = ['http://isin.twse.com.tw']
-    download_delay = 0.5
+    download_delay = 2
 
     @classmethod
     def from_crawler(cls, crawler):

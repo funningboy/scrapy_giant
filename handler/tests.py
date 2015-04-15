@@ -3,18 +3,19 @@
 # using as celery worker
 # main.INSTALLED_APPS has included handler task
 
-from celery import chain
+#from celery import chain, group
 import timeit
+import unittest
 from datetime import datetime, timedelta
 from main.tests import NoSQLTestCase
-from bin.tests import *
+from bin.tests import TestTwseHisTrader2, TestTwseHisStock, TestOtcHisTrader2, TestOtcHisStock
 from handler.tasks import *
-from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
-from handler.hisdb_handler import TwseHisDBHandler, OtcHisDBHandler
 from handler.models import StockMapColl, TraderMapColl
 
 from django.template import Context, Template
 
+
+@unittest.skipIf(True, 'skip TwseHisStockQuery')
 class TestTwseHisStockQuery(TestTwseHisTrader2, TestTwseHisStock):
 
     def test_on_run(self):
@@ -28,7 +29,7 @@ class TestTwseHisStockQuery(TestTwseHisTrader2, TestTwseHisStock):
         self.assertFalse(panel.empty)
         self.assertFalse(panel['2317'].empty)
 
-
+@unittest.skipIf(True, 'skip TwseHisTraderQuery')
 class TestTwseHisTraderQuery(TestTwseHisTrader2, TestTwseHisStock):
 
     def test_on_run(self):
@@ -52,7 +53,7 @@ class TestTwseHisTraderQuery(TestTwseHisTrader2, TestTwseHisStock):
         self.assertFalse(panel.empty)
         self.assertFalse(panel[traderid].empty)
 
-
+@unittest.skipIf(True, 'skip OtcHisStockQuery')
 class TestOtcHisStockQuery(TestOtcHisTrader2, TestOtcHisStock):
 
     def test_on_run(self):
@@ -61,11 +62,12 @@ class TestOtcHisStockQuery(TestOtcHisTrader2, TestOtcHisStock):
         endtime = datetime.utcnow()
         t = timeit.Timer()
         args = ('otc', starttime, endtime, ['5371'])
+        panel, dbhandler = trans_hisstock.delay(*args).get()
         print "run stock 10d query used %.4f(s)" % (t.timeit())
         self.assertFalse(panel.empty)
         self.assertFalse(panel['5371'].empty)
 
-
+@unittest.skipIf(True, 'skip OtcHisTraderQuery')
 class TestOtcHisTraderQuery(TestOtcHisTrader2, TestOtcHisStock):
 
     def test_on_run(self):
