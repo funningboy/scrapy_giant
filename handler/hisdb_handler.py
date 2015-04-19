@@ -177,11 +177,8 @@ class TwseTraderHisDBHandler(object):
         self._mapcoll.drop_collection()
         self._coll = coll
         self._ids = []
-        print id(self._mapcoll)
-        print self._mapcoll
-        print "eeee"
 
-    @property 
+    @property
     def ids(self):
         return self._ids
 
@@ -259,7 +256,7 @@ class TwseTraderHisDBHandler(object):
                         } else if (totalvolume >0) {
                             ratio = totalvolume / this.data.volume / 2 * 100;
                             totalhit = 1;
-                        }                     
+                        }
                     }
                     var value = {
                         totalvolume: totalvolume,
@@ -344,10 +341,7 @@ class TwseTraderHisDBHandler(object):
         return pd.Panel(item)
 
     def map_alias(self, ids=[], base='stock', aliases=['top0']):
-        """ get alias map
-        """
-        print id(self._mapcoll)
-        print self._mapcoll
+        """ get alias map as virtual to physical map """
         if base == 'stock':
             cursor = self._mapcoll.objects(Q(stockid__in=ids) & Q(alias__in=aliases))
             cursor = list(cursor)

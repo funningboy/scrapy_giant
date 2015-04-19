@@ -80,7 +80,7 @@ export C_FORCE_ROOT=true
 export ROOTPATH=./data
 # for test mode
 export ROOTPATH=./tmp
-celery -A main worker -l info
+celery -A main worker -B -l info
 python manage.py syncdb
 python manage.py shell
 celery scheduler
@@ -88,6 +88,7 @@ celery scheduler
 
 0.6 as django unittest run
 ```
+celery -A main worker -l info
 nosetests --nocapture test/test_start.py
 nosetests --nocapture test/test_... 
 python manage.py test bin

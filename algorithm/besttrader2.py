@@ -21,23 +21,25 @@ from algorithm.report import Report
 
 
 class BestTraderAlgorithm2(TradingAlgorithm):
-    """
-    find the best correlation between trader and stocks
-    ref: http://scikit-learn.org/stable/auto_examples/applications/plot_stock_market.html
-    https://www.quantopian.com/posts/working-with-history-dataframes
+    """ find the best correlation between trader and stocks
     """
 
     def __init__(self, dbhandler, *args, **kwargs):
+        self._debug = kwargs.pop('debug', False)
+        self._buf_win = kwargs.pop('buf_win', 10)
         super(BestTraderAlgorithm, self).__init__(*args, **kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
         self.tids = self.dbhandler.trader.ids
+        self.tops = {k:v for v,k in enumerate(self.tops)}
+        if self._debug:
+            print self.tops
 
     def initialize(self):
         self.edge_model = covariance.GraphLassoCV()
-        self.window = deque(max_len=self.maxlen)
-        self.X = deque(maxlen=self.maxlen*2)
-        self.Y = deque(maxlen=self.maxlen*2)
+        self.window = deque(max_len=self._buf_win)
+        self.X = deque(maxlen=self._buf_win*2)
+        self.Y = deque(maxlen=self._buf_win*2)
 
     def handle_data(self, data):
 #        data[self.sids[0]].top0_buyvolume
@@ -77,11 +79,12 @@ class BestTraderAlgorithm2(TradingAlgorithm):
 def run(opt='twse', debug=False, limit=0):
     """ as doctest run """
     # set time window
+    maxlen = 5
     starttime = datetime.utcnow() - timedelta(days=30)
     endtime = datetime.utcnow()
     # sort factor
     report = Report(
-        sort=[('buy_count', False), ('sell_count', False), ('volume', False)], limit=20)
+        sort=[('buy_count', False), ('sell_count', False), ('portfolio_value', False)], limit=20)
     # set debug or normal mode
     kwargs = {
         'debug': debug,
@@ -96,7 +99,9 @@ def run(opt='twse', debug=False, limit=0):
             dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
             dbhandler.stock.ids = [stockid]
             data = dbhandler.transform_all_data(starttime, endtime, [stockid], [traderid], 'totalvolume', 10)
-            besttrader = BestTraderAlgorithm(dbhandler=dbhandler)
+            if len(data[stockid].index) < maxlen:
+                continue
+            besttrader = BestTraderAlgorithm2(dbhandler=dbhandler, debug=True)
             results = besttrader.run(data).fillna(0)
             report.collect(stockid, results)
             print "%s pass" %(stockid)
@@ -107,20 +112,13 @@ def run(opt='twse', debug=False, limit=0):
     if report.report.empty:
         return
 
-#    # report summary
-#    stream = report.summary(dtype='html')
-#    report.write(stream, 'besttrader_%s.html' % (traderid))
-#
-#    for stockid in report.iter_stockid():
-#        stream = report.iter_report(stockid, dtype='html')
-#        report.write(stream, "besttrader_%s.html" % (traderid, stockid))
+    # report summary
+    stream = report.summary(dtype='html')
+    report.write(stream, 'besttrader2_%s.html' % (traderid))
 
-    # plot
     for stockid in report.iter_stockid():
-        try:
-            perf = report.pool[stockid]
-        except:
-            continue
+        stream = report.iter_report(stockid, dtype='html')
+        report.write(stream, "besttrader2_%s.html" % (traderid, stockid))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='test besttrader algorithm')

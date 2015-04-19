@@ -8,7 +8,11 @@ from django.shortcuts import render
 from handler.tasks import *
 
 def test(request):
-    return render(request, 'handler/dualema_1314.html')
+    starttime = datetime.utcnow() - timedelta(days=10)
+    endtime = datetime.utcnow()
+    args = ('twse', starttime, endtime, ['2317'], 'totalvolume', 10)
+    panel, dbhandler = trans_hisstock(*args)
+    return render(request, 'handler/test.html', {'stockitem': panel})
 
 def search_form(request):
     return render(request, 'handler/search_form.html')
@@ -16,10 +20,10 @@ def search_form(request):
 def search(request):
     if 'q' in request.GET and request.GET['q']:
         q = request.GET['q']
-        starttime = datetime.utcnow() - timedelta(days=4)
-        endtime = datetime.utcnow() - timedelta(days=2)
-        args = (starttime, endtime, ['2317'])
-        stockitem = hisdb_tasks('twse').stock.query(*args)
+        starttime = datetime.utcnow() - timedelta(days=10)
+        endtime = datetime.utcnow()
+        args = (starttime, endtime, ['2317', '2330', '1314'])
+        stockitem = hisdb_tasks['twse']().stock.query(*args)
         data = {'name': 'sean'}
         return render(request, 'handler/search_results.html',
                       {'stockitem': stockitem, 'data': data, 'query': q})

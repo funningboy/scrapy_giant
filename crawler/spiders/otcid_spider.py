@@ -43,7 +43,7 @@ class OtcIdSpider(CrawlSpider):
             sub['stockid'] = m.group(1) if m else None
             sub['stocknm'] = m.group(2) if m else None
             yy, mm, dd = its[2].split('/') if its[2] else [None]*3
-            sub['onmarket'] = u"%s-%s-%s" % (yy, mm, dd)
+            sub['onmarket'] = u"%s-%s-%s" % (yy, mm, dd) if None not in [yy, mm, dd] else None
             sub['industry'] = its[4] if its[4] else None
             item['data'].append(sub)
         log.msg("item[0] %s ..." % (item['data'][0]), level=log.DEBUG)

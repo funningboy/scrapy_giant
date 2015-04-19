@@ -90,7 +90,7 @@ def run(opt='twse', debug=False, limit=0):
         sort=[('buy_count', False), ('sell_count', False), ('portfolio_value', False)], limit=20)
     # set debug or normal mode
     kwargs = {
-        'debug': debug,
+        'debug': True,
         'limit': limit,
         'opt': opt
     }

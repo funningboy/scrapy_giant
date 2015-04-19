@@ -114,15 +114,25 @@ class TestOtcHisStock(TestRunScrapyService):
         print "scrapy otchisstock used %.4f(s)/%d(u)" % (t.timeit(), len(ids))
         self.assertTrue(self.has_pass('./log/otchisstock.log'))
 
+class TestTraderId(TestRunScrapyService):
+
+    def test_on_run(self):
+        t = timeit.Timer()
+        args = ('traderid', 'INFO', './log/traderid.log', True, True)
+        run_scrapy_service.delay(*args).get()
+        print "scrapy traderid used %.4f(s)" % (t.timeit())
+        self.assertTrue(self.has_pass('./log/traderid.log'))
+
 class TestThreadService(TestRunScrapyService):
 
     def test_on_run(self):
         args = [
             ('twseid', 'INFO', './log/twseid.log', True, False),
-            ('otcid', 'INFO', './log/otcid.log', True, False)
+            ('otcid', 'INFO', './log/otcid.log', True, False),
+            ('traderid', 'INFO', './log/traderid.log', True, False)
         ]
         tasks = group([
-            run_scrapy_service.subtask(args[i]) for i in range(2)
+            run_scrapy_service.subtask(args[i]) for i in range(3)
         ])
         results = tasks.apply_async()
         results.join()

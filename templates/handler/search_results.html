@@ -1,16 +1,66 @@
-<p>You searched for: <strong>{{ query }}</strong></p>
-{% if stockitem %}
-<p>Found {{ stockitem|length }} </p>
-<ul>
-    {% for item in stockitem %}
-        {% for it in item.datalist %}
-        <li>{{ it.open }}</li>
-        <li>{{ it.volume }}</li>
+{% load staticfiles %}
+{% load i18n %}
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <title> - stocklist - </title>
+        {% if stockitem %} 
+        {% for item in stockitem %}
+            <p>{{ item.stockid }}-{{ item.stocknm }}</p>
+            <table id={{ item.stockid }} class={{ item.stockid }}>
+                <thead>
+                    <tr> 
+                    {% with item.datalist|last as it %}
+                    {% for key in it.keys %}
+                        <th>{{ key }}</th>
+                    {% endfor %}
+                    {% endwith %}
+                   </tr> 
+                </thead> 
+                <tbody>
+                    {% for it in item.datalist %}
+                        <tr>
+                        {% for key,value in it.items %} 
+                            {% if key == 'date' %}
+                                <th>{{ value.isoformat }}</th>
+                            {% else %}
+                                <th>{{ value }}</th>
+                            {% endif %}
+                        {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody> 
+            </table>
         {% endfor %}
-    {% endfor %}
-</ul>
-{% else %}
-<p>No books matched your search
-criteria.</p>
-{% endif %}
-<p>{{ data.name }}</p>
+        {% endif %}
+    </head>
+    <body>
+        <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+        <script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.4/js/jquery.tablesorter.js"></script>
+        <script src=""></script>
+        <! use jquery.tablesorter>
+        {% for item in stockitem %}
+            <script>
+                jQuery(document).ready(function() {
+                    jQuery("#{{ item.stockid }}").tablesorter();
+                    // get data from table 
+                    jQuery("#{{ item.stockid }} thead th").each(function (index) {
+                        var self = jQuery(this);
+                        //console.log(self.text());
+                    });
+                    jQuery("#{{ item.stockid }} tbody tr").each(function (index) {
+                        var self = jQuery(this);
+                        if (jQuery(self).is('th')) {
+                            console.log(self.text());
+                        } 
+                        else {
+                            console.log(self.text());
+                        }
+                    });
+                });
+            </script>
+            <div id=""></div>
+        {% endfor %}
+    </body>
+</html>

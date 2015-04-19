@@ -98,6 +98,20 @@ class OtcHisTraderSpider2(CrawlSpider):
         item['close'] = u'0'
         item['volume'] = u'0'
         elems = sel.xpath('.//table[@id="ctl00_ContentPlaceHolder1_GridView2"]//td/font/text()').extract()
+# run until fetch pass
+#        if len(elems) == 0:
+#            item['count'] += 1
+#            log.msg("fetch %s retry at %d times" %(item['stockid'], item['count']), log.INFO)
+#            request = Request(
+#                response.url,
+#                meta = {
+#                    'item': item,
+#                    'cookiejar': response.meta['cookiejar']
+#                },
+#                callback=self.parse,
+#                dont_filter=True)
+#            yield request
+#        else:
         for i in xrange(0, len(elems)-20, 4):
             tradernm = elems[i].replace('-', '').replace(u'\u3000', u'').replace(u' ', u'')
             traderid = u"%s" %(OtcIdDBHandler().trader.get_id(tradernm))

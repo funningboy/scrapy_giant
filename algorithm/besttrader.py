@@ -137,10 +137,11 @@ def run(opt='twse', debug=False, limit=0):
             perf.portfolio_value.plot(ax=ax1)
 
             ax2 = fig.add_subplot(212)
+            perf[['close']].plot(ax=ax2)
 
-            ax2.plot(perf.ix[perf.buy].index,
+            ax2.plot(perf.ix[perf.buy].index, perf.close[perf.buy],
                      '^', markersize=10, color='m')
-            ax2.plot(perf.ix[perf.sell].index,
+            ax2.plot(perf.ix[perf.sell].index, perf.close[perf.sell],
                      'v', markersize=10, color='k')
             plt.legend(loc=0)
             plt.gcf().set_size_inches(18, 8)

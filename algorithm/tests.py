@@ -6,45 +6,55 @@
 import timeit
 from datetime import datetime, timedelta
 from main.tests import NoSQLTestCase
-from bin.tests import *
+from bin.tests import TestTwseHisTrader2, TestTwseHisStock, TestOtcHisTrader2, TestOtcHisStock, TestTraderId
+from algorithm.tasks import *
 from handler.tasks import *
-from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
-from handler.hisdb_handler import TwseHisDBHandler, OtcHisDBHandler
-from handler.models import StockMapColl, TraderMapColl
-
 from django.template import Context, Template
 
 class TestTwseDualemaAlg(TestTwseHisTrader2, TestTwseHisStock):
 
     def test_on_run(self, opt='twse', alg='dualema'):
         super(TestTwseDualemaAlg, self).test_on_run()
+        starttime = datetime.utcnow() - timedelta(days=150)
+        endtime = datetime.utcnow()
         args = (opt, alg, starttime, endtime, 10, True)
-        alg = run_algorithm_service.delay(*args).get()
-        algitem = alg.query_summary()
-        for it in algitem:
-            print it.end_time, it.portfolio_value
-        
-        alg = algdb_tasks[opt][alg]()
-        args = (starttime, endtime, ['2317'], [], 'totalvolume', 10, alg.to_detail)
-        alg.run(*args)
-        algitem = alg.query_detail()
-        for it in algitem:
-            print it.time, it.open, it.portfolio_value
+        # as background algorithm service
+        run_algorithm_service.delay(*args).get()
+        # query summary
+        alghandler = algdb_tasks[opt][alg]()
+        algitem = alghandler.query_summary()
+        self.assertTrue(len(algitem)>0)
+        self.assertTrue(algitem[-1].portfolio_value>0)
+        # as run/query detail
+        alghandler = algdb_tasks[opt][alg]()
+        args = (starttime, endtime, ['2317'], [], 'totalvolume', 10, alghandler.to_detail)
+        alghandler.run(*args)
+        algitem = alghandler.query_detail()
+        self.assertTrue(len(algitem)>0)
+        self.assertTrue(algitem[-1].open>0)
 
-class TestTwseBestTraderAlg():
+class TestTwseBestTraderAlg(TestTwseHisTrader2, TestTwseHisStock):
 
     def test_on_run(self, opt='twse', alg='btrader'):
         super(TestTwseBestTraderAlg, self).test_on_run()
-        algs = (opt, alg, starttime, endtime, 10, True)
-        alg = run_algorithm_service.delay(*args).get()
-        algitem = alg.query_summary()
-        for it in algitem:
-            print it.end_time, it.portfolio_value
-
-        args = (starttime, endtime, ['2317', '2330', '1314'], ['1440'], 'totalvolume', 10, alg.to_detail)
-        alg.run(*args)
-        algitem = alg.query_detail()
-        for it in algitem:
-            print it.time, it.open, it.portfolio_value
-
-
+        starttime = datetime.utcnow() - timedelta(days=10)
+        endtime = datetime.utcnow()
+        args = (opt, alg, starttime, endtime, 10, True)
+        # as background algorithm service
+        run_algorithm_service.delay(*args).get()
+        # as run/query summary
+        alghandler = algdb_tasks[opt][alg]()
+        algitem = alghandler.query_summary()
+        self.assertTrue(len(algitem)>0)
+        self.assertTrue(algitem[-1].portfolio_value>0)
+        # as run/query detail
+        # find traders as tops
+        args = ('twse', starttime, endtime, ['2317'], [], 'stock', 'totalvolume', 10)
+        panel, dbhandler = trans_histoptrader(*args)
+        tops = dbhandler.trader.map_alias(['2317'], 'stock', ["top%d" %i for i in range(10)])
+        alghandler = algdb_tasks[opt][alg]()
+        args = (starttime, endtime, ['2317'], [tops[0]], 'totalvolume', 10, alghandler.to_detail)
+        alghandler.run(*args)
+        algitem = alghandler.query_detail()
+        self.assertTrue(len(algitem)>0)
+        self.assertTrue(algitem[-1].open>0)

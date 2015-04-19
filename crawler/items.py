@@ -95,3 +95,21 @@ class OtcIdItem(TwseIdItem):
 
 class OtcRelStockItem(TwseRelStockItem):
     pass
+
+class TwseNoCreditItem(scrapy.Item):
+    data = scrapy.Field()
+# data:[{
+#    stockid = scrapy.Field()
+#    stocknm = scrapy.Field()
+#    nocredit_starttime = scrapy.Field()
+#    nocredit_endtime = scrapy.Field()
+#  }...]
+
+class OtcNoCreditItem(TwseNoCreditItem):
+    pass
+
+class TwseCreditItem(scrapy.Item):
+    pass
+
+class OtcCreditItem(scrapy.Item):
+    pass

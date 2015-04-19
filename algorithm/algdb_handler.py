@@ -8,7 +8,7 @@ from bson import json_util
 from mongoengine import *
 from bin.start import switch
 from bin.mongodb_driver import MongoDBDriver
-from handler.tasks import *
+from handler.tasks import hisdb_tasks, iddb_tasks
 from algorithm.models import *
 from algorithm.report import Report
 from algorithm.dualema import DualEMAAlgorithm
@@ -16,6 +16,7 @@ from algorithm.besttrader import BestTraderAlgorithm
 from algorithm.bbands import BBandsAlgorithm
 from algorithm.randforest import RandForestAlgorithm
 #from algorithm.kdtree import KdtKnnAlgorithm
+#from algorithm.kmeans import
 
 # register all alg to algdb_handler via decorator
 __all__ = [
@@ -50,6 +51,14 @@ class TwseAlgDBHandler(object):
         self._idhandler = iddb_tasks['twse']()
         self._report = Report(
             sort=[('buy_count', False), ('sell_count', False), ('portfolio_value', False)], limit=20)
+
+    @property
+    def dbhandler(self):
+        return self._dbhandler
+
+    @property
+    def idhandler(self):
+        return self._idhandler
 
     def run(self):
         pass
@@ -112,8 +121,10 @@ class TwseAlgDBHandler(object):
             v = kwargs.pop(k, None)
             if v:
                 c = {"%s__gt" %(k): v}
+                # __lt
                 cursor = cursor(Q(**c))
         return list(cursor)
+
 
     def query_detail(self):
         cursor = self._detl_coll.objects.all()
@@ -152,7 +163,7 @@ class TwseDualemaAlg(TwseAlgDBHandler):
             self._dbhandler.trader.drop()
             self._dbhandler.stock.ids = [stockid]
             data = self._dbhandler.transform_all_data(*args)
-            alg = self._alg(dbhandler=self._dbhandler, *self._args, **self._kwargs)
+            alg = self._alg(dbhandler=self._dbhandler)
             results = alg.run(data).fillna(0)
             self._report.collect("%s" %(stockid), results)
         if callback == self.to_summary:
@@ -187,8 +198,8 @@ class TwseBestTraderAlg(TwseAlgDBHandler):
                 self._dbhandler.trader.drop()
                 self._dbhandler.stock.ids = [stockid]
                 self._dbhandler.trader.ids = [traderid]
-                data = dbhandler.transform_all_data(*args)
-                alg = self._alg(dbhandler=self._dbhandler, *self._args, **selfself._kwargs)
+                data = self._dbhandler.transform_all_data(*args)
+                alg = self._alg(dbhandler=self._dbhandler)
                 results = alg.run(data).fillna(0)
                 self._report.collect("%s-%s" %(traderid, stockid), results)
         if callback == self.to_summary:

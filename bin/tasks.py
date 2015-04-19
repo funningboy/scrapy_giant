@@ -13,6 +13,7 @@ logger = get_task_logger('bin')
 scrapy_tasks = [
     'twseid',
     'otcid',
+    'traderid',
     'twsehistrader',
     'twsehistrader2',
     'twsehisstock',
@@ -23,7 +24,9 @@ scrapy_tasks = [
 
 @shared_task
 def add(x, y):
-    return x + y
+    r = x + y
+    print "test celey add %d" %(r)
+    return r
 
 # as background service
 @shared_task

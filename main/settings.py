@@ -86,7 +86,7 @@ AUTHENTICATION_BACKENDS = (
 )
 
 # Language code for this installation. All choices can be found here:
-# http://www.i18nguy.com/unicode/language-identifiers.html
+# http://www.i14nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-us'
 
 # following these steps to get siteid when the db is updated
@@ -96,12 +96,12 @@ LANGUAGE_CODE = 'en-us'
 #>>> s = Site()
 #>>> s.save()
 #python ./manage.py tellsiteid
-SITE_ID=u'552ccc3dffd7a91068633cab'
+SITE_ID=u'552e65aa1fd21c746fef9353'
 #SITE_ID=1
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
-USE_I18N = True
+USE_I14N = True
 
 # If you set this to False, Django will not format dates, numbers and
 # calendars according to the current locale.
@@ -152,7 +152,7 @@ COMPRESS_JS_FILTERS = [
 ]
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = 'x2$s&amp;0z2xehpnt_99i8q3)4)t*5q@+n(+6jrqz4@rt%a8fdf+!'
+SECRET_KEY = 'x2$s&amp;0z2xehpnt_99i4q3)4)t*5q@+n(+6jrqz4@rt%a4fdf+!'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -243,10 +243,16 @@ LOGGING = {
 # Can be very useful. Celery does not seem to support scheduled task
 # but only periodic
 CELERYBEAT_SCHEDULE = {
+    # register test services if debug is on
+    'run_test_service_add': {
+        'task': 'bin.tasks.add',
+        'schedule': timedelta(seconds=30),
+        'args': (10, 11)
+    },
     # register all scrapy services
     'run_scrapy_service_twseid': {
         'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=0, hour='*/8'),
+        'schedule': crontab(minute=0, hour='*/3'),
         'args': (
             'twseid',
             'INFO',
@@ -257,7 +263,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'run_scrapy_service_otcid': {
         'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=0, hour='*/8'),
+        'schedule': crontab(minute=0, hour='*/3'),
         'args': (
             'otcid',
             'INFO',
@@ -268,7 +274,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'run_scrapy_service_twsehistrader': {
         'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=40, hour='*/8'),
+        'schedule': crontab(minute=30, hour='*/3'),
         'args': (
             'twsehistrader',
             'INFO',
@@ -279,7 +285,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'run_scrapy_service_twsehistrader2': {
         'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=40, hour='*/8'),
+        'schedule': crontab(minute=30, hour='*/3'),
         'args': (
             'twsehistrader2',
             'INFO',
@@ -290,7 +296,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'run_scrapy_service_twsehisstock': {
         'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=40, hour='*/8'),
+        'schedule': crontab(minute=30, hour='*/3'),
         'args': (
             'twsehisstock',
             'INFO',
@@ -301,7 +307,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'run_scrapy_service_otchistrader': {
         'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=40, hour='*/8'),
+        'schedule': crontab(minute=30, hour='*/3'),
         'args': (
             'otchistrader',
             'INFO',
@@ -312,7 +318,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'run_scrapy_service_otchistrader2': {
         'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=40, hour='*/8'),
+        'schedule': crontab(minute=30, hour='*/3'),
         'args': (
             'otchistrader2',
             'INFO',
@@ -323,7 +329,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'run_scrapy_service_otchisstock': {
         'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=40, hour='*/8'),
+        'schedule': crontab(minute=30, hour='*/3'),
         'args': (
             'otchisstock',
             'INFO',
@@ -335,7 +341,7 @@ CELERYBEAT_SCHEDULE = {
     # register run all algorithms
     'run_algorithm_service_twsedulema': {
         'task': 'algorithm.tasks.run_algorithm_service',
-        'schedule': crontab(minute=40, hour='*/8'),
+        'schedule': crontab(minute=30, hour='*/3'),
         'args':(
             'twsedualem',
             datetime.utcnow() - timedelta(days=300),
@@ -346,7 +352,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'run_algorithm_service_otcdulema': {
         'task': 'algorithm.tasks.run_algorithm_service',
-        'schedule': crontab(minute=40, hour='*/8'),
+        'schedule': crontab(minute=30, hour='*/3'),
         'args': (
             'otcdualem',
             datetime.utcnow() - timedelta(days=300),
@@ -357,7 +363,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'run_algorithm_serivce_twsebesttrader': {
         'task': 'algorithm.tasks.run_algorithm_service',
-        'schedule': crontab(minute=40, hour='*/8'),
+        'schedule': crontab(minute=30, hour='*/3'),
         'args':(
             'twsebtrader',
             datetime.utcnow() - timedelta(days=300),
