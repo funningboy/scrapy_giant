@@ -35,17 +35,18 @@ class TwseIdSpider(CrawlSpider):
         item['data'] = []
         elems = sel.xpath('.//tr')
         for elem in elems[1:]:
-            sub = {}
             its = elem.xpath('td/text()').extract()
             if len(its) <= 5:
                 continue
             its = [it.strip(string.whitespace).replace(',', '') for it in its]
             m = re.search(r'([0-9a-zA-Z]+)(\W+)?', its[0].replace(u' ', u'').replace(u'\u3000', u''))
-            sub['stockid'] = m.group(1) if m else None
-            sub['stocknm'] = m.group(2) if m else None
             yy, mm, dd = its[2].split('/') if its[2] else [None]*3
-            sub['onmarket'] = u"%s-%s-%s" % (yy, mm, dd) if None not in [yy, mm, dd] else None
-            sub['industry'] = its[4] if its[4] else None
+            sub = {
+                'stockid': m.group(1) if m else None,
+                'stocknm':  m.group(2) if m else None,
+                'onmarket': u"%s-%s-%s" % (yy, mm, dd) if None not in [yy, mm, dd] else None,
+                'industry': its[4] if its[4] else None
+            }
             item['data'].append(sub)
         log.msg("item[0] %s ..." % (item['data'][0]), level=log.DEBUG)
         yield item

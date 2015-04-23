@@ -23,6 +23,7 @@ class TwseHisDBHandler(object):
         twsehiscoll = switch(TwseHisColl, 'twsehisdb')
         self._stock = TwseStockHisDBHandler(twsehiscoll)
         self._trader = TwseTraderHisDBHandler(twsehiscoll)
+        self._credit = TwseCreditDBHandler(twsehiscoll)
 
     @property
     def stock(self):
@@ -31,6 +32,10 @@ class TwseHisDBHandler(object):
     @property
     def trader(self):
         return self._trader
+
+    @property
+    def credit(self):
+        return self._credit
 
     def transform_all_data(self, starttime, endtime, stockids=[], traderids=[], order='totalvolume', limit=10):
         """ transfrom stock/trader data as pandas panel """
@@ -50,6 +55,8 @@ class OtcHisDBHandler(TwseHisDBHandler):
         otchiscoll = switch(OtcHisColl, 'otchisdb')
         self._stock = OtcStockHisDBHandler(otchiscoll)
         self._trader = OtcTraderHisDBHandler(otchiscoll)
+        self._credit = OtcCreditHisDBHandler(otchiscoll)
+
 
 class TwseStockHisDBHandler(object):
 
@@ -215,17 +222,17 @@ class TwseTraderHisDBHandler(object):
     def query(self, starttime, endtime, stockids=[], traderids=[],
             base='stock', order='totalvolume', limit=10, callback=None):
         """ get rank toplist volume stock/trader data
-            <stockid>                                               <stockid>
-                     | top0_v/p_<traderid> | top1 | ... top10 |          | top0_<traderid>
-            20140928 |  100               |   30    |              | 20140928 | ...
-            20140929 |    0               |   20    |              | 20140929 | ...
+            <stockid>                                          <stockid>
+                     | top0_v/p_<traderid>| top1  | ... top10 |          | top0_<traderid>
+            20140928 |  100               |   30  |           | 20140928 | ...
+            20140929 |    0               |   20  |           | 20140929 | ...
             -------------------------------------------------------------------------
                         100                   50
 
-            <traderid>                                              <traderid>
+            <traderid>                                    <traderid>
                      | top0_<stockid> | top1  | ... top10 |          | top0_<traderid>
-            20140928 |  100               |   30    |              | 20140928 | ...
-            20140929 |    0               |   20    |              | 20140929 | ...
+            20140928 |  100           |   30  |           | 20140928 | ...
+            20140929 |    0           |   20  |           | 20140929 | ...
             -------------------------------------------------------------------------
                         100                   50
         """
@@ -351,6 +358,75 @@ class TwseTraderHisDBHandler(object):
             cursor = list(cursor)
             return [it.stockid for it in cursor]
 
+
+class TwseCreditDBHandler(object):
+
+    def __init__(self, coll):
+        host, port = MongoDBDriver._host, MongoDBDriver._port
+        connect('creditmapdb', host=host, port=port, alias='creditmapdb')
+        self._iddbhandler = TwseIdDBHandler()
+        self._mapcoll = switch(CreditMapColl, 'creditmapdb')
+        self._mapcoll.drop_collection()
+        self._coll = coll
+        self._ids = []
+
+    @property
+    def ids(self):
+        return self._ids
+
+    @ids.setter
+    def ids(self, ids):
+        self._ids = ids
+
+    def drop(self):
+        self._mapcoll.drop_collection()
+        self._ids = []
+
+    def delete(self, item):
+        pass
+
+    def insert(self, item):
+        keys = [k for k,v in CreditData._fields.iteritems()]
+        for it in item:
+            dt = {k:v for k, v in it.items() if k in keys}
+            data = CreditData(**dt)
+            cursor = self._coll.objects(Q(date=it['date']) & Q(stockid=it['stockid']))
+            cursor = list(cursor)
+            coll = self._coll() if len(cursor) == 0 else cursor[0]
+            coll.stockid = it['stockid']
+            coll.date = it['date']
+            if it['type'] == 'finance':
+                coll.finance = data
+            if it['type'] == 'bearish':
+                coll.bearish = data
+            coll.save()
+
+    def query(self, starttime, endtime, stockids=[], order='totalvolume', limit=10, callback=None):
+       """ return orm
+        <stockid>                                                | <stockid> ...
+                    finance_buy| finance_sely| finance_limit| ...|
+        20140928    100        | 101         |          999 | ...|
+        20140929    100        | 102         |          999 | ...|
+        """
+        map_f = """
+            function () {
+                var key =  { stockid : this.stockid };
+                var value = {
+              };
+                emit(key, value);
+            }
+        """
+        reduce_f = """
+          function (key, values) {
+               return redval;
+            }
+        """
+        assert(order in ['financeinc', 'financedec', '', ''])
+
+    def to_pandas(self, cursor):
+        pass
+
+
 class OtcStockHisDBHandler(TwseStockHisDBHandler):
     def __init__(self, coll):
         super(OtcStockHisDBHandler, self).__init__(coll)
@@ -359,4 +435,9 @@ class OtcStockHisDBHandler(TwseStockHisDBHandler):
 class OtcTraderHisDBHandler(TwseTraderHisDBHandler):
     def __init__(self, coll):
         super(OtcTraderHisDBHandler, self).__init__(coll)
+        self._iddbhandler = OtcIdDBHandler()
+
+class OtcCreditHisDBHandler(TwseCreditDBHandler):
+    def __init__(self, coll):
+        super(OtcCreditHisDBHandler, self).__init__(coll)
         self._iddbhandler = OtcIdDBHandler()

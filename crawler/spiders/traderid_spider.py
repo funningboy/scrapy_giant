@@ -31,17 +31,19 @@ class TraderIdSpider(CrawlSpider):
             request = Request(
                 URL,
                 meta={
-                    'item': item
+                    'item': item,
+                    'index': i
                 },
-                callback=self.parse0 if i == 0 else self.parse1,
+                callback=self.parse,
                 dont_filter=True)
             yield request
 
-    def parse0(self, response):
+    def parse(self, response):
         log.msg("URL: %s" % (response.url), level=log.DEBUG)
         sel = Selector(response)
         item = response.meta['item']
-        elems = sel.xpath('.//*[@id="main-content"]//tr')
+        index = response.meta['index']
+        elems = sel.xpath('.//*[@id="main-content"]//tr') if index == 0 else sel.xpath('.//table[@class="board_prod"]//tr')
         for elem in elems[1:]:
             traderid = elem.xpath('.//td[1]/text()').extract()[0]
             tradernm = elem.xpath('.//td[2]/a/text()').extract()[0]
@@ -53,18 +55,3 @@ class TraderIdSpider(CrawlSpider):
         log.msg("item[0] %s ..." % (item['data'][0]), level=log.DEBUG)
         yield item
 
-    def parse1(self, response):
-        log.msg("URL: %s" % (response.url), level=log.DEBUG)
-        sel = Selector(response)
-        item = response.meta['item']
-        elems = sel.xpath('.//table[@class="board_prod"]//tr')
-        for elem in elems[1:]:
-            traderid = elem.xpath('.//td[1]/text()').extract()[0]
-            tradernm = elem.xpath('.//td[2]/a/text()').extract()[0]
-            sub = {
-                'traderid': traderid,
-                'tradernm': tradernm.replace(' ','').replace('-','')
-            }
-            item['data'].append(sub)
-        log.msg("item[0] %s ..." % (item['data'][0]), level=log.DEBUG)
-        yield item

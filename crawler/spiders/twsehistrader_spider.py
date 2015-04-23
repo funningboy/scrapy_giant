@@ -212,16 +212,15 @@ class TwseHisTraderSpider(CrawlSpider):
         for fm in [fm0, fm1]:
             for elem in fm.dropna().T.to_dict().values():
                 nwelem = [str(elem[it]).strip(string.whitespace).replace(',', '') for it in sorted(elem.keys())]
-                sub = {}
                 m = re.search(r'([0-9a-zA-Z]+)(\W+)?', nwelem[1].decode('cp950').replace(u'\u3000', u'').replace(u' ', u''))
-                sub.update({
+                sub = {
                     'index': nwelem[0] if nwelem[0] else u'-1',
                     'traderid': m.group(1) if m and m.group(1) else None,
                     'tradernm': m.group(2) if m and m.group(2) else None,
                     'price': nwelem[2] if nwelem[2] else u'0',
                     'buyvolume': nwelem[3] if nwelem[3] else u'0',
                     'sellvolume': nwelem[4] if nwelem[4] else u'0'
-                })
+                }
                 item['traderlist'].append(sub)
         log.msg("fetch %s pass at %d times" %(item['stockid'], item['count']), log.INFO)
         log.msg("item[0] %s ..." % (item['traderlist'][0]), level=log.DEBUG)

@@ -24,12 +24,20 @@ class StockData(EmbeddedDocument):
     volume = IntField(min_value=0, max_value=9999999)
     price = FloatField(min_value=0.0, max_value=9999999.0)
 
+class CreditData(EmbeddedDocument):
+    buyvolume = IntField(min_value=0, max_value=9999999)
+    sellvolume = IntField(min_value=0, max_value=9999999)
+    daytrade = IntField(min_value=0, max_value=9999999)
+    limit = IntField(min_value=0, max_value=9999999)
+
 class StockHisColl(Document):
     stockid = StringField()
     stocknm = StringField()
     date = DateTimeField(default=datetime.utcnow())
     toplist = ListField(EmbeddedDocumentField(TraderInfo))
     data = EmbeddedDocumentField(StockData)
+    finance = EmbeddedDocumentField(CreditData)
+    bearish = EmbeddedDocumentField(CreditData)
     meta = {
         'db_alias': 'stockhisdb',
         'allow_inheritance': True,
@@ -164,3 +172,6 @@ class TraderMapColl(Document):
     @property
     def items(self):
         return [(k, self.__dict__['_data'][k]) for k in self.keys]
+
+class CreditMapColl(Document):
+    pass

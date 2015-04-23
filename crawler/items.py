@@ -65,6 +65,19 @@ class TwseHisStockItem(scrapy.Item):
 #       }, ...
 #   ]
 
+class TwseHisCreditItem(scrapy.Item):
+    data = scrapy.Field()
+# data:[{
+#    stockid = scrapy.Field()
+#    stocknm = scrapy.Field()
+#    preremain = scrapy.Field()
+#    buyvolume = scrapy.Field()
+#    sellvolume = scrapy.Field()
+#    daytrade = scrapy.Field()
+#    curremain = scrapy.Field()
+#    limit = scrapy.Field()
+#  }...]
+
 class TwseRelStockItem(scrapy.Item):
     url = scrapy.Field()
     stockid = scrapy.Field()
@@ -84,6 +97,16 @@ class TwseRelStockItem(scrapy.Item):
 #       }, ...
 #   ]
 
+class TwseNoCreditItem(scrapy.Item):
+    data = scrapy.Field()
+# data:[{
+#    stockid = scrapy.Field()
+#    stocknm = scrapy.Field()
+#    nocredit_starttime = scrapy.Field()
+#    nocredit_endtime = scrapy.Field()
+#  }...]
+
+
 class OtcHisTraderItem(TwseHisTraderItem):
     pass
 
@@ -96,20 +119,8 @@ class OtcIdItem(TwseIdItem):
 class OtcRelStockItem(TwseRelStockItem):
     pass
 
-class TwseNoCreditItem(scrapy.Item):
-    data = scrapy.Field()
-# data:[{
-#    stockid = scrapy.Field()
-#    stocknm = scrapy.Field()
-#    nocredit_starttime = scrapy.Field()
-#    nocredit_endtime = scrapy.Field()
-#  }...]
-
 class OtcNoCreditItem(TwseNoCreditItem):
     pass
 
-class TwseCreditItem(scrapy.Item):
-    pass
-
-class OtcCreditItem(scrapy.Item):
+class OtcHisCreditItem(TwseHisCreditItem):
     pass
