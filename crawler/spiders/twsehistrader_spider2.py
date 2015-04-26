@@ -42,6 +42,8 @@ class TwseHisTraderSpider2(CrawlSpider):
             'opt': 'twse'
         }
         for i,stockid in enumerate(TwseIdDBHandler().stock.get_ids(**kwargs)):
+#           if not idhandler.stock.is_warrant(stockid):
+#               continue
             item = TwseHisTraderItem()
             item.update({
                 'stockid': stockid,
@@ -97,27 +99,13 @@ class TwseHisTraderSpider2(CrawlSpider):
         item['close'] = u'0'
         item['volume'] = u'0'
         elems = sel.xpath('.//table[@id="ctl00_ContentPlaceHolder1_GridView2"]//td/font/text()').extract()
-# run until fetch pass
-#        if len(elems) == 0:
-#            item['count'] += 1
-#            log.msg("fetch %s retry at %d times" %(item['stockid'], item['count']), log.INFO)
-#            request = Request(
-#                response.url,
-#                meta = {
-#                    'item': item,
-#                    'cookiejar': response.meta['cookiejar']
-#                },
-#                callback=self.parse,
-#                dont_filter=True)
-#            yield request
-#        else:
         for i in xrange(0, len(elems)-20, 4):
             tradernm = elems[i].replace('-', '').replace(u'\u3000', u'').replace(u' ', u'')
             traderid = u"%s" %(TwseIdDBHandler().trader.get_id(tradernm))
             sub = {
                 'index': u'0',
-                'traderid': traderid if traderid else None,
-                'tradernm': tradernm if tradernm else None,
+                'traderid': traderid,
+                'tradernm': tradernm,
                 'price': elems[i+3] if elems[i+3] else u'0',
                 'buyvolume': u"%d" % (float(elems[i+1])*1000) if elems[i+1] else u'0',
                 'sellvolume': u"%d" % (float(elems[i+2])*1000) if elems[i+2] else u'0'

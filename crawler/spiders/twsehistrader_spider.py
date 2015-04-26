@@ -50,8 +50,8 @@ class TwseHisTraderSpider(CrawlSpider):
         URL = 'http://bsr.twse.com.tw/bshtm/bsMenu.aspx'
         idhandler = TwseIdDBHandler()
         for i,stockid in enumerate(idhandler.stock.get_ids(**kwargs)):
-            if not idhandler.stock.is_warrant(stockid):
-                continue
+#            if not idhandler.stock.is_warrant(stockid):
+#                continue
             item = TwseHisTraderItem()
             item.update({
                 'stockid': stockid,

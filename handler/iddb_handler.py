@@ -60,7 +60,7 @@ class StockIdDBHandler(object):
                 for stockid in ['5371', '1565', '3105']:
                     yield stockid
         else:
-            cursor = self._coll.objects.limit(limit) if limit > 0 else self._coll.objects
+            cursor = self._coll.objects.limit(limit) if limit > 0 else self._coll.objects.all()
             cursor = list(cursor)
             for it in cursor:
                 yield it.stockid
@@ -74,7 +74,7 @@ class StockIdDBHandler(object):
                 for stocknm in [u'中光電', u'精華', u'穩懋']:
                     yield stocknm
         else:
-            cursor = self._coll.objects.limit(limit) if limit > 0 else self._coll.objects
+            cursor = self._coll.objects.limit(limit) if limit > 0 else self._coll.objects.all()
             cursor = list(cursor)
             for it in cursor:
                 yield it.stocknm
@@ -131,7 +131,7 @@ class TraderIdDBHandler(object):
                 for traderid in ['1590', '1440', '1470']:
                     yield traderid
         else:
-            cursor = self._coll.objects.limit(limit)
+            cursor = self._coll.objects.limit(limit) if limit > 0 else self._coll.objects.all()
             cursor = list(cursor)
             for it in cursor:
                 yield it.traderid
@@ -142,7 +142,7 @@ class TraderIdDBHandler(object):
                 for tradernm in [u'花旗環球', u'美林', u'台灣摩根']:
                     yield tradernm
         else:
-            cursor = self._coll.objects.limit(limit) if limit > 0 else self._coll.objects
+            cursor = self._coll.objects.limit(limit) if limit > 0 else self._coll.objects.all()
             cursor = list(cursor)
             for it in cursor:
                 yield it.tradernm

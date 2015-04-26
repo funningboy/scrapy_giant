@@ -56,7 +56,8 @@
                     {% for it in item.datalist %}
                     data.push({
                             "ratio": {{ it.ratio }},
-                            "price": {{ it.price }},
+                            "avgbuyprice": {{ it.avgbuyprice }},
+                            "avgsellprice": {{ it.avgsellprice }},
                             "buyvolume": {{ it.buyvolume }},
                             "sellvolume": {{ it.sellvolume }},
                             "date" :new Date("{{ it.date.isoformat }}")
@@ -69,7 +70,11 @@
                             "tradernm": "{{ item.tradernm }}",
                             "stocknm": "{{ item.stocknm }}",
                             "totalvolume": {{ item.totalvolume }},
+                            "totalbuyvolume": {{ item.totalbuyvolume }},
+                            "totalsellvolume": {{ item.totalsellvolume }},
                             "totalhit": {{ item.totalhit }},
+                            "totaltradeprice": {{ item.totaltradeprice }},
+                            "totaltradevolume": {{ item.totaltradevolume }},
                             "datalist": data
                             });
                     {% endfor %}
@@ -90,18 +95,20 @@
                             "stocklow": {{ it.low }},
                             "stockprice": {{ it.close }},
                             "stockvolume": {{ it.volume }},
-                            "traderprice": 0,
+                            "traderbuyprice": 0,
+                            "tradersellprice": 0,
                             "traderbuyvolume": 0,
                             "tradersellvolume": 0,
                             "event": ""
                             });
                     {% endfor %}
-                    for (var ii in match[0].datalist) {
-                        var result = jQuery.grep(ndata, function(e){ return e.date.getTime() == match[0].datalist[ii].date.getTime(); }); 
+                    for (var i in match[0].datalist) {
+                        var result = jQuery.grep(ndata, function(e){ return e.date.getTime() == match[0].datalist[i].date.getTime(); }); 
                         if (result.length != 0) {
-                            result[0].traderprice = match[0].datalist[ii].price;
-                            result[0].traderbuyvolume = match[0].datalist[ii].buyvolume;
-                            result[0].tradersellvolume = match[0].datalist[ii].sellvolume;
+                            result[0].traderbuyprice = match[0].datalist[i].avgbuyprice;
+                            result[0].tradersellprice = match[0].datalist[i].avgsellprice;
+                            result[0].traderbuyvolume = match[0].datalist[i].buyvolume;
+                            result[0].tradersellvolume = match[0].datalist[i].sellvolume;
                         } else {
                             console.log("trader data is over stock data");
                         }
@@ -134,7 +141,8 @@
                                         "traderbuyvolume": dataPoint.data[y].traderbuyvolume,
                                         "tradersellvolume": dataPoint.data[y].tradersellvolume,
                                         "tradersumvolume": dataPoint.data[y].tradersumvolume,
-                                        "traderprice": dataPoint.data[y].traderprice * dataPoint.data[y].tradersumvolume,
+                                        "traderbuyprice": dataPoint.data[y].traderbuyprice * dataPoint.data[y].traderbuyvolume,
+                                        "tradersellprice": dataPoint.data[y].tradersellprice * dataPoint.data[y].tradersellvolume,
                                         "stockvolume": 0,
                                         "stockprice": 0 
                                         });
@@ -145,12 +153,14 @@
                                 collectiveData[y].traderbuyvolume += dataPoint.data[y].traderbuyvolume;
                                 collectiveData[y].tradersellvolume += dataPoint.data[y].tradersellvolume;
                                 collectiveData[y].tradersumvolume += dataPoint.data[y].tradersumvolume;
-                                collectiveData[y].traderprice += dataPoint.data[y].traderprice * dataPoint.data[y].tradersumvolume;
+                                collectiveData[y].traderbuyprice += dataPoint.data[y].traderbuyprice * dataPoint.data[y].traderbuyvolume;
+                                collectiveData[y].tradersellprice += dataPoint.data[y].tradersellprice * dataPoint.data[y].tradersellvolume;
                             }
                         }
                     }
                     for (var x in collectiveData) {
-                        collectiveData[x].traderprice = Math.floor(collectiveData[x].traderprice / collectiveData[x].tradersumvolume);
+                        collectiveData[x].traderbuyprice = Math.floor(collectiveData[x].traderbuyprice / collectiveData[x].traderbuyvolume);
+                        collectiveData[x].tradersellprice = Math.floor(collectiveData[x].tradersellprice / collectiveData[x].tradersellvolume);
                     }
                 }
 
@@ -207,12 +217,20 @@
                             "stackType": "regular"
                             }, 
                             {
-                            "id": "priceAxis",
+                            "id": "avgbuypriceAxis",
                             "axisAlpha": 0,
                             "gridAlpha": 0,
                             "inside": true,
                             "position": "right",
-                            "title": "price"
+                            "title": "avgbuyprice"
+                            },
+                            {
+                            "id": "avgsellpriceAxis",
+                            "axisAlpha": 0,
+                            "gridAlpha": 0,
+                            "inside": true,
+                            "position": "right",
+                            "title": "avgsellprice"
                             }],
                             "graphs": [{
                                 "balloonText": "[[value]]",
@@ -260,10 +278,27 @@
                                 "labelPosition": "right",
                                 "labelText": "[[event]]",
                                 "legendValueText": "p: [[value]]",
-                                "title": "traderprice",
+                                "title": "traderbuyprice",
                                 "fillAlphas": 0,
-                                "valueField": "traderprice",
-                                "valueAxis": "priceAxis"
+                                "valueField": "traderbuyprice",
+                                "valueAxis": "buypriceAxis"
+                            },
+                            {
+                                "balloonText": "p:[[value]]",
+                                "bullet": "round",
+                                "bulletBorderAlpha": 1,
+                                "useLineColorForBulletBorder": true,
+                                "bulletColor": "#FFFFFF",
+                                "bulletSizeField": "townSize",
+                                "dashLengthField": "dashLength",
+                                "descriptionField": "event",
+                                "labelPosition": "right",
+                                "labelText": "[[event]]",
+                                "legendValueText": "p: [[value]]",
+                                "title": "tradersellprice",
+                                "fillAlphas": 0,
+                                "valueField": "tradersellprice",
+                                "valueAxis": "sellpriceAxis"
                             },
                             {
                                 "balloonText": "p: [[value]]",
@@ -353,12 +388,11 @@
         <link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
         <script src="//code.jquery.com/jquery-1.10.2.js"></script>
         <script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
-        <div id="chartdiv1"></div>
-        <div id="chartdiv2"></div>
-
+        <div>
+            <div id="chartdiv1"></div>
+            <div id="chartdiv2"></div>
+        </div>
     </body>
-
-
 </html>
 
 

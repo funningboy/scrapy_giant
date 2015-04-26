@@ -25,6 +25,8 @@ class StockData(EmbeddedDocument):
     price = FloatField(min_value=0.0, max_value=9999999.0)
 
 class CreditData(EmbeddedDocument):
+    preremain = IntField(min_value=0, max_value=9999999)
+    curremain = IntField(min_value=0, max_value=9999999)
     buyvolume = IntField(min_value=0, max_value=9999999)
     sellvolume = IntField(min_value=0, max_value=9999999)
     daytrade = IntField(min_value=0, max_value=9999999)
@@ -126,7 +128,8 @@ class StockMapColl(Document):
 
 class TraderMapData(EmbeddedDocument):
     ratio = FloatField(min_value=0.0, max_value=100.0)
-    price = FloatField(min_value=0.0, max_value=9999.0)
+    avgbuyprice = FloatField(min_value=0.0, max_value=9999.0)
+    avgsellprice = FloatField(min_value=0.0, max_value=9999.0)
     buyvolume = IntField(min_value=0, max_value=9999999)
     sellvolume = IntField(min_value=0, max_value=9999999)
     date = DateTimeField(default=datetime.utcnow())
@@ -134,7 +137,7 @@ class TraderMapData(EmbeddedDocument):
     @property
     def keys(self):
         # return as order html tags
-        return ['date', 'ratio','price', 'buyvolume', 'sellvolume']
+        return ['date', 'ratio','avgbuyprice', 'avgsellprice', 'buyvolume', 'sellvolume']
 
     @property
     def values(self):
@@ -152,7 +155,11 @@ class TraderMapColl(Document):
     stockid = StringField()
     stocknm = StringField()
     totalvolume = IntField(min_value=0, max_value=9999999)
+    totalbuyvolume = IntField(min_value=0, max_value=9999999)
+    totalsellvolume = IntField(min_value=0, max_value=9999999)
     totalhit = IntField(min_value=0, max_value=9999999)
+    totaltradeprice = FloatField(min_value=0.0, max_value=9999.0)
+    totaltradevolume = IntField(min_value=0, max_value=9999999)
     datalist = ListField(EmbeddedDocumentField(TraderMapData))
     meta = {
         'db_alias': 'tradermapdb',

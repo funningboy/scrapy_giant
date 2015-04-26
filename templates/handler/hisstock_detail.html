@@ -1,4 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE use ajax to GET http json request >
 {% load staticfiles %}
 <html>
     <head>
@@ -14,12 +15,14 @@
                 width : 100%;
                 height : 300px;
                 font-size : 11px;
+                position:relative;
                 float: left;
             }
             #chartdiv2 {
                 width : 100%;
                 height : 300px;
                 font-size : 11px;
+                position:relative;
                 float: right;
             }
             #chartdiv3 {
@@ -63,7 +66,8 @@
                         "stocklow": {{ it.low }},
                         "stockprice": {{ it.close }},
                         "stockvolume": {{ it.volume }},
-                        "traderprice": 0,
+                        "traderavgbuyprice": 0,
+                        "traderavgsellprice": 0,
                         "traderbuyvolume": 0,
                         "tradersellvolume": 0,
                         "event": ""
@@ -77,7 +81,8 @@
                 var date = new Date("{{ it.date.isoformat }}");
                 var result = jQuery.grep(ndata, function(e){ return e.date.getTime() == date.getTime(); });
                 if (result.length != 0) {
-                    result[0].traderprice = {{ it.price }};
+                    result[0].traderavgbuyprice = {{ it.avgbuyprice }};
+                    result[0].traderavgsellprice = {{ it.avgsellprice }};
                     result[0].traderbuyvolume = {{ it.buyvolume }};
                     result[0].tradersellvolume = {{ it.sellvolume }};
                 } else {
@@ -90,7 +95,6 @@
                     "stockidnm": "{{ item.stockid }}-{{ item.stocknm }}",
                     "tradervolume": "{{ item.totalvolume }}",
                     "traderhit": "{{ item.totalhit }}",
-                    "url": "",
                     "description": "",
                     "data": ndata
                 }
@@ -113,8 +117,8 @@
                                     "date": dataPoint.data[y].date,
                                     "traderbuyvolume": dataPoint.data[y].traderbuyvolume,
                                     "tradersellvolume": dataPoint.data[y].tradersellvolume,
-                                    "tradersumvolume": dataPoint.data[y].tradersumvolume,
-                                    "traderprice": dataPoint.data[y].traderprice * dataPoint.data[y].tradersumvolume,
+                                    "traderavgbuyprice": dataPoint.data[y].traderavgbuyprice * dataPoint.data[y].traderbuyvolume,
+                                    "traderavgsellprice": dataPoint.data[y].traderavgsellprice * dataPoint.data[y].tradersellvolume,
                                     "stockvolume": dataPoint.data[y].stockvolume,
                                     "stockprice": dataPoint.data[y].stockprice
                                     });
@@ -124,13 +128,14 @@
                         for (var y in dataPoint.data) {
                             collectiveData[y].traderbuyvolume += dataPoint.data[y].traderbuyvolume;
                             collectiveData[y].tradersellvolume += dataPoint.data[y].tradersellvolume;
-                            collectiveData[y].tradersumvolume += dataPoint.data[y].tradersumvolume;
-                            collectiveData[y].traderprice += dataPoint.data[y].traderprice * dataPoint.data[y].tradersumvolume;
+                            collectiveData[y].traderavgbuyprice += dataPoint.data[y].traderavgbuyprice * dataPoint.data[y].traderbuyvolume;
+                            collectiveData[y].traderavgsellprice += dataPoint.data[y].traderavgsellprice * dataPoint.data[y].tradersellvolume
                         }
                     }
                 }
                 for (var x in collectiveData) {
-                    collectiveData[x].traderprice = Math.floor(collectiveData[x].traderprice / collectiveData[x].tradersumvolume);
+                    collectiveData[x].traderavgbuyprice = Math.floor(collectiveData[x].traderavgbuyprice / collectiveData[x].traderbuyvolume);
+                    collectiveData[x].traderavgsellprice = Math.floor(collectiveData[x].traderavgsellprice / collectiveData[x].tradersellvolume);
                 }
             }
 
@@ -146,7 +151,7 @@
                         "legend": {
                         "markerType": "circle",
                         "position": "right",
-                        "marginRight": 80, 
+                        "marginRight": 500, 
                         "autoMargins": false
                         },
                         "pullOutOnlyOne": true
@@ -162,7 +167,7 @@
                         "legend": {
                         "markerType": "circle",
                         "position": "right",
-                        "marginRight": 80, 
+                        "marginRight": 500, 
                         "autoMargins": false
                         },
                         "pullOutOnlyOne": true
@@ -242,9 +247,26 @@
                             "labelPosition": "right",
                             "labelText": "[[event]]",
                             "legendValueText": "p: [[value]]",
-                            "title": "traderprice",
+                            "title": "traderavgbuyprice",
                             "fillAlphas": 0,
-                            "valueField": "traderprice",
+                            "valueField": "traderavgbuyprice",
+                            "valueAxis": "priceAxis"
+                        },
+                        {
+                            "balloonText": "p:[[value]]",
+                            "bullet": "round",
+                            "bulletBorderAlpha": 1,
+                            "useLineColorForBulletBorder": true,
+                            "bulletColor": "#FFFFFF",
+                            "bulletSizeField": "townSize",
+                            "dashLengthField": "dashLength",
+                            "descriptionField": "event",
+                            "labelPosition": "right",
+                            "labelText": "[[event]]",
+                            "legendValueText": "p: [[value]]",
+                            "title": "traderavgsellprice",
+                            "fillAlphas": 0,
+                            "valueField": "traderavgsellprice",
                             "valueAxis": "priceAxis"
                         },
                         {
@@ -384,9 +406,11 @@
         <link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
         <script src="//code.jquery.com/jquery-1.10.2.js"></script>
         <script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
-        <div id="chartdiv1"></div>
-        <div id="chartdiv3"></div>
-        <div id="chartdiv2"></div>
+        <div>
+            <div id="chartdiv1"></div>
+            <div id="chartdiv3"></div>
+            <div id="chartdiv2"></div>
+        </div>
     </body>
 </html>
 

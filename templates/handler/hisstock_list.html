@@ -6,27 +6,27 @@
     <head>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
         <title> - stocklist - </title>
-        {% if stockitem %} 
+        {% if stockitem %}
         <table id="stocklist" class="tablesorter">
             <thead>
-                <tr> 
-                    <th></th> 
-                    <th>open</th>
-                    <th>close</th>
-                    <th>high</th>
-                    <th>low</th>
-                    <th>volume</th>
-               </tr> 
+                <tr>
+                <th></th>
+                <th>open</th>
+                <th>high</th>
+                <th>low</th>
+                <th>close</th>
+                <th>volume</th>
+                </tr>
             </thead> 
             <tbody>
                 {% for item in stockitem %}
                 <tr>
                 {% with item.datalist|last as it %}
-                <th><a href="xx">{{ item.stockid }}-{{ item.stocknm }}</a></th>
+                <th><a href="{{ item.stockid }}">{{ item.stockid }}-{{ item.stocknm }}</a></th>
                 <th>{{ it.open }}</th>
-                <th>{{ it.close }}</th>
                 <th>{{ it.high }}</th>
                 <th>{{ it.low }}</th>
+                <th>{{ it.close }}</th>
                 <th>{{ it.volume }}</th>
                 {% endwith %}
                 </tr>

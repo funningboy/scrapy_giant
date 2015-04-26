@@ -22,7 +22,7 @@ class TwseHisCreditSpider(CrawlSpider):
         (u'前日餘額',  u'preremain'),
         (u'賣出', u'sellvolume'),
         (u'買進', u'buyvolume'),
-        (u'現券'|u'現償', u'daytrade'),
+#        (u'現券'|u'現償', u'daytrade'),
         (u'今日餘額', u'curremain'),
         (u'限額', u'limit')
     ]
@@ -57,7 +57,12 @@ class TwseHisCreditSpider(CrawlSpider):
         sel = Selector(response)
         item = response.meta['item']
         index = response.meta['index']
-        self.xpath('.//*[@id="contentblock"]/td/table[2]/tbody/tr/td/table[2]/tbody/tr/td/div')
+        try:
+            frame = pf.frame
+        except:
+            log.msg
+            return
+        #self.xpath('.//*[@id="contentblock"]/td/table[2]/tbody/tr/td/table[2]/tbody/tr/td/div')
         elems = self.xpath('.//*[@id="tbl-containerx"]//tr')
         for elem in elems[1:]:
             its = elem.xpath('td/text()').extract()
@@ -74,7 +79,7 @@ class TwseHisCreditSpider(CrawlSpider):
                     'curremain',
                     'limit'])}
             sub.update({
-                'date': date
+                'date': date,
                 'type': 'finance' if index == 0 else 'bearish'
             })
             item['data'].append(sub)

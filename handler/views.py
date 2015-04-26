@@ -40,10 +40,11 @@ def hisstock_list(request, opt, starttime, endtime, order='totalvolume', limit=1
     stockitem = dbhandler.stock.query(*args)
     return render(request,'handler/hisstock_list.html', {'stockitem': stockitem})
 
-def hisstock_detail(request, opt, stockid, starttime, endtime, traderids=[], order='totalvolume', limit=10):
+def hisstock_detail(request, opt, stockid, starttime, endtime, traderids=None, order='totalvolume', limit=10):
     dbhandler = hisdb_tasks[opt]()
     starttime = datetime(int(starttime[0:4]), int(starttime[4:6]), int(starttime[6:8]))
     endtime = datetime(int(endtime[0:4]), int(endtime[4:6]), int(endtime[6:8]))
+    traderids = traderids.split(',') if traderids else []
     args = (starttime, endtime, [stockid], order, limit)
     stockitem = dbhandler.stock.query(*args)
     args = (starttime, endtime, [stockid], traderids, 'stock', order, limit)
@@ -60,10 +61,11 @@ def histrader_list(request, opt, starttime, endtime, order='totalvolume', limit=
     traderitem = dbhandler.trader.query(*args)
     return render(request,'handler/histrader_list.html', {'traderitem': traderitem})
 
-def histrader_detail(request, opt, traderid, starttime, endtime, stockids=[], order='totalvolume', limit=10):
+def histrader_detail(request, opt, traderid, starttime, endtime, stockids=None, order='totalvolume', limit=10):
     dbhandler = hisdb_tasks[opt]()
     starttime = datetime(int(starttime[0:4]), int(starttime[4:6]), int(starttime[6:8]))
     endtime = datetime(int(endtime[0:4]), int(endtime[4:6]), int(endtime[6:8]))
+    stockids = stockids.split(',') if stockids else []
     args = (starttime, endtime, stockids, [traderid], 'trader', order, limit)
     traderitem = dbhandler.trader.query(*args)
     stockids = [it.stockid for it in traderitem]

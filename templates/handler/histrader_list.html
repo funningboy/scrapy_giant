@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<! https://github.com/bradleyayers/django-tables2/blob/master/django_tables2/templates/django_tables2/table.html>
+{% load staticfiles %}
+{% load i18n %}
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <title> - traderlist - </title>
+        {% if traderitem %} 
+        <table id="traderlist" class="tablesorter">
+            <thead>
+                <tr>
+                <th></th>
+                <th>totalvolume</th>
+                <th>totalbuyvolume</th>
+                <th>totalsellvolume</th>
+                <th>totalhit</th>
+                <th>totaltradeprice</th>
+                <th>totaltradvolume</th>
+                </tr>
+            </thead> 
+            <tbody>
+                {% for item in traderitem %}
+                <tr>
+                <th><a href="{{ item.traderid }}">{{ item.traderid }}-{{ item.tradernm }}</a></th>
+                <th>{{ item.totalvolume }}</th>
+                <th>{{ item.totalbuyvolume }}</th>
+                <th>{{ item.totalsellvolume }}</th>
+                <th>{{ item.totalhit }}</th>
+                <th>{{ iten.totaltradeprice }}</th>
+                <th>{{ item.totaltradevolume }}</th>
+                </tr>
+                {% endfor %}
+            </tbody> 
+        </table>
+        {% endif %}
+    </head>
+    <body>
+        <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+        <script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.4/js/jquery.tablesorter.js"></script>
+        <! use jquery.tablesorter>
+        <script>
+            $(document).ready(function() {
+                $("#traderlist").tablesorter(); 
+            } );
+        </script>
+    </body>
+</html>
