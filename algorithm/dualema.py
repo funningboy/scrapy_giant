@@ -100,7 +100,7 @@ def run(opt='twse', debug=False, limit=0):
             dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
             dbhandler.stock.ids = [stockid]
             dbhandler.trader.ids = []
-            data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
+            data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], ['totalvolume']*2, 10)
             if len(data[stockid].index) < maxlen:
                 continue
             dualema = DualEMAAlgorithm(dbhandler=dbhandler, debug=True)

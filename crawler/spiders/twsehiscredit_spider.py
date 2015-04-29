@@ -5,7 +5,7 @@ import re
 from scrapy.selector import Selector
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy import log
-
+from crawler.items import TwseHisCreditItem
 
 __all__ = ['TwseHisCreditSpider']
 #
@@ -40,7 +40,7 @@ class TwseHisCreditSpider(CrawlSpider):
             'http://www.twse.com.tw/ch/trading/exchange/TWT93U/TWT93U.php'
         ]
         for i, URL in enumerate(URLS):
-            item = TwseCreditItem()
+            item = TwseHisCreditItem()
             item['data'] = []
             request = Request(
                 URL,
@@ -62,7 +62,12 @@ class TwseHisCreditSpider(CrawlSpider):
         except:
             log.msg
             return
-        #self.xpath('.//*[@id="contentblock"]/td/table[2]/tbody/tr/td/table[2]/tbody/tr/td/div')
+        if index == 0:
+            date = self.xpath('.//*[@id="contentHeader"]/tbody/tr/td/table[2]/tbody/tr[3]/td/div/table/tbody/tr[1]/td/div/input[1]/@value').extract()[0]
+        else:
+            date = self.xpath('.//*[@id="contentHeader"]/tbody/tr/td/table[2]/tbody/tr[3]/td/table/tbody/tr[1]/td/input[1]/@value').extract()[0]
+        yy, mm, dd = date.split('/')
+        date = u"%s-%s-%s" % (int(yy) + 1911, mm, dd)
         elems = self.xpath('.//*[@id="tbl-containerx"]//tr')
         for elem in elems[1:]:
             its = elem.xpath('td/text()').extract()

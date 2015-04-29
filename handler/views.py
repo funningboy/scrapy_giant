@@ -68,7 +68,7 @@ def histrader_detail(request, opt, traderid, starttime, endtime, stockids=None, 
     stockids = stockids.split(',') if stockids else []
     args = (starttime, endtime, stockids, [traderid], 'trader', order, limit)
     traderitem = dbhandler.trader.query(*args)
-    stockids = [it.stockid for it in traderitem]
+    stockids = [it['stockid'] for it in traderitem]
     args = (starttime, endtime, stockids, order, limit)
     stockitem = dbhandler.stock.query(*args)
     return render(request,'handler/histrader_detail.html', {'stockitem': stockitem, 'traderitem': traderitem})

@@ -160,7 +160,7 @@ class TraderMapColl(Document):
     totalhit = IntField(min_value=0, max_value=9999999)
     totaltradeprice = FloatField(min_value=0.0, max_value=9999.0)
     totaltradevolume = IntField(min_value=0, max_value=9999999)
-    datalist = ListField(EmbeddedDocumentField(TraderMapData))
+    #datalist = ListField(EmbeddedDocumentField(TraderMapData))
     meta = {
         'db_alias': 'tradermapdb',
         'allow_inheritance': True,

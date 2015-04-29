@@ -3,7 +3,7 @@
 import pandas as pd
 import pytz
 from collections import OrderedDict
-from bson import json_util
+from datetime import datetime
 
 from mongoengine import *
 from bin.start import switch
@@ -37,12 +37,14 @@ class TwseHisDBHandler(object):
     def credit(self):
         return self._credit
 
-    def transform_all_data(self, starttime, endtime, stockids=[], traderids=[], order='totalvolume', limit=10):
+    def transform_all_data(self, starttime, endtime, stockids=[], traderids=[], orders=['totalvolume','totalvolume'], limit=10):
         """ transfrom stock/trader data as pandas panel """
-        args = (starttime, endtime, stockids, order, limit, self._stock.to_pandas)
-        stockdt = self._stock.query(*args)
-        args = (starttime, endtime, list(stockdt.keys()), traderids, 'stock', order, limit, self._trader.to_pandas)
-        traderdt = self._trader.query(*args)
+        args = (starttime, endtime, stockids, orders[0], limit, self._stock.to_pandas)
+        stockdt = self._stock.query_raw(*args)
+        args = (starttime, endtime, list(stockdt.keys()), traderids, 'stock', orders[1], limit, self._trader.to_pandas)
+        traderdt = self._trader.query_raw(*args)
+#        args = (starttime, endtime, stockids, orders[2], limit, self._stock.to_pandas)
+#        stockdt = self._stock.query_raw(*args)
         return pd.concat([stockdt, traderdt], axis=2).fillna(0)
 
 
@@ -65,7 +67,6 @@ class TwseStockHisDBHandler(object):
         connect('stockmapdb', host=host, port=port, alias='stockmapdb')
         self._iddbhandler = TwseIdDBHandler()
         self._mapcoll = switch(StockMapColl, 'stockmapdb')
-        self._mapcoll.drop_collection()
         self._coll = coll
         self._ids = []
 
@@ -77,18 +78,14 @@ class TwseStockHisDBHandler(object):
     def ids(self, ids):
         self._ids = ids
 
-    def drop(self):
-        self._mapcoll.drop_collection()
-        self._ids = []
-
-    def delete(self, item):
+    def delete_raw(self, item):
         pass
 
-    def insert(self, item):
+    def insert_raw(self, item):
         keys = [k for k,v in StockData._fields.iteritems()]
         for it in item:
-            dt = {k:v for k, v in it.items() if k in keys}
-            data = StockData(**dt)
+            data = {k:v for k, v in it.items() if k in keys}
+            data = StockData(**data)
             cursor = self._coll.objects(Q(date=it['date']) & Q(stockid=it['stockid']))
             cursor = list(cursor)
             coll = self._coll() if len(cursor) == 0 else cursor[0]
@@ -97,7 +94,7 @@ class TwseStockHisDBHandler(object):
             coll.data = data
             coll.save()
 
-    def query(self, starttime, endtime, stockids=[], order='totalvolume', limit=10, callback=None):
+    def query_raw(self, starttime, endtime, stockids=[], order='totalvolume', limit=10, callback=None):
         """ return orm
         <stockid>                               | <stockid> ...
                     open| high| low|close|volume|          | open | ...
@@ -148,38 +145,46 @@ class TwseStockHisDBHandler(object):
                 return redval;
             }
         """
-        assert(order in ['totalvolume', 'totaldiff'])
+        decorder = ['totalvolume', 'totaldiff', 'maxhigh']
+        incorder = ['minlow', 'minhigh']
+        assert(order in decorder + incorder)
         cursor = self._coll.objects(Q(date__gte=starttime) & Q(date__lte=endtime) & Q(stockid__in=stockids))
         results = cursor.map_reduce(map_f, reduce_f, 'stockmap')
         results = list(results)
-        keys = [k for k,v in StockMapData._fields.iteritems()]
-        pool = sorted(results, key=lambda x: x.value[order], reverse=True)[:limit]
+        pool = sorted(results, key=lambda x: x.value[order], reverse=True if order in decorder else False)[:limit]
+        retval = []
         for it in pool:
-            coll = self._mapcoll()
+            coll = { 'datalist': [] }
             for data in sorted(it.value['data'], key=lambda x: x['date']):
-                dt = {k:v for k, v in data.items() if k in keys}
-                coll.datalist.append(StockMapData(**dt))
-            coll.stockid = it.key['stockid']
-            coll.stocknm = self._iddbhandler.stock.get_name(it.key['stockid'])
-            coll.url = ''
-            coll.save()
-        results = self._mapcoll.objects.all()
-        return callback(results) if callback else results
+                coll['datalist'].append(data)
+            coll.update({
+                'stockid': it.key['stockid'],
+                'stocknm': self._iddbhandler.stock.get_name(it.key['stockid'])
+            })
+            retval.append(coll)
+        return callback(retval) if callback else retval
 
     def to_pandas(self, cursor):
         item = OrderedDict()
-        keys = [k for k,v in StockMapData._fields.iteritems()]
         for it in cursor:
             index, data = [], []
-            for i in it.datalist:
-                index.append(pytz.timezone('UTC').localize(i.date))
-                dt = {k: getattr(i, k) for k in keys}
-                data.append(dt)
+            for i in it['datalist']:
+                date = i.pop('date', datetime.utcnow())
+                index.append(pytz.timezone('UTC').localize(date))
+                data.append(i)
             if index and data:
-                id = it.stockid
+                id = it['stockid']
                 item.update({id: pd.DataFrame(data, index=index).fillna(0)})
         return pd.Panel(item)
 
+    def to_map(self, cursor):
+        pass
+
+    def query_map(self,):
+        pass
+
+    def delete_map(self,):
+        pass
 
 class TwseTraderHisDBHandler(object):
 
@@ -188,7 +193,6 @@ class TwseTraderHisDBHandler(object):
         connect('tradermapdb', host=host, port=port, alias='tradermapdb')
         self._iddbhandler = TwseIdDBHandler()
         self._mapcoll = switch(TraderMapColl, 'tradermapdb')
-        self._mapcoll.drop_collection()
         self._coll = coll
         self._ids = []
 
@@ -200,24 +204,20 @@ class TwseTraderHisDBHandler(object):
     def ids(self, ids):
         self._ids = ids
 
-    def drop(self):
-        self._mapcoll.drop_collection()
-        self._ids = []
-
-    def delete(self, item):
+    def delete_raw(self, item):
         pass
 
-    def insert(self, item):
+    def insert_raw(self, item):
         keys = [k for k,v in TraderData._fields.iteritems()]
         toplist = []
         for it in item['toplist']:
-            dt = {k:v for k, v in it['data'].items() if k in keys}
-            td = {
+            data = {k:v for k, v in it['data'].items() if k in keys}
+            info = {
                 'traderid': it['traderid'],
                 'tradernm': it['tradernm'],
-                'data': TraderData(**dt)
+                'data': TraderData(**data)
             }
-            toplist.append(TraderInfo(**td))
+            toplist.append(TraderInfo(**info))
         cursor = self._coll.objects(Q(date=item['date']) & Q(stockid=item['stockid']))
         cursor = list(cursor)
         coll = self._coll() if len(cursor) == 0 else cursor[0]
@@ -226,7 +226,7 @@ class TwseTraderHisDBHandler(object):
         coll.toplist = toplist
         coll.save()
 
-    def query(self, starttime, endtime, stockids=[], traderids=[],
+    def query_raw(self, starttime, endtime, stockids=[], traderids=[],
             base='stock', order='totalvolume', limit=10, callback=None):
         """ get rank toplist volume stock/trader data
             <stockid>                                          <stockid>
@@ -317,8 +317,9 @@ class TwseTraderHisDBHandler(object):
         """
         ids = stockids if base == 'stock' else traderids
         mkey = 'stockid' if base == 'stock' else 'traderid'
-        assert(order in ['totalvolume', 'totalhit', 'totalbuyvolume', 'totalsellvolume', 'totaltradeprice', 'totaltradevolume'])
-        keys = [k for k,v in TraderMapData._fields.iteritems()]
+        decorder = ['totalvolume', 'totalhit', 'totalbuyvolume', 'totalsellvolume', 'totaltradeprice', 'totaltradevolume']
+        incorder = []
+        assert(order in decorder + incorder)
         if stockids and traderids:
             cursor = self._coll.objects(
                 Q(date__gte=starttime) & Q(date__lte=endtime) &
@@ -329,62 +330,66 @@ class TwseTraderHisDBHandler(object):
                 (Q(stockid__in=stockids) | Q(toplist__traderid__in=traderids)))
         results = cursor.map_reduce(map_f, reduce_f, 'toptradermap')
         results = list(results)
+        retval = []
         for id in ids:
             pool = list(filter(lambda x: x.key[mkey]==id, results))
-            pool = sorted(pool, key=lambda x: x.value['totalhit'], reverse=True)[:limit]
+            pool = sorted(pool, key=lambda x: x.value['totalhit'], reverse=True if order in decorder else False)[:limit]
             for i, it in enumerate(pool):
-                coll = self._mapcoll()
+                coll = { 'datalist': [] }
                 for data in sorted(it.value['data'], key=lambda x: x['date']):
-                    dt = {k:v for k, v in data.items() if k in keys}
-                    coll.datalist.append(TraderMapData(**dt))
-                coll.traderid = it.key['traderid']
-                coll.stockid = it.key['stockid']
-                coll.tradernm = self._iddbhandler.trader.get_name(it.key['traderid'])
-                coll.stocknm = self._iddbhandler.stock.get_name(it.key['stockid'])
-                coll.totalvolume = it.value['totalvolume']
-                coll.totalbuyvolume = it.value['totalbuyvolume']
-                coll.totalsellvolume = it.value['totalsellvolume']
-                coll.totalhit = it.value['totalhit']
-                coll.totaltradeprice = it.value['totaltradeprice']
-                coll.totaltradevolume = it.value['totaltradevolume']
-                coll.alias = "top%d" % (i)
-                coll.save()
-        results = self._mapcoll.objects.all()
-        return callback(results) if callback else results
+                    coll['datalist'].append(data)
+                coll.update({
+                    'traderid': it.key['traderid'],
+                    'stockid': it.key['stockid'],
+                    'tradernm': self._iddbhandler.trader.get_name(it.key['traderid']),
+                    'stocknm': self._iddbhandler.stock.get_name(it.key['stockid']),
+                    'totalvolume': it.value['totalvolume'],
+                    'totalbuyvolume': it.value['totalbuyvolume'],
+                    'totalsellvolume': it.value['totalsellvolume'],
+                    'totalhit': it.value['totalhit'],
+                    'totaltradeprice': it.value['totaltradeprice'],
+                    'totaltradevolume': it.value['totaltradevolume'],
+                    'alias': "top%d" % (i)
+                })
+                retval.append(coll)
+        return callback(retval) if callback else retval
 
     def to_pandas(self, cursor, base='stock'):
         item = OrderedDict()
-        ids = [it.stockid if base =='stock' else it.traderid for it in cursor]
+        ids = [it['stockid'] if base =='stock' else it['traderid'] for it in cursor]
         for id in ids:
             df = pd.DataFrame()
-            pool = list(filter(lambda x: x.stockid==id, cursor)) if base == 'stock' else list(filter(lambda x: x.traderid==id, cursor))
+            pool = list(filter(lambda x: x['stockid']==id, cursor)) if base == 'stock' else list(filter(lambda x: x['traderid']==id, cursor))
             for it in pool:
                 index, data= [], []
-                for i in it.datalist:
-                    index.append(pytz.timezone('UTC').localize(i.date))
-                    dt = {
-                        "%s_ratio" % (it.alias): i.ratio,
-                        "%s_price" % (it.alias): i.price,
-                        "%s_buyvolume" % (it.alias): i.buyvolume,
-                        "%s_sellvolume" % (it.alias): i.sellvolume
+                for i in it['datalist']:
+                    date = i.pop('date', datetime.utcnow())
+                    index.append(pytz.timezone('UTC').localize(date))
+                    mdata = {
+                        "%s_ratio" % (it['alias']): i['ratio'],
+                        "%s_avgbuyprice" % (it['alias']): i['avgbuyprice'],
+                        "%s_avgsellprice" % (it['alias']): i['avgsellprice'],
+                        "%s_buyvolume" % (it['alias']): i['buyvolume'],
+                        "%s_sellvolume" % (it['alias']): i['sellvolume']
                     }
-                    data.append(dt)
+                    data.append(mdata)
                 if index and data:
                     df = pd.concat([df, pd.DataFrame(data, index=index).fillna(0)], axis=1)
             item.update({id: df})
         return pd.Panel(item)
 
-    def map_alias(self, ids=[], base='stock', aliases=['top0']):
+    def get_alias(self, ids=[], base='stock', aliases=['top0']):
         """ get alias map as virtual to physical map """
-        if base == 'stock':
-            cursor = self._mapcoll.objects(Q(stockid__in=ids) & Q(alias__in=aliases))
-            cursor = list(cursor)
-            return [it.traderid for it in cursor]
-        else:
-            cursor = self._mapcoll.objects(Q(traderid__in=ids) & Q(alias__in=aliases))
-            cursor = list(cursor)
-            return [it.stockid for it in cursor]
+        pass
 
+    def to_map(self, cursor):
+        pass
+
+    def query_map(self, ):
+        pass
+
+    def delete_map(self,):
+        pass
 
 class TwseCreditDBHandler(object):
 
@@ -393,7 +398,6 @@ class TwseCreditDBHandler(object):
         connect('creditmapdb', host=host, port=port, alias='creditmapdb')
         self._iddbhandler = TwseIdDBHandler()
         self._mapcoll = switch(CreditMapColl, 'creditmapdb')
-        self._mapcoll.drop_collection()
         self._coll = coll
         self._ids = []
 
@@ -405,18 +409,14 @@ class TwseCreditDBHandler(object):
     def ids(self, ids):
         self._ids = ids
 
-    def drop(self):
-        self._mapcoll.drop_collection()
-        self._ids = []
-
-    def delete(self, item):
+    def delete_raw(self, item):
         pass
 
-    def insert(self, item):
+    def insert_raw(self, item):
         keys = [k for k,v in CreditData._fields.iteritems()]
         for it in item:
-            dt = {k:v for k, v in it.items() if k in keys}
-            data = CreditData(**dt)
+            data = {k:v for k, v in it.items() if k in keys}
+            data = CreditData(**data)
             cursor = self._coll.objects(Q(date=it['date']) & Q(stockid=it['stockid']))
             cursor = list(cursor)
             coll = self._coll() if len(cursor) == 0 else cursor[0]
@@ -428,7 +428,7 @@ class TwseCreditDBHandler(object):
                 coll.bearish = data
             coll.save()
 
-    def query(self, starttime, endtime, stockids=[], order='totalvolume', limit=10, callback=None):
+    def query_raw(self, starttime, endtime, stockids=[], order='totalvolume', limit=10, callback=None):
         """ return orm
         <stockid>                                                | <stockid> ...
                     finance_buy| finance_sely| finance_limit| ...|
@@ -479,36 +479,45 @@ class TwseCreditDBHandler(object):
                 return redval;
             }
         """
-        assert(order in ['financeinc', 'financedec', 'bearishinc', 'bearishdec'])
+        decorder = ['financeinc', 'bearishinc']
+        incorder = ['financedec', 'bearishdec']
+        assert(order in decorder + incorder)
         cursor = self._coll.objects(Q(date__gte=starttime) & Q(date__lte=endtime) & Q(stockid__in=stockids))
         results = cursor.map_reduce(map_f, reduce_f, 'creditmap')
         results = list(results)
-        keys = [k for k,v in CreditMapData._fields.iteritems()]
-        pool = sorted(results, key=lambda x: x.value[order], reverse=True if order in ['financeinc', 'bearishinc'] else False)[:limit]
+        pool = sorted(results, key=lambda x: x.value[order], reverse=True if order in decorder else False)[:limit]
+        retval = []
         for it in pool:
-            coll = self._mapcoll()
+            coll = { 'datalist': [] }
             for data in sorted(it.value['data'], key=lambda x: x['date']):
-                dt = {k:v for k, v in data.items() if k in keys}
-                coll.datalist.append(CreditMapData(**dt))
-            coll.stockid = it.key['stockid']
-            coll.save()
-        results = self._mapcoll.objects.all()
-        return callback(results) if callback else results
+                coll['datalist'].append(data)
+            coll.update({
+                'stockid': it.key['stockid']
+            })
+            retval.append(coll)
+        return callback(retval) if callback else retval
 
     def to_pandas(self, cursor):
         item = OrderedDict()
-        keys = [k for k,v in CreditMapData._fields.iteritems()]
         for it in cursor:
             index, data = [], []
-            for i in it.datalist:
-                index.append(pytz.timezone('UTC').localize(i.date))
-                dt = {k: getattr(i, k) for k in keys}
-                data.append(dt)
+            for i in it['datalist']:
+                date = i.pop(date, datetime.utcnow())
+                index.append(pytz.timezone('UTC').localize(date))
+                data.append(i)
             if index and data:
-                id = it.stockid
+                id = it['stockid']
                 item.update({id: pd.DataFrame(data, index=index).fillna(0)})
         return pd.Panel(item)
 
+    def to_map(self, cursor):
+        pass
+
+    def query_map(self,):
+        pass
+
+    def delete_map(self,):
+        pass
 
 class OtcStockHisDBHandler(TwseStockHisDBHandler):
     def __init__(self, coll):

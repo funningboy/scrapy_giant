@@ -41,4 +41,4 @@ class TwseHisCreditPipeline(BasePipeline):
         return item
 
     def _write_item(self, item):
-        self._db.credit.insert(item)
+        self._db.credit.insert_raw(item)

@@ -39,3 +39,14 @@ def trans_histoptrader(opt, starttime, endtime, stockids=[], traderids=[], base=
     cursor = dbhandler.trader.query(*args)
     panel = dbhandler.trader.to_pandas(cursor, base)
     return panel, dbhandler
+
+@shared_task
+def map_histoptrader(opt, starttime, endtime, stockids=[], traderids=[], base='stock', order='totalvolume', limit=10):
+   dbhandler = hisdb_tasks[opt]()
+   dbhandler.stock.ids = stockids
+   dbhandler.trader.ids = traderids
+   args = (starttime, endtime, stockids, traderids, base, order, limit)
+   cursor = dbhandler.trader.query(*args)
+   panel = dbhandler.trader.to_pandas(cursor, base)
+   return panel, dbhandler
+

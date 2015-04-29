@@ -51,4 +51,4 @@ class TwseHisStockPipeline(BasePipeline):
         return item
 
     def _write_item(self, item):
-        self._db.stock.insert(item)
+        self._db.stock.insert_raw(item)
