@@ -39,15 +39,15 @@ class TwseHisStockSpider(CrawlSpider):
 
     def __init__(self, crawler):
         super(TwseHisStockSpider, self).__init__()
-
-    def start_requests(self):
         kwargs = {
-            'debug': self.settings.getbool('GIANT_DEBUG'),
-            'limit': self.settings.getint('GIANT_LIMIT'),
+            'debug': crawler.settings.getbool('GIANT_DEBUG'),
+            'limit': crawler.settings.getint('GIANT_LIMIT'),
             'opt': 'twse'
         }
-        requests = []
-        for i,stockid in enumerate(TwseIdDBHandler().stock.get_ids(**kwargs)):
+        self._id = TwseIdDBHandler(**kwargs)
+
+    def start_requests(self):
+        for i,stockid in enumerate(self._id.stock.get_ids()):
             for mon in range(2, -1, -1):
                 timestamp = datetime.utcnow() - relativedelta(months=mon)
                 if mon == 0:
@@ -75,8 +75,7 @@ class TwseHisStockSpider(CrawlSpider):
                     },
                     callback=self.parse,
                     dont_filter=True)
-                requests.append(request)
-        return requests
+                yield request
 
     def parse(self, response):
         """

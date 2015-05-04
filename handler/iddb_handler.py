@@ -15,14 +15,29 @@ __all__ = ['TwseIdDBHandler', 'OtcIdDBHandler', 'TraderIdDBHandler']
 
 class TwseIdDBHandler(object):
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        self._debug = kwargs.pop('debug', False)
+        self._opt = kwargs.pop('opt', 'twse')
         host, port = MongoDBDriver._host, MongoDBDriver._port
-        connect('traderiddb', host=host, port=port, alias='traderiddb')
-        traderidcoll = switch(TraderIdColl, 'traderiddb')
-        connect('twseiddb', host=host, port=port, alias='twseiddb')
-        twseidcoll = switch(TwseIdColl, 'twseiddb')
-        self._stock = StockIdDBHandler(twseidcoll)
-        self._trader = TraderIdDBHandler(traderidcoll)
+        db = 'traderiddb' if not self._debug else 'testtraderiddb'
+        connect(db, host=host, port=port, alias=db)
+        traderidcoll = switch(TraderIdColl, db)
+        db = 'twseiddb' if not self._debug else 'testtwseiddb'
+        connect(db, host=host, port=port, alias=db)
+        twseidcoll = switch(TwseIdColl, db)
+        kwargs = {
+            'db': db,
+            'coll': twseidcoll,
+            'debug': self._debug,
+            'opt': self._opt
+        }
+        self._stock = StockIdDBHandler(**kwargs)
+        kwargs = {
+            'coll': traderidcoll,
+            'debug': self._debug,
+            'opt': self._opt
+        }
+        self._trader = TraderIdDBHandler(**kwargs)
 
     @property
     def stock(self):
@@ -35,25 +50,48 @@ class TwseIdDBHandler(object):
 
 class OtcIdDBHandler(TwseIdDBHandler):
 
-    def __init__(self):
-        super(OtcIdDBHandler, self).__init__()
+    def __init__(self, **kwargs):
+        ckwargs = kwargs.copy()
+        super(OtcIdDBHandler, self).__init__(**kwargs)
+        self._debug = ckwargs.pop('debug', False)
+        self._opt = ckwargs.pop('opt', 'otc')
         host, port = MongoDBDriver._host, MongoDBDriver._port
-        connect('traderiddb', host=host, port=port, alias='traderiddb')
-        traderidcoll = switch(TraderIdColl, 'traderiddb')
-        connect('otciddb', host=host, port=port, alias='otciddb')
-        otcidcoll = switch(OtcIdColl, 'otciddb')
-        self._stock = StockIdDBHandler(otcidcoll)
-        self._trader = TraderIdDBHandler(traderidcoll)
+        db = 'traderiddb' if not self._debug else 'testtraderiddb'
+        connect(db, host=host, port=port, alias=db)
+        traderidcoll = switch(TraderIdColl, db)
+        db = 'otciddb' if not self._debug else 'testotciddb'
+        connect(db, host=host, port=port, alias=db)
+        otcidcoll = switch(OtcIdColl, db)
+        kwargs = {
+            'coll': otcidcoll,
+            'debug': self._debug,
+            'opt': self._opt,
+        }
+        self._stock = StockIdDBHandler(**kwargs)
+        kwargs = {
+            'coll': traderidcoll,
+            'debug': self._debug,
+            'opt': self._opt
+        }
+        self._trader = TraderIdDBHandler(**kwargs)
 
 
 class StockIdDBHandler(object):
 
-    def __init__(self, coll):
-        self._coll = coll
+    def __init__(self, **kwargs):
+        self._coll = kwargs.pop('coll', None)
+        self._debug = kwargs.pop('debug', False)
+        self._opt = kwargs.pop('opt', 'twse')
+        self._db = kwargs.pop('db', None)
+        assert(self._coll)
 
-    def get_ids(self, limit=0, debug=False, opt='twse'):
-        if debug:
-            if opt == 'twse':
+    @property
+    def coll(self):
+        return self._coll
+
+    def get_ids(self, limit=0):
+        if self._debug:
+            if self._opt == 'twse':
                 for stockid in ['2317', '1314', '2330']:
                     yield stockid
             else:
@@ -65,9 +103,9 @@ class StockIdDBHandler(object):
             for it in cursor:
                 yield it.stockid
 
-    def get_names(self, limit=0, debug=False, opt='twse'):
-        if debug:
-            if opt == 'twse':
+    def get_names(self, limit=0):
+        if self._debug:
+            if self._opt == 'twse':
                 for stocknm in [u'鴻海', u'中石化', u'台積電']:
                     yield stocknm
             else:
@@ -82,18 +120,14 @@ class StockIdDBHandler(object):
     def get_id(self, stocknm):
         cursor = self._coll.objects(Q(stocknm=stocknm)).limit(1)
         cursor = list(cursor)
-        try:
+        if cursor:
             return cursor[0].stockid
-        except:
-            pass
 
     def get_name(self, stockid):
         cursor = self._coll.objects(Q(stockid=stockid)).limit(1)
         cursor = list(cursor)
-        try:
+        if cursor:
             return cursor[0].stocknm
-        except:
-            pass
 
     def has_id(self, stockid):
         cursor = self._coll.objects(Q(stockid=stockid)).limit(1)
@@ -108,7 +142,13 @@ class StockIdDBHandler(object):
     def is_warrant(self, stockid):
         return len(stockid) >= 6
 
-    def insert(self, item):
+    def update_raw(self, item):
+        pass
+
+    def delete_raw(self, item):
+        pass
+
+    def insert_raw(self, item):
         for it in item:
             cursor = self._coll.objects(Q(stockid=it['stockid']))
             cursor = list(cursor)
@@ -119,15 +159,21 @@ class StockIdDBHandler(object):
             coll.industry = it['industry']
             coll.save()
 
-
 class TraderIdDBHandler(object):
 
-    def __init__(self, coll):
-        self._coll = coll
+    def __init__(self, **kwargs):
+        self._coll = kwargs.pop('coll', None)
+        self._debug = kwargs.pop('debug', False)
+        self._opt = kwargs.pop('opt', 'twse')
+        assert(self._coll)
 
-    def get_ids(self, limit=0, debug=False, opt='twse'):
-        if debug:
-            if opt in ['twse', 'otc']:
+    @property
+    def coll(self):
+        return self._coll
+
+    def get_ids(self, limit=0):
+        if self._debug:
+            if self._opt in ['twse', 'otc']:
                 for traderid in ['1590', '1440', '1470']:
                     yield traderid
         else:
@@ -136,9 +182,9 @@ class TraderIdDBHandler(object):
             for it in cursor:
                 yield it.traderid
 
-    def get_names(self, limit=0, debug=False, opt='twse'):
-        if debug:
-            if opt in ['twse', 'otc']:
+    def get_names(self, limit=0):
+        if self._debug:
+            if self._opt in ['twse', 'otc']:
                 for tradernm in [u'花旗環球', u'美林', u'台灣摩根']:
                     yield tradernm
         else:
@@ -150,18 +196,14 @@ class TraderIdDBHandler(object):
     def get_id(self, tradernm):
         cursor = self._coll.objects(Q(tradernm=tradernm)).limit(1)
         cursor = list(cursor)
-        try:
+        if cursor:
             return cursor[0].traderid
-        except:
-            pass
 
     def get_name(self, traderid):
         cursor = self._coll.objects(Q(traderid=traderid)).limit(1)
         cursor = list(cursor)
-        try:
+        if cursor:
             return cursor[0].tradernm
-        except:
-            pass
 
     def has_id(self, traderid):
         cursor = self._coll.objects(Q(traderid=traderid)).limit(1)
@@ -173,7 +215,13 @@ class TraderIdDBHandler(object):
         cursor = list(cursor)
         return True if cursor else False
 
-    def insert(self, item):
+    def update_raw(self, item):
+        pass
+
+    def delete_raw(self, item):
+        pass
+
+    def insert_raw(self, item):
         for it in item:
             cursor = self._coll.objects(Q(traderid=it['traderid']))
             cursor = list(cursor)
@@ -181,3 +229,4 @@ class TraderIdDBHandler(object):
             coll.traderid = it['traderid']
             coll.tradernm = it['tradernm']
             coll.save()
+

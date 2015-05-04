@@ -26,14 +26,14 @@ class DualEMAAlgorithm(TradingAlgorithm):
     sell:
     """
 
-    def __init__(self, dbhandler, *args, **kwargs):
+    def __init__(self, dbhandler, **kwargs):
         self._debug = kwargs.pop('debug', False)
         self._buf_win = kwargs.pop('buf_win', 30)
         self._short_ema_win = kwargs.pop('short_ema_win', 20)
         self._long_ema_win = kwargs.pop('long_ema_win', 40)
         self._buy_amount = kwargs.pop('buy_amount', 1000)
         self._sell_amount = kwargs.pop('sell_amount', 1000)
-        super(DualEMAAlgorithm, self).__init__(*args, **kwargs)
+        super(DualEMAAlgorithm, self).__init__(**kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
 
@@ -100,7 +100,8 @@ def run(opt='twse', debug=False, limit=0):
             dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
             dbhandler.stock.ids = [stockid]
             dbhandler.trader.ids = []
-            data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], ['totalvolume']*2, 10)
+            args = [starttime, endtime, [stockid], [], ['totalvolume']*2, 10]
+            data = dbhandler.transform_all_data(*args)
             if len(data[stockid].index) < maxlen:
                 continue
             dualema = DualEMAAlgorithm(dbhandler=dbhandler, debug=True)

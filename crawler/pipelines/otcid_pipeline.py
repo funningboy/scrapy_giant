@@ -14,4 +14,8 @@ class OtcIdPipeline(TwseIdPipeline):
     def __init__(self, crawler):
         super(OtcIdPipeline, self).__init__(crawler)
         self._name = 'otcid'
-        self._id = OtcIdDBHandler()
+        kwargs = {
+            'debug': crawler.settings.getbool('GIANT_DEBUG'),
+            'opt': 'otc'
+        }
+        self._id = OtcIdDBHandler(**kwargs)

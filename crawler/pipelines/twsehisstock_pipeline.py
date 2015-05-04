@@ -20,8 +20,11 @@ class TwseHisStockPipeline(BasePipeline):
     def __init__(self, crawler):
         super(TwseHisStockPipeline, self).__init__()
         self._name = 'twsehisstock'
-        self._settings = crawler.settings
-        self._db = TwseHisDBHandler()
+        kwargs = {
+            'debug': crawler.settings.getbool('GIANT_DEBUG'),
+            'opt': 'twse'
+        }
+        self._db = TwseHisDBHandler(**kwargs)
 
     def process_item(self, item, spider):
         if spider.name not in [self._name]:

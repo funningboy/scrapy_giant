@@ -34,15 +34,16 @@ class OtcHisTraderSpider2(CrawlSpider):
 
     def __init__(self, crawler):
         super(OtcHisTraderSpider2, self).__init__()
-
-    def start_requests(self):
         kwargs = {
-            'debug': self.settings.getbool('GIANT_DEBUG'),
-            'limit': self.settings.getint('GIANT_LIMIT'),
-#            'slice': self.settings.getint('GIANT_SLICE'),
+            'debug': crawler.settings.getbool('GIANT_DEBUG'),
+            'limit': crawler.settings.getint('GIANT_LIMIT'),
+#            'slice': crawler.settings.getint('GIANT_SLICE'),
             'opt': 'otc'
         }
-        for i,stockid in enumerate(OtcIdDBHandler().stock.get_ids(**kwargs)):
+        self._id = OtcIdDBHandler(**kwargs)
+
+    def start_requests(self):
+        for i,stockid in enumerate(self._id.stock.get_ids()):
             item = OtcHisTraderItem()
             item.update({
                 'stockid': stockid,

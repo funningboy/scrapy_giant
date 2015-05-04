@@ -38,14 +38,15 @@ class OtcHisStockSpider(CrawlSpider):
 
     def __init__(self, crawler):
         super(OtcHisStockSpider, self).__init__()
-
-    def start_requests(self):
         kwargs = {
-            'debug': self.settings.getbool('GIANT_DEBUG'),
-            'limit': self.settings.getint('GIANT_LIMIT'),
+            'debug': crawler.settings.getbool('GIANT_DEBUG'),
+            'limit': crawler.settings.getint('GIANT_LIMIT'),
             'opt': 'otc'
         }
-        for i,stockid in enumerate(OtcIdDBHandler().stock.get_ids(**kwargs)):
+        self._id = OtcIdDBHandler(**kwargs)
+
+    def start_requests(self):
+        for i,stockid in enumerate(self._id.stock.get_ids()):
             for mon in range(2, -1, -1):
                 timestamp = datetime.utcnow() - relativedelta(months=mon)
                 if mon == 0:

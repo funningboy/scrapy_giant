@@ -16,5 +16,11 @@ class OtcHisTraderPipeline(TwseHisTraderPipeline):
     def __init__(self, crawler):
         super(OtcHisTraderPipeline, self).__init__(crawler)
         self._name = 'otchistrader'
-        self._db = OtcHisDBHandler()
-        self._id = OtcIdDBHandler()
+        kwargs = []
+        for i in range(2):
+            kwargs.append({
+                'debug': crawler.settings.getbool('GIANT_DEBUG'),
+                'opt': 'otc'
+        })
+        self._db = OtcHisDBHandler(**kwargs[0])
+        self._id = OtcIdDBHandler(**kwargs[1])

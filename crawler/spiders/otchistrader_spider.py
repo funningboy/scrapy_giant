@@ -37,16 +37,16 @@ class OtcHisTraderSpider(CrawlSpider):
 
     def __init__(self, crawler):
         super(OtcHisTraderSpider, self).__init__()
-
-    def start_requests(self):
         kwargs = {
-            'debug': self.settings.getbool('GIANT_DEBUG'),
-            'limit': self.settings.getint('GIANT_LIMIT'),
-#            'slice': self.settings.getint('GIANT_SLICE'),
+            'debug': crawler.settings.getbool('GIANT_DEBUG'),
+            'limit': crawler.settings.getint('GIANT_LIMIT'),
+#            'slice': crawler.settings.getint('GIANT_SLICE'),
             'opt': 'otc'
         }
-        idhandler = OtcIdDBHandler()
-        for i,stockid in enumerate(idhandler.stock.get_ids(**kwargs)):
+        self._id = OtcIdDBHandler(**kwargs)
+
+    def start_requests(self):
+        for i,stockid in enumerate(self._id.stock.get_ids()):
 #            if not idhandler.stock.is_warrant(stockid):
 #                continue
             URL = 'http://www.gretai.org.tw/web/stock/aftertrading/broker_trading/brokerBS.php?l=zh-tw'

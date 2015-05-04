@@ -35,7 +35,7 @@ class OtcIdSpider(CrawlSpider):
         elems = sel.xpath('.//tr')
         for elem in elems[1:]:
             sub = {}
-            its = elem.xpath('td/text()').extract()
+            its = elem.xpath('./td/text()').extract()
             if len(its) <= 5:
                 continue
             its = [it.strip(string.whitespace).replace(',', '') for it in its]

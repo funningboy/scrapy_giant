@@ -20,16 +20,22 @@ class TwseHisTraderPipeline(BasePipeline):
 
     def __init__(self, crawler):
         super(TwseHisTraderPipeline, self).__init__()
-        self._settings = crawler.settings
         self._name = 'twsehistrader'
-        self._db = TwseHisDBHandler()
-        self._id = TwseIdDBHandler()
+        kwargs = []
+        for i in range(2):
+            kwargs.append({
+                'debug': crawler.settings.getbool('GIANT_DEBUG'),
+                'opt': 'twse'
+            })
+        self._db = TwseHisDBHandler(**kwargs[0])
+        self._id = TwseIdDBHandler(**kwargs[1])
+        self._debug = crawler.settings.getbool('GIANT_DEBUG')
 
     def process_item(self, item, spider):
         if spider.name not in [self._name]:
             return item
         item = self._clear_item(item)
-        item = self._update_item(item, 9999 if not self._settings.getbool('GIANT_DEBUG') else 10)
+        item = self._update_item(item, 9999 if not self._debug else 2)
         self._write_item(item)
 
     def _clear_item(self, item):
@@ -90,5 +96,5 @@ class TwseHisTraderPipeline(BasePipeline):
         return item
 
     def _write_item(self, item):
-        self._db.trader.insert(item)
-        self._id.trader.insert(item['toplist'])
+        self._db.trader.insert_raw(item)
+        self._id.trader.insert_raw(item['toplist'])

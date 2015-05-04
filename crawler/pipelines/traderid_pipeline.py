@@ -19,8 +19,12 @@ class TraderIdPipeline(BasePipeline):
     def __init__(self, crawler):
         super(TraderIdPipeline, self).__init__()
         self._name = 'traderid'
-        self._settings = crawler.settings
-        self._id = TwseIdDBHandler()
+        # twse/otc used the same traderid table
+        kwargs = {
+            'debug': crawler.settings.getbool('GIANT_DEBUG'),
+            'opt': 'twse'
+        }
+        self._id = TwseIdDBHandler(**kwargs)
 
     def process_item(self, item, spider):
         if spider.name not in [self._name]:
@@ -39,4 +43,4 @@ class TraderIdPipeline(BasePipeline):
         return item
 
     def _write_item(self, item):
-        self._id.trader.insert(item)
+        self._id.trader.insert_raw(item)

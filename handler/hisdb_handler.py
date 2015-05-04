@@ -2,7 +2,7 @@
 
 import pandas as pd
 import pytz
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from datetime import datetime
 
 from mongoengine import *
@@ -17,13 +17,23 @@ __all__ = ['TwseHisDBHandler', 'OtcHisDBHandler']
 
 class TwseHisDBHandler(object):
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        self._debug = kwargs.pop('debug', False)
+        self._opt = kwargs.pop('opt', 'twse')
+        db = 'twsehisdb' if not self._debug else 'testtwsehisdb'
         host, port = MongoDBDriver._host, MongoDBDriver._port
-        connect('twsehisdb', host=host, port=port, alias='twsehisdb')
-        twsehiscoll = switch(TwseHisColl, 'twsehisdb')
-        self._stock = TwseStockHisDBHandler(twsehiscoll)
-        self._trader = TwseTraderHisDBHandler(twsehiscoll)
-        self._credit = TwseCreditDBHandler(twsehiscoll)
+        connect(db, host=host, port=port, alias=db)
+        twsehiscoll = switch(TwseHisColl, db)
+        kwargs = []
+        for i in range(3):
+            kwargs.append({
+                'coll': twsehiscoll,
+                'debug': self._debug,
+                'opt': self._opt
+            })
+        self._stock = TwseStockHisDBHandler(**kwargs[0])
+        self._trader = TwseTraderHisDBHandler(**kwargs[1])
+        self._credit = TwseCreditDBHandler(**kwargs[2])
 
     @property
     def stock(self):
@@ -37,10 +47,12 @@ class TwseHisDBHandler(object):
     def credit(self):
         return self._credit
 
-    def transform_all_data(self, starttime, endtime, stockids=[], traderids=[], orders=['totalvolume','totalvolume'], limit=10):
+    def transform_all_data(self, starttime, endtime, stockids=[], traderids=[], orders=['totalvolume']*3, limit=10):
         """ transfrom stock/trader data as pandas panel """
         args = (starttime, endtime, stockids, orders[0], limit, self._stock.to_pandas)
         stockdt = self._stock.query_raw(*args)
+        if self._debug:
+            print stockdt
         args = (starttime, endtime, list(stockdt.keys()), traderids, 'stock', orders[1], limit, self._trader.to_pandas)
         traderdt = self._trader.query_raw(*args)
 #        args = (starttime, endtime, stockids, orders[2], limit, self._stock.to_pandas)
@@ -50,24 +62,42 @@ class TwseHisDBHandler(object):
 
 class OtcHisDBHandler(TwseHisDBHandler):
 
-    def __init__(self):
-        super(OtcHisDBHandler, self).__init__()
+    def __init__(self, **kwargs):
+        ckwargs = kwargs.copy()
+        super(OtcHisDBHandler, self).__init__(**kwargs)
+        self._debug = ckwargs.pop('debug', False)
+        self._opt = ckwargs.pop('opt', 'otc')
+        db = 'otchisdb' if not self._debug else 'testotchisdb'
         host, port = MongoDBDriver._host, MongoDBDriver._port
-        connect('otchisdb', host=host, port=port, alias='otchisdb')
-        otchiscoll = switch(OtcHisColl, 'otchisdb')
-        self._stock = OtcStockHisDBHandler(otchiscoll)
-        self._trader = OtcTraderHisDBHandler(otchiscoll)
-        self._credit = OtcCreditHisDBHandler(otchiscoll)
+        connect(db, host=host, port=port, alias=db)
+        otchiscoll = switch(OtcHisColl, db)
+        kwargs = []
+        for i in range(3):
+            kwargs.append({
+                'coll': otchiscoll,
+                'debug': self._debug,
+                'opt': self._opt
+            })
+        self._stock = OtcStockHisDBHandler(**kwargs[0])
+        self._trader = OtcTraderHisDBHandler(**kwargs[1])
+        self._credit = OtcCreditHisDBHandler(**kwargs[2])
 
 
 class TwseStockHisDBHandler(object):
 
-    def __init__(self, coll):
+    def __init__(self, **kwargs):
+        self._coll = kwargs.pop('coll', None)
+        self._debug = kwargs.pop('debug', False)
+        self._opt = kwargs.pop('opt', 'twse')
+        db = 'stcokmapdb' if not self._debug else 'teststcokmapdb'
         host, port = MongoDBDriver._host, MongoDBDriver._port
-        connect('stockmapdb', host=host, port=port, alias='stockmapdb')
-        self._iddbhandler = TwseIdDBHandler()
-        self._mapcoll = switch(StockMapColl, 'stockmapdb')
-        self._coll = coll
+        connect(db, host=host, port=port, alias=db)
+        kwargs = {
+            'debug': self._debug,
+            'opt': self._opt
+        }
+        self._id = TwseIdDBHandler(**kwargs)
+        self._mapcoll = switch(StockMapColl, db)
         self._ids = []
 
     @property
@@ -77,6 +107,17 @@ class TwseStockHisDBHandler(object):
     @ids.setter
     def ids(self, ids):
         self._ids = ids
+
+    @property
+    def coll(self):
+        return self._coll
+
+    @property
+    def mapcoll(self):
+        return self._mapcoll
+
+    def update_raw(self, item):
+        pass
 
     def delete_raw(self, item):
         pass
@@ -147,6 +188,7 @@ class TwseStockHisDBHandler(object):
         """
         decorder = ['totalvolume', 'totaldiff', 'maxhigh']
         incorder = ['minlow', 'minhigh']
+        bufwin = endtime - starttime
         assert(order in decorder + incorder)
         cursor = self._coll.objects(Q(date__gte=starttime) & Q(date__lte=endtime) & Q(stockid__in=stockids))
         results = cursor.map_reduce(map_f, reduce_f, 'stockmap')
@@ -158,8 +200,15 @@ class TwseStockHisDBHandler(object):
             for data in sorted(it.value['data'], key=lambda x: x['date']):
                 coll['datalist'].append(data)
             coll.update({
+                # key
+                'date': endtime,
+                'bufwin': bufwin.days,
                 'stockid': it.key['stockid'],
-                'stocknm': self._iddbhandler.stock.get_name(it.key['stockid'])
+                'order': order,
+                'stocknm': self._id.stock.get_name(it.key['stockid']),
+                # value
+                'totalvolume': it.value['totalvolume'],
+                'totaldiff': it.value['totaldiff']
             })
             retval.append(coll)
         return callback(retval) if callback else retval
@@ -169,16 +218,23 @@ class TwseStockHisDBHandler(object):
         for it in cursor:
             index, data = [], []
             for i in it['datalist']:
-                date = i.pop('date', datetime.utcnow())
-                index.append(pytz.timezone('UTC').localize(date))
-                data.append(i)
+                date = i.pop('date', None)
+                if date:
+                    index.append(pytz.timezone('UTC').localize(date))
+                    data.append(i)
             if index and data:
                 id = it['stockid']
                 item.update({id: pd.DataFrame(data, index=index).fillna(0)})
         return pd.Panel(item)
 
     def to_map(self, cursor):
-        pass
+        keys = [k for k,v in StockMapColl._fields.iteritems()]
+        for it in cursor:
+            cursor = self._mapcoll.objects(Q(date=it['date']) & Q(buf_win=it['bufwin']) & Q(stockid=it['stockid']) & Q(order=it['order']))
+            cursor = list(cursor)
+            coll = self._coll() if len(cursor) == 0 else cursor[0]
+            [setattr(coll, "%s" %(k), it[k]) for k in keys]
+            coll.save()
 
     def query_map(self,):
         pass
@@ -188,12 +244,20 @@ class TwseStockHisDBHandler(object):
 
 class TwseTraderHisDBHandler(object):
 
-    def __init__(self, coll):
+    def __init__(self, **kwargs):
+        self._coll = kwargs['coll']
+        self._debug = kwargs['debug']
+        self._opt = kwargs['opt']
         host, port = MongoDBDriver._host, MongoDBDriver._port
-        connect('tradermapdb', host=host, port=port, alias='tradermapdb')
-        self._iddbhandler = TwseIdDBHandler()
-        self._mapcoll = switch(TraderMapColl, 'tradermapdb')
-        self._coll = coll
+        db = 'tradermapdb' if not self._debug else 'testtradermapdb'
+        connect(db, host=host, port=port, alias=db)
+        self._mapcoll = switch(TraderMapColl, db)
+        kwargs = {
+            'debug': self._debug,
+            'opt': self._opt
+        }
+        self._id = TwseIdDBHandler(**kwargs)
+        self._cache = []
         self._ids = []
 
     @property
@@ -203,6 +267,17 @@ class TwseTraderHisDBHandler(object):
     @ids.setter
     def ids(self, ids):
         self._ids = ids
+
+    @property
+    def coll(self):
+        return self._coll
+
+    @property
+    def mapcoll(self):
+        return self._mapcoll
+
+    def update_raw(self, item):
+        pass
 
     def delete_raw(self, item):
         pass
@@ -214,7 +289,6 @@ class TwseTraderHisDBHandler(object):
             data = {k:v for k, v in it['data'].items() if k in keys}
             info = {
                 'traderid': it['traderid'],
-                'tradernm': it['tradernm'],
                 'data': TraderData(**data)
             }
             toplist.append(TraderInfo(**info))
@@ -317,6 +391,7 @@ class TwseTraderHisDBHandler(object):
         """
         ids = stockids if base == 'stock' else traderids
         mkey = 'stockid' if base == 'stock' else 'traderid'
+        bufwin = endtime - starttime
         decorder = ['totalvolume', 'totalhit', 'totalbuyvolume', 'totalsellvolume', 'totaltradeprice', 'totaltradevolume']
         incorder = []
         assert(order in decorder + incorder)
@@ -331,27 +406,35 @@ class TwseTraderHisDBHandler(object):
         results = cursor.map_reduce(map_f, reduce_f, 'toptradermap')
         results = list(results)
         retval = []
-        for id in ids:
-            pool = list(filter(lambda x: x.key[mkey]==id, results))
-            pool = sorted(pool, key=lambda x: x.value['totalhit'], reverse=True if order in decorder else False)[:limit]
-            for i, it in enumerate(pool):
-                coll = { 'datalist': [] }
-                for data in sorted(it.value['data'], key=lambda x: x['date']):
-                    coll['datalist'].append(data)
-                coll.update({
-                    'traderid': it.key['traderid'],
-                    'stockid': it.key['stockid'],
-                    'tradernm': self._iddbhandler.trader.get_name(it.key['traderid']),
-                    'stocknm': self._iddbhandler.stock.get_name(it.key['stockid']),
-                    'totalvolume': it.value['totalvolume'],
-                    'totalbuyvolume': it.value['totalbuyvolume'],
-                    'totalsellvolume': it.value['totalsellvolume'],
-                    'totalhit': it.value['totalhit'],
-                    'totaltradeprice': it.value['totaltradeprice'],
-                    'totaltradevolume': it.value['totaltradevolume'],
-                    'alias': "top%d" % (i)
-                })
-                retval.append(coll)
+        pool = sorted(results, key=lambda x: x.value[order], reverse=True if order in decorder else False)[:limit]
+        for i, it in enumerate(pool):
+             coll = { 'datalist': [] }
+             for data in sorted(it.value['data'], key=lambda x: x['date']):
+                 coll['datalist'].append(data)
+             coll.update({
+                 # html link
+                 'opt': 'twse' if self.__class__.__name__ == 'TwseTraderHisDBHandler' else 'otc',
+                 'starttime': datetime.strftime(starttime, "%Y%m%d"),
+                 'endtime': datetime.strftime(endtime, "%Y%m%d"),
+                 # key
+                 'date': endtime,
+                 'bufwin': bufwin.days,
+                 'traderid': it.key['traderid'],
+                 'stockid': it.key['stockid'],
+                 'order': order,
+                 'tradernm': self._id.trader.get_name(it.key['traderid']),
+                 'stocknm': self._id.stock.get_name(it.key['stockid']),
+                 # value
+                 'totalvolume': it.value['totalvolume'],
+                 'totalbuyvolume': it.value['totalbuyvolume'],
+                 'totalsellvolume': it.value['totalsellvolume'],
+                 'totalhit': it.value['totalhit'],
+                 'totaltradeprice': it.value['totaltradeprice'],
+                 'totaltradevolume': it.value['totaltradevolume'],
+                 'alias': "top%d" % (i)
+             })
+             retval.append(coll)
+        self._cache = retval
         return callback(retval) if callback else retval
 
     def to_pandas(self, cursor, base='stock'):
@@ -363,27 +446,38 @@ class TwseTraderHisDBHandler(object):
             for it in pool:
                 index, data= [], []
                 for i in it['datalist']:
-                    date = i.pop('date', datetime.utcnow())
-                    index.append(pytz.timezone('UTC').localize(date))
-                    mdata = {
-                        "%s_ratio" % (it['alias']): i['ratio'],
-                        "%s_avgbuyprice" % (it['alias']): i['avgbuyprice'],
-                        "%s_avgsellprice" % (it['alias']): i['avgsellprice'],
-                        "%s_buyvolume" % (it['alias']): i['buyvolume'],
-                        "%s_sellvolume" % (it['alias']): i['sellvolume']
-                    }
-                    data.append(mdata)
+                    date = i.pop('date', None)
+                    if date:
+                        index.append(pytz.timezone('UTC').localize(date))
+                        mdata = {
+                            "%s_ratio" % (it['alias']): i['ratio'],
+                            "%s_avgbuyprice" % (it['alias']): i['avgbuyprice'],
+                            "%s_avgsellprice" % (it['alias']): i['avgsellprice'],
+                            "%s_buyvolume" % (it['alias']): i['buyvolume'],
+                            "%s_sellvolume" % (it['alias']): i['sellvolume']
+                        }
+                        data.append(mdata)
                 if index and data:
                     df = pd.concat([df, pd.DataFrame(data, index=index).fillna(0)], axis=1)
-            item.update({id: df})
+                    item.update({id: df})
         return pd.Panel(item)
 
     def get_alias(self, ids=[], base='stock', aliases=['top0']):
         """ get alias map as virtual to physical map """
-        pass
+        pool = list(filter(lambda x: x['alias'] in aliases, self._cache))
+        for it in aliases:
+            for i in pool:
+                if i['alias'] == it:
+                    yield i['stockid'] if base == 'stock' else i['traderid']
 
     def to_map(self, cursor):
-        pass
+        keys = [k for k,v in TraderMapColl._fields.iteritems()]
+        for it in cursor:
+            cursor = self._mapcoll.objects(Q(date=it['date']) & Q(buf_win=it['bufwin']) & Q(stockid=it['stockid']) & Q(order=it['traderid']) & Q(order=it['order']))
+            cursor = list(cursor)
+            coll = self._coll() if len(cursor) == 0 else cursor[0]
+            [setattr(coll, "%s" %(k), it[k]) for k in keys]
+            coll.save()
 
     def query_map(self, ):
         pass
@@ -393,12 +487,19 @@ class TwseTraderHisDBHandler(object):
 
 class TwseCreditDBHandler(object):
 
-    def __init__(self, coll):
+    def __init__(self, **kwargs):
+        self._coll = kwargs.pop('coll', None)
+        self._debug = kwargs.pop('debug', False)
+        self._opt = kwargs.pop('opt', 'twse')
         host, port = MongoDBDriver._host, MongoDBDriver._port
-        connect('creditmapdb', host=host, port=port, alias='creditmapdb')
-        self._iddbhandler = TwseIdDBHandler()
-        self._mapcoll = switch(CreditMapColl, 'creditmapdb')
-        self._coll = coll
+        db = 'creditmapdb' if not self._debug else 'testcreditmapdb'
+        connect(db, host=host, port=port, alias=db)
+        kwargs = {
+            'debug': self._debug,
+            'opt': self._opt
+        }
+        self._id = TwseIdDBHandler(**kwargs)
+        self._mapcoll = switch(CreditMapColl, db)
         self._ids = []
 
     @property
@@ -408,6 +509,9 @@ class TwseCreditDBHandler(object):
     @ids.setter
     def ids(self, ids):
         self._ids = ids
+
+    def update_raw(self, item):
+        pass
 
     def delete_raw(self, item):
         pass
@@ -479,8 +583,9 @@ class TwseCreditDBHandler(object):
                 return redval;
             }
         """
-        decorder = ['financeinc', 'bearishinc']
-        incorder = ['financedec', 'bearishdec']
+        decorder = ['incfinance', 'incbearish', 'totalvolume']
+        incorder = ['decfinance', 'decbearish']
+        bufwin = endtime - starttime
         assert(order in decorder + incorder)
         cursor = self._coll.objects(Q(date__gte=starttime) & Q(date__lte=endtime) & Q(stockid__in=stockids))
         results = cursor.map_reduce(map_f, reduce_f, 'creditmap')
@@ -492,7 +597,9 @@ class TwseCreditDBHandler(object):
             for data in sorted(it.value['data'], key=lambda x: x['date']):
                 coll['datalist'].append(data)
             coll.update({
-                'stockid': it.key['stockid']
+                'stockid': it.key['stockid'],
+                'bufwin': bufwin.days,
+                'order': order
             })
             retval.append(coll)
         return callback(retval) if callback else retval
@@ -502,9 +609,10 @@ class TwseCreditDBHandler(object):
         for it in cursor:
             index, data = [], []
             for i in it['datalist']:
-                date = i.pop(date, datetime.utcnow())
-                index.append(pytz.timezone('UTC').localize(date))
-                data.append(i)
+                date = i.pop('date', None)
+                if date:
+                    index.append(pytz.timezone('UTC').localize(date))
+                    data.append(i)
             if index and data:
                 id = it['stockid']
                 item.update({id: pd.DataFrame(data, index=index).fillna(0)})
@@ -513,23 +621,26 @@ class TwseCreditDBHandler(object):
     def to_map(self, cursor):
         pass
 
-    def query_map(self,):
+    def query_map(self, **kwargs):
         pass
 
-    def delete_map(self,):
+    def delete_map(self, item):
         pass
 
 class OtcStockHisDBHandler(TwseStockHisDBHandler):
-    def __init__(self, coll):
-        super(OtcStockHisDBHandler, self).__init__(coll)
-        self._iddbhandler = OtcIdDBHandler()
+    def __init__(self, **kwargs):
+        ckwargs = kwargs.copy()
+        super(OtcStockHisDBHandler, self).__init__(**kwargs)
+        self._id = OtcIdDBHandler(**ckwargs)
 
 class OtcTraderHisDBHandler(TwseTraderHisDBHandler):
-    def __init__(self, coll):
-        super(OtcTraderHisDBHandler, self).__init__(coll)
-        self._iddbhandler = OtcIdDBHandler()
+    def __init__(self, **kwargs):
+        ckwargs = kwargs.copy()
+        super(OtcTraderHisDBHandler, self).__init__(**kwargs)
+        self._id = OtcIdDBHandler(**ckwargs)
 
 class OtcCreditHisDBHandler(TwseCreditDBHandler):
-    def __init__(self, coll):
-        super(OtcCreditHisDBHandler, self).__init__(coll)
-        self._iddbhandler = OtcIdDBHandler()
+    def __init__(self, **kwargs):
+        ckwargs = kwargs.copy()
+        super(OtcCreditHisDBHandler, self).__init__(**kwargs)
+        self._id = OtcIdDBHandler(**ckwargs)

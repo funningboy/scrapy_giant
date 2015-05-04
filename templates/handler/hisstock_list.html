@@ -16,6 +16,8 @@
                 <th>low</th>
                 <th>close</th>
                 <th>volume</th>
+                <th>totaldiff</th>
+                <th>totalvolume</th>
                 </tr>
             </thead> 
             <tbody>
@@ -29,6 +31,8 @@
                 <th>{{ it.close }}</th>
                 <th>{{ it.volume }}</th>
                 {% endwith %}
+                <th>{{ item.totaldiff }}</th>
+                <th>{{ item.totalvolume }}</th>
                 </tr>
                 {% endfor %}
             </tbody> 

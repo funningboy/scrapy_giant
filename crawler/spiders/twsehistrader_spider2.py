@@ -33,15 +33,16 @@ class TwseHisTraderSpider2(CrawlSpider):
 
     def __init__(self, crawler):
         super(TwseHisTraderSpider2, self).__init__()
-
-    def start_requests(self):
         kwargs = {
-            'debug': self.settings.getbool('GIANT_DEBUG'),
-            'limit': self.settings.getint('GIANT_LIMIT'),
-#            'slice': self.settings.getint('GIANT_SLICE'),
+            'debug': crawler.settings.getbool('GIANT_DEBUG'),
+            'limit': crawler.settings.getint('GIANT_LIMIT'),
+#            'slice': crawler.settings.getint('GIANT_SLICE'),
             'opt': 'twse'
         }
-        for i,stockid in enumerate(TwseIdDBHandler().stock.get_ids(**kwargs)):
+        self._id = TwseIdDBHandler(**kwargs)
+
+    def start_requests(self):
+        for i,stockid in enumerate(self._id.stock.get_ids()):
 #           if not idhandler.stock.is_warrant(stockid):
 #               continue
             item = TwseHisTraderItem()

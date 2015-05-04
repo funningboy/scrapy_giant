@@ -13,6 +13,9 @@ class OtcHisCreditPipeline(TwseHisCreditPipeline):
 
     def __init__(self, crawler):
         super(OtcHisCreditPipeline, self).__init__(crawler)
-        self._name = 'otchisstock'
-        self._settings = crawler.settings
-        self._db = OtcHisDBHandler()
+        self._name = 'otchiscredit'
+        kwargs = {
+            'debug': crawler.settings.getbool('GIANT_DEBUG'),
+            'opt': 'otc'
+        }
+        self._db = OtcHisDBHandler(**kwargs)

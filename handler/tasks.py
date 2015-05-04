@@ -22,7 +22,8 @@ iddb_tasks = {
     'otc': OtcIdDBHandler
 }
 
-# as middleware database trans orm to df/panel
+# as middleware trans raw db to df/panel
+@shared_task
 def trans_hisstock(opt, starttime, endtime, stockids=[], order='totalvolume', limit=10):
     dbhandler = hisdb_tasks[opt]()
     dbhandler.stock.ids = stockids
@@ -31,6 +32,7 @@ def trans_hisstock(opt, starttime, endtime, stockids=[], order='totalvolume', li
     panel = dbhandler.stock.to_pandas(cursor)
     return panel, dbhandler
 
+@shared_task
 def trans_histoptrader(opt, starttime, endtime, stockids=[], traderids=[], base='stock', order='totalvolume', limit=10):
     dbhandler = hisdb_tasks[opt]()
     dbhandler.stock.ids = stockids
@@ -41,12 +43,11 @@ def trans_histoptrader(opt, starttime, endtime, stockids=[], traderids=[], base=
     return panel, dbhandler
 
 @shared_task
-def map_histoptrader(opt, starttime, endtime, stockids=[], traderids=[], base='stock', order='totalvolume', limit=10):
-   dbhandler = hisdb_tasks[opt]()
-   dbhandler.stock.ids = stockids
-   dbhandler.trader.ids = traderids
-   args = (starttime, endtime, stockids, traderids, base, order, limit)
-   cursor = dbhandler.trader.query(*args)
-   panel = dbhandler.trader.to_pandas(cursor, base)
-   return panel, dbhandler
+def trans_hiscredit(opt, starttime, endtime, stockids=[], order='totalvolume', limit=10):
+    dbhandler = hisdb_tasks[opt]()
+    dbhandler.stock.ids = stockids
+    args = (starttime, endtime, stockids, order, limit)
+    cursor = dbhandler.stock.query(*args)
+    panel = dbhandler.credit.to_pandas(cursor)
+    return panel, dbhandler
 

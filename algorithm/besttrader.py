@@ -36,7 +36,7 @@ class BestTraderAlgorithm(TradingAlgorithm):
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
         self.tids = self.dbhandler.trader.ids
-        self.tops = self.dbhandler.trader.map_alias([self.sids[0]], 'stock', ["top%d" %i for i in range(10)])
+        self.tops = list(self.dbhandler.trader.get_alias([self.sids[0]], 'trader', ["top%d" %i for i in range(10)]))
         self.tops = {k:v for v,k in enumerate(self.tops)}
         if self._debug:
             print self.tops
@@ -47,25 +47,30 @@ class BestTraderAlgorithm(TradingAlgorithm):
     def handle_data(self, data):
         buyvolume, sellvolume = 0,0
         sideband = {}
+        date = data[self.sids[0]].datetime
+
         try:
             buyvolume = getattr(data[self.sids[0]], "top%d_buyvolume" %(self.tops[self.tids[0]]))
             sellvolume = getattr(data[self.sids[0]], "top%d_sellvolume" %(self.tops[self.tids[0]]))
-            price = getattr(data[self.sids[0]], "top%d_price" %(self.tops[self.tids[0]]))
+            avgbuyprice = getattr(data[self.sids[0]], "top%d_avgbuyprice" %(self.tops[self.tids[0]]))
+            avgsellprice = getattr(data[self.sids[0]], "top%d_avgsellprice" %(self.tops[self.tids[0]]))
+            ratio = getattr(data[self.sids[0]], "top%d_ratio" %(self.tops[self.tids[0]]))
 
             if buyvolume:
-                self.order_target_percent(self.sids[0], buyvolume, style=LimitOrder(price))
+                self.order_target_percent(self.sids[0], buyvolume, style=LimitOrder(avgbuyprice))
             if sellvolume:
-                self.order_target_percent(self.sids[0], -sellvolume, style=LimitOrder(price))
+                self.order_target_percent(self.sids[0], -sellvolume, style=LimitOrder(avgsellprice))
 
             sideband = {
-                "top0_%s_buyvolume" % (self.tids[0]): buyvolume,
-                "top0_%s_sellvolume" % (self.tids[0]): sellvolume,
-                "top0_%s_price" % (self.tids[0]): price
+                "top%d_%s_buyvolume" % (self.tops[self.tids[0]], self.tids[0]): buyvolume,
+                "top%d_%s_sellvolume" % (self.tops[self.tids[0]], self.tids[0]): sellvolume,
+                "top%d_%s_avgbuyprice" % (self.tops[self.tids[0]], self.tids[0]): avgbuyprice,
+                "top%d_%s_avgsellprice" % (self.tops[self.tids[0]], self.tids[0]): avgsellprice
             }
         except:
             if self._debug:
-                print "traderid(%s) not found in stockid(%s)" %(self.tids[0], self.sids[0])
-            pass
+                print "%s: traderid(%s) not found in stockid(%s)" %(date, self.tids[0], self.sids[0])
+        pass
 
         # save to recorder
         signals = {
@@ -103,10 +108,20 @@ def run(opt='twse', debug=False, limit=0):
     idhandler = TwseIdDBHandler() if kwargs['opt'] == 'twse' else OtcIdDBHandler()
     for stockid in idhandler.stock.get_ids(**kwargs):
         try:
+            # pre find traderid as top0
+            dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
+            args = (starttime, endtime, [stockid], [], 'stock', 'totalvolume', 10)
+            dbhandler.trader.query_raw(*args)
+            tops = list(dbhandler.trader.get_alias([stockid], 'trader', ["top%d" %i for i in range(10)]))
+            print "prefound:%s" %(tops)
+            traderid = tops[0] if traderid not in tops else traderid
+
+            # main
             dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
             dbhandler.stock.ids = [stockid]
             dbhandler.trader.ids = [traderid]
-            data = dbhandler.transform_all_data(starttime, endtime, [stockid], [traderid], 'totalvolume', 10)
+            args = [starttime, endtime, [stockid], [traderid], ['totalvolume']*2, 10]
+            data = dbhandler.transform_all_data(*args)
             if len(data[stockid].index) < maxlen:
                 continue
             besttrader = BestTraderAlgorithm(dbhandler=dbhandler, debug=True)

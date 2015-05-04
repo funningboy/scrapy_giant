@@ -13,7 +13,6 @@ class TraderData(EmbeddedDocument):
 
 class TraderInfo(EmbeddedDocument):
     traderid = StringField()
-    tradernm = StringField()
     data = EmbeddedDocumentField(TraderData)
 
 class StockData(EmbeddedDocument):
@@ -34,7 +33,6 @@ class CreditData(EmbeddedDocument):
 
 class StockHisColl(Document):
     stockid = StringField()
-    stocknm = StringField()
     date = DateTimeField(default=datetime.utcnow())
     toplist = ListField(EmbeddedDocumentField(TraderInfo))
     data = EmbeddedDocumentField(StockData)
@@ -43,7 +41,7 @@ class StockHisColl(Document):
     meta = {
         'db_alias': 'stockhisdb',
         'allow_inheritance': True,
-        'indexes': [('stockid', 'stocknm', 'date')]
+        'indexes': [('stockid', 'date')]
     }
 
 class TwseHisColl(StockHisColl):
@@ -80,105 +78,50 @@ class TraderIdColl(Document):
         'indexes': [('traderid', 'tradernm')]
     }
 
-class StockMapData(EmbeddedDocument):
-    open = FloatField(min_value=0.0, max_value=9999.0)
-    high = FloatField(min_value=0.0, max_value=9999.0)
-    low = FloatField(min_value=0.0, max_value=9999.0)
-    close = FloatField(min_value=0, max_value=9999.0)
-    volume = IntField(min_value=0, max_value=9999999)
-    price = FloatField(min_value=0.0, max_value=9999999.0)
-    date = DateTimeField(default=datetime.utcnow())
-
-    @property
-    def keys(self):
-        #return as order html tags
-        return ['date', 'open', 'high', 'low', 'close', 'volume', 'price']
-
-    @property
-    def values(self):
-        return [self.__dict__['_data'][k] for k in self.keys]
-
-    @property
-    def items(self):
-        return [(k, self.__dict__['_data'][k]) for k in self.keys]
-
+# collect stcok feature
 class StockMapColl(Document):
-    url = StringField()
+    # key
+    date = DateTimeField(default=datetime.utcnow())
+    bufwin = IntField(min_value=0, max_value=999)
     stockid = StringField()
-    stocknm = StringField()
-    datalist = ListField(EmbeddedDocumentField(StockMapData))
+    order = StringField()
+    # value
+    totaldiff = FloatField(min_value=0.0, max_value=99999.0)
+    totalvolume = IntField(min_value=0, max_value=9999999)
     meta = {
         'db_alias': 'stockmapdb',
         'allow_inheritance': True,
-        'indexes': [('stockid')]
+        'indexes': [('date', 'bufwin', 'stockid', 'order')]
     }
 
-    @property
-    def keys(self):
-        #return as order html tags
-        return ['stockid', 'stocknm', 'datalist']
+#    @property
+#    def values(self):
+#        return [self.__dict__['_data'].values ]
 
-    @property
-    def values(self):
-        return [self.__dict__['_data'][k] for k in self.keys]
 
-    @property
-    def items(self):
-        return [(k, self.__dict__['_data'][k]) for k in self.keys]
-
-class TraderMapData(EmbeddedDocument):
-    ratio = FloatField(min_value=0.0, max_value=100.0)
-    avgbuyprice = FloatField(min_value=0.0, max_value=9999.0)
-    avgsellprice = FloatField(min_value=0.0, max_value=9999.0)
-    buyvolume = IntField(min_value=0, max_value=9999999)
-    sellvolume = IntField(min_value=0, max_value=9999999)
-    date = DateTimeField(default=datetime.utcnow())
-
-    @property
-    def keys(self):
-        # return as order html tags
-        return ['date', 'ratio','avgbuyprice', 'avgsellprice', 'buyvolume', 'sellvolume']
-
-    @property
-    def values(self):
-        return [self.__dict__['_data'][k] for k in self.keys]
-
-    @property
-    def items(self):
-        return [(k, self.__dict__['_data'][k]) for k in self.keys]
-
+# collect trader feature
 class TraderMapColl(Document):
-    url = StringField()
-    alias = StringField()
+    # key
+    date = DateTimeField(default=datetime.utcnow())
+    bufwin = IntField(min_value=0, max_value=999)
     traderid = StringField()
-    tradernm = StringField()
     stockid = StringField()
-    stocknm = StringField()
+    order = StringField()
+    # value
     totalvolume = IntField(min_value=0, max_value=9999999)
     totalbuyvolume = IntField(min_value=0, max_value=9999999)
     totalsellvolume = IntField(min_value=0, max_value=9999999)
     totalhit = IntField(min_value=0, max_value=9999999)
     totaltradeprice = FloatField(min_value=0.0, max_value=9999.0)
     totaltradevolume = IntField(min_value=0, max_value=9999999)
-    #datalist = ListField(EmbeddedDocumentField(TraderMapData))
     meta = {
         'db_alias': 'tradermapdb',
         'allow_inheritance': True,
-        'indexes': [('stockid', 'traderid', 'alias')]
+        'indexes': [('date', 'bufwin', 'traderid', 'stockid')]
     }
 
-    @property
-    def keys(self):
-        # return as order html tags
-        return ['alias', 'traderid', 'tradernm', 'stockid', 'stocknm', 'totalvolume', 'totalhit', 'datalist']
-
-    @property
-    def values(self):
-        return [self.__dict__['_data'][k] for k in self.keys]
-
-    @property
-    def items(self):
-        return [(k, self.__dict__['_data'][k]) for k in self.keys]
-
+# collect credit feature
 class CreditMapColl(Document):
+    # key
+    # value
     pass

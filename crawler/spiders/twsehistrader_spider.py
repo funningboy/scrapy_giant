@@ -39,17 +39,17 @@ class TwseHisTraderSpider(CrawlSpider):
 
     def __init__(self, crawler):
         super(TwseHisTraderSpider, self).__init__()
-
-    def start_requests(self):
         kwargs = {
-            'debug': self.settings.getbool('GIANT_DEBUG'),
-            'limit': self.settings.getint('GIANT_LIMIT'),
-#            'slice': self.settings.getint('GIANT_SLICE'),
+            'debug': crawler.settings.getbool('GIANT_DEBUG'),
+            'limit': crawler.settings.getint('GIANT_LIMIT'),
+#            'slice': crawler.settings.getint('GIANT_SLICE'),
             'opt': 'twse'
         }
+        self._id = TwseIdDBHandler(**kwargs)
+
+    def start_requests(self):
         URL = 'http://bsr.twse.com.tw/bshtm/bsMenu.aspx'
-        idhandler = TwseIdDBHandler()
-        for i,stockid in enumerate(idhandler.stock.get_ids(**kwargs)):
+        for i,stockid in enumerate(self._id.stock.get_ids()):
 #            if not idhandler.stock.is_warrant(stockid):
 #                continue
             item = TwseHisTraderItem()
@@ -132,7 +132,7 @@ class TwseHisTraderSpider(CrawlSpider):
                 dont_filter=True)
             yield request
         else:
-            err = sel.xpath('//*[@id="Label_ErrorMsg"]/font/text()').extract()[0]
+            err = sel.xpath('.//*[@id="Label_ErrorMsg"]/font/text()').extract()[0]
             if re.match(ur'.*驗證碼.*', err, re.UNICODE):
                 URL = 'http://bsr.twse.com.tw/bshtm/bsMenu.aspx'
                 item['count']+=1
@@ -151,10 +151,10 @@ class TwseHisTraderSpider(CrawlSpider):
     def parse_after_page_find(self, response):
         item = response.meta['item']
         sel = Selector(response)
-        date = sel.xpath('//*[@id="receive_date"]/text()').extract()[0]
+        date = sel.xpath('.//*[@id="receive_date"]/text()').extract()[0]
         yy, mm, dd = date.split('/')
         item['date'] = u"%s-%s-%s" % (yy, mm, dd)
-        stockdd = sel.xpath('//*[@id="stock_id"]/text()').extract()[0]
+        stockdd = sel.xpath('.//*[@id="stock_id"]/text()').extract()[0]
         item['stockid'], item['stocknm'] = stockdd.split()
         URL = 'http://bsr.twse.com.tw/bshtm/bsContent.aspx'
         request = Request(

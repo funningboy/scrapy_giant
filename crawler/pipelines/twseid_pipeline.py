@@ -19,8 +19,12 @@ class TwseIdPipeline(BasePipeline):
     def __init__(self, crawler):
         super(TwseIdPipeline, self).__init__()
         self._name = 'twseid'
-        self._settings = crawler.settings
-        self._id = TwseIdDBHandler()
+        kwargs = {
+            'debug': crawler.settings.getbool('GIANT_DEBUG'),
+            'opt': 'twse'
+        }
+        self._id = TwseIdDBHandler(**kwargs)
+        self._id.stock.coll.drop_collection()
 
     def process_item(self, item, spider):
         if spider.name not in [self._name]:
@@ -39,4 +43,4 @@ class TwseIdPipeline(BasePipeline):
         return item
 
     def _write_item(self, item):
-        self._id.stock.insert(item)
+        self._id.stock.insert_raw(item)

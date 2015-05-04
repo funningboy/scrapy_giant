@@ -41,26 +41,34 @@ class TestTwseHisDBTraderQuery(TestTwseHisAll):
         self._pool = []
         starttime = datetime.utcnow() - timedelta(days=4)
         endtime = datetime.utcnow()
-        self._db = TwseHisDBHandler()
-        cursor = self._db.trader.query(starttime, endtime, ['2330'], [], 'stock', 'totalvolume', 3)
-        self._traderids = self._db.trader.map_alias(['2330'], 'stock', ['top0'])
-        # update handler as new ptr
-        self._db = TwseHisDBHandler()
+        kwargs = []
+        for i in range(3):
+            kwargs.append({
+                'debug': True,
+                'opt': 'twse'
+            })
+        self._db = TwseHisDBHandler(**kwargs[0])
+        self._id = TwseIdDBHandler(**kwargs[1])
+        args = (starttime, endtime, ['2330'], [], 'stock', 'totalvolume', 10)
+        cursor = self._db.trader.query_raw(*args)
+        cursor = list(cursor)
+        tops = self._db.trader.get_alias(['2330'], 'trader', ['top0'])
+        # update handler as new
+        self._db = TwseHisDBHandler(**kwargs[2])
 
-        def wap_get_toptrader_data(starttime, endtime, traderids):
+        def wap_get_toptrader_data():
             while self._check:
-                cursor = self._db.trader.query(starttime, endtime, [], traderids, 'trader', 'totalvolume', 3)
+                args = (starttime, endtime, ['2330'], [tops[0]], 'trader', 'totalvolume', 10)
+                cursor = self._db.trader.query_raw(*args)
                 if cursor:
                     if len(self._pool) > 3:
                         self._pool.pop(0)
                     self._pool.append(cursor)
-                self._db.trader.drop()
                 time.sleep(0.5)
 
         self._threads = [
             threading.Thread(
-                target=wap_get_toptrader_data,
-                args=(starttime, endtime, self._traderids))
+                target=wap_get_toptrader_data)
             ]
 
         [it.setDaemon(True) for it in self._threads]
@@ -68,6 +76,7 @@ class TestTwseHisDBTraderQuery(TestTwseHisAll):
 
     def _assert_threading_query_join(self):
         self._check = False
+        [it.join() for it in self._threads]
         stream = self._db.trader.to_pandas(self._pool[-1])
         print stream
 
@@ -91,13 +100,19 @@ class TestTwseHisDBStockQuery(TestTwseHisAll):
         self._pool = []
         starttime = datetime.utcnow() - timedelta(days=4)
         endtime = datetime.utcnow()
-        self._db = TwseHisDBHandler()
-        self._id = TwseIdDBHandler()
-        self._stockids = list(self._id.stock.get_ids(debug=True, opt='twse'))
+        kwargs = []
+        for i in range(2):
+            kwargs.append({
+                'debug': True,
+                'opt': 'twse'
+            })
+        self._db = TwseHisDBHandler(**kwargs[0])
+        self._id = TwseIdDBHandler(**kwargs[1])
 
-        def wap_get_stock_data(starttime, endtime, stockids):
+        def wap_get_stock_data():
             while self._check:
-                cursor = self._db.stock.query(starttime, endtime, stockids)
+                args = (starttime, endtime, ['2330'], 'totalvolume', 10)
+                cursor = self._db.stock.query_raw(*args)
                 if cursor:
                     if len(self._pool) > 3:
                         self._pool.pop(0)
@@ -106,8 +121,7 @@ class TestTwseHisDBStockQuery(TestTwseHisAll):
 
         self._threads = [
             threading.Thread(
-                target=wap_get_stock_data,
-                args=(starttime, endtime, self._stockids))
+                target=wap_get_stock_data)
             ]
 
         [it.setDaemon(True) for it in self._threads]
@@ -139,13 +153,25 @@ class TestTwseHisDBAllQuery(TestTwseHisAll):
         self._pool = []
         starttime = datetime.utcnow() - timedelta(days=4)
         endtime = datetime.utcnow()
-        self._db = TwseHisDBHandler()
-        self._id = TwseIdDBHandler()
-        self._stockids = list(self._id.stock.get_ids(debug=True, opt='twse'))
+        kwargs = []
+        for i in range(3):
+            kwargs.append({
+                'debug': True,
+                'opt': 'twse'
+            })
+        self._db = TwseHisDBHandler(**kwargs[0])
+        self._id = TwseIdDBHandler(**kwargs[1])
+        args = (starttime, endtime, ['2330'], [], 'stock', 'totalvolume', 10)
+        cursor = self._db.trader.query_raw(*args)
+        cursor = list(cursor)
+        tops = self._db.trader.get_alias(['2330'], 'trader', ['top0'])
+        # update handler as new
+        self._db = TwseHisDBHandler(**kwargs[2])
 
-        def wap_get_all_data(starttime, endtime, stockids):
+        def wap_get_all_data():
             while self._check:
-                stream = self._db.transform_all_data(starttime, endtime, stockids, [], 'totalvolume', 10)
+                args = (starttime, endtime, ['2330'], [tops[0]], ['totalvolume']*3, 10)
+                stream = self._db.transform_all_data(*args)
                 if not stream.empty:
                     if len(self._pool) > 3:
                         self._pool.pop(0)
@@ -154,8 +180,7 @@ class TestTwseHisDBAllQuery(TestTwseHisAll):
 
         self._threads = [
             threading.Thread(
-                target=wap_get_all_data,
-                args=(starttime, endtime, self._stockids))
+                target=wap_get_all_data)
         ]
 
         [it.setDaemon(True) for it in self._threads]
@@ -164,9 +189,7 @@ class TestTwseHisDBAllQuery(TestTwseHisAll):
     def _assert_threading_query_join(self):
         self._check = False
         [it.join() for it in self._threads]
-        stream = self._pool[-1]
-        for stockid in self._stockids:
-            print stream[stockid]
+        print self._pool[-1]
 
 
 if __name__ == '__main__':

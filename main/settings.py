@@ -96,7 +96,7 @@ LANGUAGE_CODE = 'en-us'
 #>>> s = Site()
 #>>> s.save()
 #python ./manage.py tellsiteid
-SITE_ID=u'553c80211fd21c0dfdff936c'
+SITE_ID=u'55461d6f1fd21cc0262c2e5c'
 #SITE_ID=1
 
 # If you set this to False, Django will make some optimizations so as not
@@ -305,6 +305,17 @@ CELERYBEAT_SCHEDULE = {
             _debug
         )
     },
+    'run_scrapy_service_twsehiscredit': {
+        'task': 'bin.tasks.run_scrapy_service',
+        'schedule': crontab(minute=30, hour='*/3'),
+        'args': (
+            'twsehiscredit',
+            'INFO',
+            "./log/%s_%s.log" % ('twsehisstock', datetime.today().strftime("%Y%m%d_%H%M")),
+            True,
+            _debug
+        )
+    },
     'run_scrapy_service_otchistrader': {
         'task': 'bin.tasks.run_scrapy_service',
         'schedule': crontab(minute=30, hour='*/3'),
@@ -338,6 +349,19 @@ CELERYBEAT_SCHEDULE = {
             _debug
         )
     },
+    'run_scrapy_service_otchiscredit': {
+        'task': 'bin.tasks.run_scrapy_service',
+        'schedule': crontab(minute=30, hour='*/3'),
+        'args': (
+            'otchiscredit',
+            'INFO',
+            "./log/%s_%s.log" %('otchiscredit', datetime.today().strftime("%Y%m%d_%H%M")),
+            True,
+            _debug
+        )
+    },
+    # register run all feature collection
+
     # register run all algorithms
     'run_algorithm_service_twsedulema': {
         'task': 'algorithm.tasks.run_algorithm_service',

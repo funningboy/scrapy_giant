@@ -24,12 +24,12 @@
                 {% for item in traderitem %}
                 <tr>
                 <th><a href="{{ item.traderid }}">{{ item.traderid }}-{{ item.tradernm }}</a></th>
-                <th><a href="">{{ item.stockid }}-{{ item.stocknm }}</a></th>
+                <th><a href="../../../../hisstock/{{ item.opt }}/{{ item.starttime }}/{{ item.endtime }}/{{ item.stockid }}">{{ item.stockid }}-{{ item.stocknm }}</a></th>
                 <th>{{ item.totalvolume }}</th>
                 <th>{{ item.totalbuyvolume }}</th>
                 <th>{{ item.totalsellvolume }}</th>
                 <th>{{ item.totalhit }}</th>
-                <th>{{ iten.totaltradeprice }}</th>
+                <th>{{ item.totaltradeprice }}</th>
                 <th>{{ item.totaltradevolume }}</th>
                 </tr>
                 {% endfor %}

@@ -47,6 +47,7 @@ LOG_LEVEL = 'INFO'
 GIANT_DEBUG = False
 GIANT_LIMIT = 0
 
+# proxy list to avoid ip blocker
 PROXY_LIST = 'crawler/list.txt'
 
 ITEM_PIPELINES = {
@@ -56,11 +57,13 @@ ITEM_PIPELINES = {
     'crawler.pipelines.twsehistrader_pipeline.TwseHisTraderPipeline': 800,
     'crawler.pipelines.twsehistrader_pipeline2.TwseHisTraderPipeline2': 800,
     'crawler.pipelines.twsehisstock_pipeline.TwseHisStockPipeline': 800,
+    'crawler.pipelines.twsehiscredit_pipeline.TwseHisCreditPipeline': 800,
     # otchis trader/stock
     'crawler.pipelines.otcid_pipeline.OtcIdPipeline': 800,
     'crawler.pipelines.otchistrader_pipeline.OtcHisTraderPipeline': 800,
     'crawler.pipelines.otchisstock_pipeline.OtcHisStockPipeline': 800,
     'crawler.pipelines.otchistrader_pipeline2.OtcHisTraderPipeline2': 800,
+    'crawler.pipelines.otchiscredit_pipeline.OtcHisCreditPipeline': 800,
     # trader
     'crawler.pipelines.traderid_pipeline.TraderIdPipeline': 800
 }

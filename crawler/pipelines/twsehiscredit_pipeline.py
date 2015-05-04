@@ -20,8 +20,11 @@ class TwseHisCreditPipeline(BasePipeline):
     def __init__(self, crawler):
         super(TwseHisCreditPipeline, self).__init__()
         self._name = 'twsehiscredit'
-        self._settings = crawler.settings
-        self._db = TwseHisDBHandler()
+        kwargs = {
+            'debug': crawler.settings.getbool('GIANT_DEBUG'),
+            'opt': 'twse'
+        }
+        self._db = TwseHisDBHandler(**kwargs)
 
     def process_item(self, item, spider):
         if spider.name not in [self._name]:
@@ -36,6 +39,11 @@ class TwseHisCreditPipeline(BasePipeline):
 
     def _update_item(self, item):
         item = item['data']
+        def _encode_datetime(it):
+            yy, mm, dd = it.split('-')
+            return datetime(int(yy), int(mm), int(dd), 0, 0, 0, 0, pytz.utc)
+        for it in item:
+            it['date'] = _encode_datetime(it['date'])
         # use pd frame as sorted item and trans unicode to each item type
         log.msg("item: %s" % (item), level=log.DEBUG)
         return item
