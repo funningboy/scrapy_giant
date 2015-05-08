@@ -97,9 +97,6 @@ class TestTwseHisTrader(TestBase):
         stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
         print stream
 
-    def tearDown(self):
-        super(TestTwseHisTrader, self).tearDown()
-
 
 class TestTwseHisTrader2(TestBase):
 
@@ -355,7 +352,8 @@ class TestOtcHisAll(TestBase):
             'scrapy crawl otchistrader -s LOG_FILE=otchistrader.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG',
             'scrapy crawl otchistrader2 -s LOG_FILE=otchistrader2.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG',
             'scrapy crawl otchisstock -s LOG_FILE=otchisstock.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG',
-#            'scrapy crawl otchiscredit -s LOG_FILE=otchiscredit.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_FILE=DEBUG'
+#            'scrapy crawl otchiscredit -s LOG_FILE=otchiscredit.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_FILE=DEBUG',
+#            'scrapy crawl otchisnocredit -s LOG_FILE=otchisnocredit.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_FILE=DEBUG
         ]
         for cmd in cmds:
             subprocess.check_call(cmd, shell=True)
