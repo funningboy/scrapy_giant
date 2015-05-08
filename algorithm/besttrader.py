@@ -2,6 +2,7 @@
 # ref: http://scikit-learn.org/stable/auto_examples/applications/plot_stock_market.html
 # https://www.quantopian.com/posts/working-with-history-dataframes
 
+import pandas as pd
 import pytz
 import matplotlib.pyplot as plt
 import traceback
@@ -29,7 +30,7 @@ class BestTraderAlgorithm(TradingAlgorithm):
     sell:
     """
 
-    def __init__(self, dbhandler, *args, **kwargs):
+    def __init__(self, dbhandler, **kwargs):
         self._debug = kwargs.pop('debug', False)
         self._buf_win = kwargs.pop('buf_win', 10)
         super(BestTraderAlgorithm, self).__init__(*args, **kwargs)
@@ -105,11 +106,15 @@ def run(opt='twse', debug=False, limit=0):
     }
     # 1590:u'花旗環球', 1440:u'美林'
     traderid = '1440'
-    idhandler = TwseIdDBHandler() if kwargs['opt'] == 'twse' else OtcIdDBHandler()
-    for stockid in idhandler.stock.get_ids(**kwargs):
+    idhandler = TwseIdDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcIdDBHandler(**kwargs)
+    for stockid in idhandler.stock.get_ids():
         try:
+            kwargs = {
+                'debug': True,
+                'opt': opt
+            }
             # pre find traderid as top0
-            dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
+            dbhandler = TwseHisDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcHisDBHandler(**kwargs)
             args = (starttime, endtime, [stockid], [], 'stock', 'totalvolume', 10)
             dbhandler.trader.query_raw(*args)
             tops = list(dbhandler.trader.get_alias([stockid], 'trader', ["top%d" %i for i in range(10)]))
@@ -119,9 +124,13 @@ def run(opt='twse', debug=False, limit=0):
             # main
             dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
             dbhandler.stock.ids = [stockid]
-            dbhandler.trader.ids = [traderid]
-            args = [starttime, endtime, [stockid], [traderid], ['totalvolume']*2, 10]
-            data = dbhandler.transform_all_data(*args)
+            dbhandler.trader.ids = [stockid]
+            # group sub df to main df 
+            args = (starttime, endtime, [stockid], [traderid], 'stock', 'totalvolume', 10, dbhandler.trader.to_pandas)
+            traderdt = dbhandler.trader.query_raw(*args)
+            args = (starttime, endtime, [stockid] , 'totalvolume', 10, dbhandler.stock.to_pandas)
+            stockdt = dbhandler.stock.query_raw(*args)
+            data = pd.concat([stockdt, traderdt], axis=2).fillna(0)
             if len(data[stockid].index) < maxlen:
                 continue
             besttrader = BestTraderAlgorithm(dbhandler=dbhandler, debug=True)

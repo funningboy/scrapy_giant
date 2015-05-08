@@ -94,14 +94,20 @@ def run(opt='twse', debug=False, limit=0):
         'limit': limit,
         'opt': opt
     }
-    idhandler = TwseIdDBHandler() if kwargs['opt'] == 'twse' else OtcIdDBHandler()
-    for stockid in idhandler.stock.get_ids(**kwargs):
+    # fetch 
+    idhandler = TwseIdDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcIdDBHandler(**kwargs)
+    for stockid in idhandler.stock.get_ids():
         try:
-            dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
+            # run 
+            kwargs = {
+                'debug': True,
+                'opt': opt
+            }
+            dbhandler = TwseHisDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcHisDBHandler(**kwargs)
             dbhandler.stock.ids = [stockid]
-            dbhandler.trader.ids = []
-            args = [starttime, endtime, [stockid], [], ['totalvolume']*2, 10]
-            data = dbhandler.transform_all_data(*args)
+            args = (starttime, endtime, [stockid], 'totalvolume', 10)
+            cursor = dbhandler.stock.query_raw(*args)
+            data = dbhandler.stock.to_pandas(cursor)
             if len(data[stockid].index) < maxlen:
                 continue
             dualema = DualEMAAlgorithm(dbhandler=dbhandler, debug=True)

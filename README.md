@@ -84,6 +84,7 @@ celery -A main worker -B -l info
 python manage.py syncdb
 python manage.py shell
 celery scheduler
+scrapy crawl twsehisstock -s LOG_FILE=twsehisstock.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG
 ```
 
 0.6 as django unittest run
@@ -91,8 +92,8 @@ celery scheduler
 celery -A main worker -l info
 nosetests --nocapture test/test_start.py
 nosetests --nocapture test/test_... 
-python manage.py test bin
-python manage.py test handler/algorithm
+python manage.py test bin --traceback
+python manage.py test handler algorithm --traceback
 ```
 
 ref:

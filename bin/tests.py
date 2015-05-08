@@ -9,7 +9,45 @@ import re
 from celery import group
 from main.tests import NoSQLTestCase
 from bin.tasks import *
-from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
+from bin.start import wap_scrapy_cmd
+
+# scrapy tests
+scrapy_tests = {
+    # id table [0:3]
+    'twseid': ('twseid', 'INFO', './log/twseid.log', True, False),
+    'otcid': ('otcid', 'INFO', './log/otcid.log', True, False),
+    'tradeerid': ('traderid', 'INFO', './log/traderid.log', True, False),
+    # twsehisdb table [3:8]
+    'twsehistrader': ('twsehistrader', 'INFO', './log/twsehistrader.log', True, True),
+    'twsehistrader2': ('twsehistrader2', 'INFO', './log/twsehistrader2.log', True, True),
+    'twsehisstock': ('twsehisstock', 'INFO', './log/twsehisstock.log', True, True),
+    'twsehiscredit': ('twsehiscredit', 'INFO', './log/twsehiscredit.log', True, True),
+    'twsehisnocredit': ('twsehisnocredit', 'INFO', './log/twsehisnocredit.log', True, True),
+    'twsehisnews': ('twsehisnews', 'INFO', './log/twsehisnews.log', True, True),
+    # otchisdb table [8:13]
+    'otchistrader': ('otchistrader', 'INFO', './log/otchistrader.log', True, True),
+    'otchistrader2': ('otchistrader2', 'INFO', './log/otchistrader2.log', True, True),
+    'otchisstock': ('otchisstock', 'INFO', './log/otchisstock.log', True, True),
+    'otchiscredit': ('otchiscredit', 'INFO', './log/otchiscredit.log', True, True),
+    'otchisnocredit': ('otchisnocredit', 'INFO', './log/otchisnocredit.log', True, True),
+    'otchisnews': ('otchisnews', 'INFO', './log/otchisnews.log', True, True)
+}
+
+# scrapy kwargs
+scrapy_kwargs = {
+    'twseid': {
+        'debug': True,
+        'opt': 'twse'
+    },
+    'otcid' : {
+        'debug': True,
+        'opt': 'otc'
+    },
+    'traderid': {
+        'debug': True,
+        'opt': 'twse'
+    },
+}
 
 @unittest.skipIf(True, 'skip TestAdd')
 class TestAdd(NoSQLTestCase):
@@ -19,6 +57,10 @@ class TestAdd(NoSQLTestCase):
 
 
 class TestRunScrapyService(NoSQLTestCase):
+
+    def setUp(self):
+        """ make sure mongodb has start """
+        self.assertTrue(has_service())
 
     def has_pass(self, fpath):
         try:
@@ -30,129 +72,70 @@ class TestRunScrapyService(NoSQLTestCase):
         except:
             return False
 
-class TestTwseId(TestRunScrapyService):
-
-    def test_on_run(self):
-        t = timeit.Timer()
-        args = ('twseid', 'INFO', './log/twseid.log', True, True)
-        run_scrapy_service.delay(*args).get()
-        print "scrapy twseid used %.4f(s)" % (t.timeit())
-        self.assertTrue(self.has_pass('./log/twseid.log'))
-
-class TestTwseHisTrader(TestRunScrapyService):
-
-    def test_on_run(self):
-        ids = TwseIdDBHandler().stock.get_ids(debug=True)
-        ids = list(ids)
-        t = timeit.Timer()
-        args = ('twsehistrader', 'INFO', './log/twsehistrader.log', True, True)
-        run_scrapy_service.delay(*args).get()
-        print "scrapy twsehistrader used %.4f(s)/%d(u)" % (t.timeit(), len(ids))
-        self.assertTrue(self.has_pass('./log/twsehistrader.log'))
-
-class TestTwseHisTrader2(TestRunScrapyService):
-
-    def test_on_run(self):
-        ids = TwseIdDBHandler().stock.get_ids(debug=True)
-        ids = list(ids)
-        t = timeit.Timer()
-        args = ('twsehistrader2', 'INFO', './log/twsehistrader2.log', True, True)
-        run_scrapy_service.delay(*args).get()
-        print "scrapy twsehistrader2 used %.4f(s)/%d(u)" % (t.timeit(), len(ids))
-        self.assertTrue(self.has_pass('./log/twsehistrader2.log'))
-
-class TestTwseHisStock(TestRunScrapyService):
-
-    def test_on_run(self):
-        ids = TwseIdDBHandler().stock.get_ids(debug=True)
-        ids = list(ids)
-        t = timeit.Timer()
-        args = ('twsehisstock', 'INFO', './log/twsehisstock.log', True, True)
-        run_scrapy_service.delay(*args).get()
-        print "scrapy twsehisstock used %.4f(s)/%d(u)" % (t.timeit(), len(ids))
-        self.assertTrue(self.has_pass('./log/twsehisstock.log'))
-
-class TestOtcId(TestRunScrapyService):
-
-    def test_on_run(self):
-        t = timeit.Timer()
-        args = ('otcid', 'INFO', './log/otcid.log', True, True)
-        run_scrapy_service.delay(*args).get()
-        print "scrapy otcid used %.4f(s)" % (t.timeit())
-        self.assertTrue(self.has_pass('./log/otcid.log'))
-
-class TestOtcHisTrader(TestRunScrapyService):
-
-    def test_on_run(self):
-        ids = OtcIdDBHandler().stock.get_ids(debug=True)
-        ids = list(ids)
-        t = timeit.Timer()
-        args = ('otchistrader', 'INFO', './log/otchistrader.log', True, True)
-        run_scrapy_service.delay(*args).get()
-        print "scrapy otchistrader used %.4f(s)/%d(u)" % (t.timeit(), len(ids))
-        self.assertTrue(self.has_pass('./log/otchistrader.log'))
-
-class TestOtcHisTrader2(TestRunScrapyService):
-
-    def test_on_run(self):
-        ids = OtcIdDBHandler().stock.get_ids(debug=True)
-        ids = list(ids)
-        t = timeit.Timer()
-        args = ('otchistrader2', 'INFO', './log/otchistrader2.log', True, True)
-        run_scrapy_service.delay(*args).get()
-        print "scrapy otchistrader2 used %.4f(s)/%d(u)" % (t.timeit(), len(ids))
-        self.assertTrue(self.has_pass('./log/otchistrader2.log'))
-
-class TestOtcHisStock(TestRunScrapyService):
-
-    def test_on_run(self):
-        ids = OtcIdDBHandler().stock.get_ids(debug=True)
-        ids = list(ids)
-        t = timeit.Timer()
-        args = ('otchisstock', 'INFO', './log/otchisstock.log', True, True)
-        run_scrapy_service.delay(*args).get()
-        print "scrapy otchisstock used %.4f(s)/%d(u)" % (t.timeit(), len(ids))
-        self.assertTrue(self.has_pass('./log/otchisstock.log'))
-
-class TestTraderId(TestRunScrapyService):
-
-    def test_on_run(self):
-        t = timeit.Timer()
-        args = ('traderid', 'INFO', './log/traderid.log', True, True)
-        run_scrapy_service.delay(*args).get()
-        print "scrapy traderid used %.4f(s)" % (t.timeit())
-        self.assertTrue(self.has_pass('./log/traderid.log'))
+    def tearDown(self):
+        pass
 
 class TestThreadService(TestRunScrapyService):
 
     def test_on_run(self):
-        args = [
-            ('twseid', 'INFO', './log/twseid.log', True, False),
-            ('otcid', 'INFO', './log/otcid.log', True, False),
-            ('traderid', 'INFO', './log/traderid.log', True, False)
-        ]
+        # id
+        jobs = ['twseid', 'otcid', 'traderid'] 
         tasks = group([
-            run_scrapy_service.subtask(args[i]) for i in range(3)
+            run_scrapy_service.subtask(scrapy_tests[k]) for k in jobs
         ])
         results = tasks.apply_async()
         results.join()
         self.assertTrue(results.ready())
         self.assertTrue(results.successful())
-
-        args = [
-            ('twsehistrader', 'INFO', './log/twsehistrader.log', True, True),
-            ('twsehistrader2', 'INFO', './log/twsehistrader2.log', True, True),
-            ('twsehisstock', 'INFO', './log/twsehisstock.log', True, True),
-            ('otchistrader', 'INFO', './log/otchistrader.log', True, True),
-            ('otchistrader2', 'INFO', './log/otchistrader2.log', True, True),
-            ('otchisstock', 'INFO', './log/otchisstock.log', True, True)
-        ]
+        [self.assertTrue(self.has_pass(scrapy_tests[k][2])) for k in jobs]
+        
+        # twse
+        jobs = ['twsehisstock', 'twsehistrader', 'twsehistrader2', 'twsehiscredit']
         tasks = group([
-            run_scrapy_service.subtask(args[i]) for i in range(6)
+            run_scrapy_service.subtask(scrapy_tests[k]) for k in jobs 
         ])
         t = timeit.Timer()
         results = tasks.apply_async()
         results.join()
-        print "scrapy all bin.tasks used %.4f(s)" % (t.timeit())
         self.assertTrue(results.ready())
         self.assertTrue(results.successful())
+        [self.assertTrue(self.has_pass(scrapy_tests[k][2])) for k in jobs]
+        print "scrapy twsehisdb bin.tasks used %.4f(s)" % (t.timeit())
+
+        # otc
+        jobs = ['otchisstock', 'otchistrader', 'otchistradeer2']
+        tasks = group([
+            run_scrapy_service.subtask(scrapy_tests[k]) for k in jobs
+        ])
+        t = timeit.Timer()
+        results = tasks.apply_async()
+        results.join()
+        self.assertTrue(results.ready())
+        self.assertTrue(results.successful())
+        [self.assertTrue(self.has_pass(scrapy_tests[k][2])) for k in jobs]
+        print "scrapy otchisdb bin.tasks used %.4f(s)" % (t.timeit())
+
+
+class TestTraderId(TestRunScrapyService):
+
+    def test_on_run(self):
+        self._id = TwseIdDBHandler(**scrapy_kwargs['traderid'])
+        self._id.trader.coll.drop_collection()
+        jobs = ['traderid']
+        tasks = group([
+            run_scrapy_service.subtask(scrapy_tests[k]) for k in jobs
+        ])
+        results = tasks.apply_async()
+        results.join()
+        self.assertTrue(results.ready())
+        self.assertTrue(results.successful())
+        expect = self._id.trader.get_ids()
+        cursor = self._id.trader.coll.objects(Q(traderid__in=expect))
+        item = list(cursor)[0]
+        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        print stream
+
+class
+
+class 
+

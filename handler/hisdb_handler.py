@@ -24,16 +24,27 @@ class TwseHisDBHandler(object):
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect(db, host=host, port=port, alias=db)
         twsehiscoll = switch(TwseHisColl, db)
-        kwargs = []
-        for i in range(3):
-            kwargs.append({
+        kwargs = {
+            'stock': {
                 'coll': twsehiscoll,
                 'debug': self._debug,
                 'opt': self._opt
-            })
-        self._stock = TwseStockHisDBHandler(**kwargs[0])
-        self._trader = TwseTraderHisDBHandler(**kwargs[1])
-        self._credit = TwseCreditDBHandler(**kwargs[2])
+            },
+            'trader': {
+                'coll': twsehiscoll,
+                'debug': self._debug,
+                'opt': self._opt
+            },
+            'credit': {
+                'coll': twsehiscoll,
+                'debug': self._debug,
+                'opt': self._opt
+            }
+        }
+        self._stock = TwseStockHisDBHandler(**kwargs['stock'])
+        self._trader = TwseTraderHisDBHandler(**kwargs['trader'])
+        self._credit = TwseCreditDBHandler(**kwargs['credit'])
+        # new
 
     @property
     def stock(self):
@@ -47,18 +58,6 @@ class TwseHisDBHandler(object):
     def credit(self):
         return self._credit
 
-    def transform_all_data(self, starttime, endtime, stockids=[], traderids=[], orders=['totalvolume']*3, limit=10):
-        """ transfrom stock/trader data as pandas panel """
-        args = (starttime, endtime, stockids, orders[0], limit, self._stock.to_pandas)
-        stockdt = self._stock.query_raw(*args)
-        if self._debug:
-            print stockdt
-        args = (starttime, endtime, list(stockdt.keys()), traderids, 'stock', orders[1], limit, self._trader.to_pandas)
-        traderdt = self._trader.query_raw(*args)
-#        args = (starttime, endtime, stockids, orders[2], limit, self._stock.to_pandas)
-#        stockdt = self._stock.query_raw(*args)
-        return pd.concat([stockdt, traderdt], axis=2).fillna(0)
-
 
 class OtcHisDBHandler(TwseHisDBHandler):
 
@@ -71,16 +70,26 @@ class OtcHisDBHandler(TwseHisDBHandler):
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect(db, host=host, port=port, alias=db)
         otchiscoll = switch(OtcHisColl, db)
-        kwargs = []
-        for i in range(3):
-            kwargs.append({
-                'coll': otchiscoll,
+        kwargs = {
+            'stock': {
+                'coll': twsehiscoll,
                 'debug': self._debug,
                 'opt': self._opt
-            })
-        self._stock = OtcStockHisDBHandler(**kwargs[0])
-        self._trader = OtcTraderHisDBHandler(**kwargs[1])
-        self._credit = OtcCreditHisDBHandler(**kwargs[2])
+            },
+            'trader': {
+                'coll': twsehiscoll,
+                'debug': self._debug,
+                'opt': self._opt
+            },
+            'credit': {
+                'coll': twsehiscoll,
+                'debug': self._debug,
+                'opt': self._opt
+            }
+        }
+        self._stock = TwseStockHisDBHandler(**kwargs['stock'])
+        self._trader = TwseTraderHisDBHandler(**kwargs['trader'])
+        self._credit = TwseCreditDBHandler(**kwargs['credit'])
 
 
 class TwseStockHisDBHandler(object):
@@ -93,10 +102,12 @@ class TwseStockHisDBHandler(object):
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect(db, host=host, port=port, alias=db)
         kwargs = {
-            'debug': self._debug,
-            'opt': self._opt
+            'id': {
+                'debug': self._debug,
+                'opt': self._opt
+            }
         }
-        self._id = TwseIdDBHandler(**kwargs)
+        self._id = TwseIdDBHandler(**kwargs['id'])
         self._mapcoll = switch(StockMapColl, db)
         self._ids = []
 
@@ -253,10 +264,12 @@ class TwseTraderHisDBHandler(object):
         connect(db, host=host, port=port, alias=db)
         self._mapcoll = switch(TraderMapColl, db)
         kwargs = {
-            'debug': self._debug,
-            'opt': self._opt
+            'id': {
+                'debug': self._debug,
+                'opt': self._opt
+            }
         }
-        self._id = TwseIdDBHandler(**kwargs)
+        self._id = TwseIdDBHandler(**kwargs['id'])
         self._cache = []
         self._ids = []
 
@@ -495,10 +508,12 @@ class TwseCreditDBHandler(object):
         db = 'creditmapdb' if not self._debug else 'testcreditmapdb'
         connect(db, host=host, port=port, alias=db)
         kwargs = {
-            'debug': self._debug,
-            'opt': self._opt
+            'id': {
+                'debug': self._debug,
+                'opt': self._opt
+            }
         }
-        self._id = TwseIdDBHandler(**kwargs)
+        self._id = TwseIdDBHandler(**kwargs['id'])
         self._mapcoll = switch(CreditMapColl, db)
         self._ids = []
 
@@ -621,7 +636,7 @@ class TwseCreditDBHandler(object):
     def to_map(self, cursor):
         pass
 
-    def query_map(self, **kwargs):
+    def query_map(self, ):
         pass
 
     def delete_map(self, item):

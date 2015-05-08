@@ -11,15 +11,22 @@ logger = get_task_logger('bin')
 
 # scrapy tasks sync
 scrapy_tasks = [
+# id
     'twseid',
     'otcid',
     'traderid',
+# twse
     'twsehistrader',
     'twsehistrader2',
     'twsehisstock',
+    'twsehiscredit',
+    'twsehisnocredit',
+# otc
     'otchistrader',
     'otchistrader2',
-    'otchisstock'
+    'otchisstock',
+    'otchiscredit',
+    'otchisnocredit'
 ]
 
 @shared_task

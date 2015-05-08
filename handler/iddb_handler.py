@@ -26,18 +26,19 @@ class TwseIdDBHandler(object):
         connect(db, host=host, port=port, alias=db)
         twseidcoll = switch(TwseIdColl, db)
         kwargs = {
-            'db': db,
-            'coll': twseidcoll,
-            'debug': self._debug,
-            'opt': self._opt
+            'stock': {
+                'coll': twseidcoll,
+                'debug': self._debug,
+                'opt': self._opt
+            },
+            'trader': {
+                'coll': traderidcoll,
+                'debug': self._debug,
+                'opt': self._opt
+            }
         }
-        self._stock = StockIdDBHandler(**kwargs)
-        kwargs = {
-            'coll': traderidcoll,
-            'debug': self._debug,
-            'opt': self._opt
-        }
-        self._trader = TraderIdDBHandler(**kwargs)
+        self._stock = StockIdDBHandler(**kwargs['stock'])
+        self._trader = TraderIdDBHandler(**kwargs['trader'])
 
     @property
     def stock(self):
@@ -63,17 +64,19 @@ class OtcIdDBHandler(TwseIdDBHandler):
         connect(db, host=host, port=port, alias=db)
         otcidcoll = switch(OtcIdColl, db)
         kwargs = {
-            'coll': otcidcoll,
-            'debug': self._debug,
-            'opt': self._opt,
+            'stock': {
+                'coll': twseidcoll,
+                'debug': self._debug,
+                'opt': self._opt
+            },
+            'trader': {
+                'coll': traderidcoll,
+                'debug': self._debug,
+                'opt': self._opt
+            }
         }
-        self._stock = StockIdDBHandler(**kwargs)
-        kwargs = {
-            'coll': traderidcoll,
-            'debug': self._debug,
-            'opt': self._opt
-        }
-        self._trader = TraderIdDBHandler(**kwargs)
+        self._stock = StockIdDBHandler(**kwargs['stock'])
+        self._trader = TraderIdDBHandler(**kwargs['trader'])
 
 
 class StockIdDBHandler(object):
