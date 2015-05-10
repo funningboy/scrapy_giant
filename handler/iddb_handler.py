@@ -17,7 +17,6 @@ class TwseIdDBHandler(object):
 
     def __init__(self, **kwargs):
         self._debug = kwargs.pop('debug', False)
-        self._opt = kwargs.pop('opt', 'twse')
         host, port = MongoDBDriver._host, MongoDBDriver._port
         db = 'traderiddb' if not self._debug else 'testtraderiddb'
         connect(db, host=host, port=port, alias=db)
@@ -29,12 +28,12 @@ class TwseIdDBHandler(object):
             'stock': {
                 'coll': twseidcoll,
                 'debug': self._debug,
-                'opt': self._opt
+                'opt': 'twse'
             },
             'trader': {
                 'coll': traderidcoll,
                 'debug': self._debug,
-                'opt': self._opt
+                'opt': 'twse'
             }
         }
         self._stock = StockIdDBHandler(**kwargs['stock'])
@@ -55,7 +54,6 @@ class OtcIdDBHandler(TwseIdDBHandler):
         ckwargs = kwargs.copy()
         super(OtcIdDBHandler, self).__init__(**kwargs)
         self._debug = ckwargs.pop('debug', False)
-        self._opt = ckwargs.pop('opt', 'otc')
         host, port = MongoDBDriver._host, MongoDBDriver._port
         db = 'traderiddb' if not self._debug else 'testtraderiddb'
         connect(db, host=host, port=port, alias=db)
@@ -65,14 +63,14 @@ class OtcIdDBHandler(TwseIdDBHandler):
         otcidcoll = switch(OtcIdColl, db)
         kwargs = {
             'stock': {
-                'coll': twseidcoll,
+                'coll': otcidcoll,
                 'debug': self._debug,
-                'opt': self._opt
+                'opt': 'otc'
             },
             'trader': {
                 'coll': traderidcoll,
                 'debug': self._debug,
-                'opt': self._opt
+                'opt': 'otc'
             }
         }
         self._stock = StockIdDBHandler(**kwargs['stock'])
@@ -84,7 +82,7 @@ class StockIdDBHandler(object):
     def __init__(self, **kwargs):
         self._coll = kwargs.pop('coll', None)
         self._debug = kwargs.pop('debug', False)
-        self._opt = kwargs.pop('opt', 'twse')
+        self._opt = kwargs.pop('opt', None)
         self._db = kwargs.pop('db', None)
         assert(self._coll)
 
@@ -146,7 +144,7 @@ class StockIdDBHandler(object):
         return len(stockid) >= 6
 
     def update_raw(self, item):
-        pass
+        self.insert_raw(item)
 
     def delete_raw(self, item):
         pass
@@ -167,7 +165,7 @@ class TraderIdDBHandler(object):
     def __init__(self, **kwargs):
         self._coll = kwargs.pop('coll', None)
         self._debug = kwargs.pop('debug', False)
-        self._opt = kwargs.pop('opt', 'twse')
+        self._opt = kwargs.pop('opt', None)
         assert(self._coll)
 
     @property
@@ -219,7 +217,7 @@ class TraderIdDBHandler(object):
         return True if cursor else False
 
     def update_raw(self, item):
-        pass
+        self.insert_raw(item)
 
     def delete_raw(self, item):
         pass

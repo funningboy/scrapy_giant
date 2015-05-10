@@ -6,12 +6,10 @@
 import timeit
 from datetime import datetime, timedelta
 from main.tests import NoSQLTestCase
-from bin.tests import TestTwseHisTrader2, TestTwseHisStock, TestOtcHisTrader2, TestOtcHisStock, TestTraderId
 from algorithm.tasks import *
-from handler.tasks import *
 from django.template import Context, Template
 
-class TestTwseDualemaAlg(TestTwseHisTrader2, TestTwseHisStock):
+class TestTwseDualemaAlg():
 
     def test_on_run(self, opt='twse', alg='dualema'):
         super(TestTwseDualemaAlg, self).test_on_run()

@@ -19,7 +19,6 @@ class TwseHisDBHandler(object):
 
     def __init__(self, **kwargs):
         self._debug = kwargs.pop('debug', False)
-        self._opt = kwargs.pop('opt', 'twse')
         db = 'twsehisdb' if not self._debug else 'testtwsehisdb'
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect(db, host=host, port=port, alias=db)
@@ -28,23 +27,20 @@ class TwseHisDBHandler(object):
             'stock': {
                 'coll': twsehiscoll,
                 'debug': self._debug,
-                'opt': self._opt
             },
             'trader': {
                 'coll': twsehiscoll,
                 'debug': self._debug,
-                'opt': self._opt
             },
             'credit': {
                 'coll': twsehiscoll,
                 'debug': self._debug,
-                'opt': self._opt
             }
         }
         self._stock = TwseStockHisDBHandler(**kwargs['stock'])
         self._trader = TwseTraderHisDBHandler(**kwargs['trader'])
         self._credit = TwseCreditDBHandler(**kwargs['credit'])
-        # new
+        # news
 
     @property
     def stock(self):
@@ -65,46 +61,41 @@ class OtcHisDBHandler(TwseHisDBHandler):
         ckwargs = kwargs.copy()
         super(OtcHisDBHandler, self).__init__(**kwargs)
         self._debug = ckwargs.pop('debug', False)
-        self._opt = ckwargs.pop('opt', 'otc')
         db = 'otchisdb' if not self._debug else 'testotchisdb'
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect(db, host=host, port=port, alias=db)
         otchiscoll = switch(OtcHisColl, db)
         kwargs = {
             'stock': {
-                'coll': twsehiscoll,
+                'coll': otchiscoll,
                 'debug': self._debug,
-                'opt': self._opt
             },
             'trader': {
-                'coll': twsehiscoll,
+                'coll': otchiscoll,
                 'debug': self._debug,
-                'opt': self._opt
             },
             'credit': {
-                'coll': twsehiscoll,
+                'coll': otchiscoll,
                 'debug': self._debug,
-                'opt': self._opt
             }
         }
-        self._stock = TwseStockHisDBHandler(**kwargs['stock'])
-        self._trader = TwseTraderHisDBHandler(**kwargs['trader'])
-        self._credit = TwseCreditDBHandler(**kwargs['credit'])
-
+        self._stock = OtcStockHisDBHandler(**kwargs['stock'])
+        self._trader = OtcTraderHisDBHandler(**kwargs['trader'])
+        #self._credit = OtcCreditDBHandler(**kwargs['credit'])
+        # news
 
 class TwseStockHisDBHandler(object):
 
     def __init__(self, **kwargs):
         self._coll = kwargs.pop('coll', None)
         self._debug = kwargs.pop('debug', False)
-        self._opt = kwargs.pop('opt', 'twse')
         db = 'stcokmapdb' if not self._debug else 'teststcokmapdb'
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect(db, host=host, port=port, alias=db)
         kwargs = {
             'id': {
                 'debug': self._debug,
-                'opt': self._opt
+                'opt': 'twse'
             }
         }
         self._id = TwseIdDBHandler(**kwargs['id'])
@@ -128,12 +119,14 @@ class TwseStockHisDBHandler(object):
         return self._mapcoll
 
     def update_raw(self, item):
-        pass
+        self.insert_raw(item)
 
     def delete_raw(self, item):
         pass
 
     def insert_raw(self, item):
+        """ as update hisdb stock part
+        """
         keys = [k for k,v in StockData._fields.iteritems()]
         for it in item:
             data = {k:v for k, v in it.items() if k in keys}
@@ -197,6 +190,8 @@ class TwseStockHisDBHandler(object):
                 return redval;
             }
         """
+        finalize_f = """
+        """
         decorder = ['totalvolume', 'totaldiff', 'maxhigh']
         incorder = ['minlow', 'minhigh']
         bufwin = endtime - starttime
@@ -225,6 +220,7 @@ class TwseStockHisDBHandler(object):
         return callback(retval) if callback else retval
 
     def to_pandas(self, cursor):
+        """ callback as pandas df """
         item = OrderedDict()
         for it in cursor:
             index, data = [], []
@@ -239,6 +235,7 @@ class TwseStockHisDBHandler(object):
         return pd.Panel(item)
 
     def to_map(self, cursor):
+        """ as new group after hisstock map/reduce/finalize """
         keys = [k for k,v in StockMapColl._fields.iteritems()]
         for it in cursor:
             cursor = self._mapcoll.objects(Q(date=it['date']) & Q(buf_win=it['bufwin']) & Q(stockid=it['stockid']) & Q(order=it['order']))
@@ -253,12 +250,12 @@ class TwseStockHisDBHandler(object):
     def delete_map(self,):
         pass
 
+
 class TwseTraderHisDBHandler(object):
 
     def __init__(self, **kwargs):
         self._coll = kwargs['coll']
         self._debug = kwargs['debug']
-        self._opt = kwargs['opt']
         host, port = MongoDBDriver._host, MongoDBDriver._port
         db = 'tradermapdb' if not self._debug else 'testtradermapdb'
         connect(db, host=host, port=port, alias=db)
@@ -266,7 +263,7 @@ class TwseTraderHisDBHandler(object):
         kwargs = {
             'id': {
                 'debug': self._debug,
-                'opt': self._opt
+                'opt': 'twse'
             }
         }
         self._id = TwseIdDBHandler(**kwargs['id'])
@@ -290,12 +287,13 @@ class TwseTraderHisDBHandler(object):
         return self._mapcoll
 
     def update_raw(self, item):
-        pass
+        self.insert_raw(item)
 
     def delete_raw(self, item):
         pass
 
     def insert_raw(self, item):
+        """ as update hisstcok trader part """
         keys = [k for k,v in TraderData._fields.iteritems()]
         toplist = []
         for it in item['toplist']:
@@ -402,8 +400,8 @@ class TwseTraderHisDBHandler(object):
                 return redval;
             }
         """
-        ids = stockids if base == 'stock' else traderids
-        mkey = 'stockid' if base == 'stock' else 'traderid'
+        finalize_f = """
+        """
         bufwin = endtime - starttime
         decorder = ['totalvolume', 'totalhit', 'totalbuyvolume', 'totalsellvolume', 'totaltradeprice', 'totaltradevolume']
         incorder = []
@@ -451,6 +449,7 @@ class TwseTraderHisDBHandler(object):
         return callback(retval) if callback else retval
 
     def to_pandas(self, cursor, base='stock'):
+        """ callback as pandas df """
         item = OrderedDict()
         ids = [it['stockid'] if base =='stock' else it['traderid'] for it in cursor]
         for id in ids:
@@ -476,7 +475,7 @@ class TwseTraderHisDBHandler(object):
         return pd.Panel(item)
 
     def get_alias(self, ids=[], base='stock', aliases=['top0']):
-        """ get alias map as virtual to physical map """
+        """ get alias map as virtual nick name to physical name map """
         pool = list(filter(lambda x: x['alias'] in aliases, self._cache))
         for it in aliases:
             for i in pool:
@@ -484,6 +483,7 @@ class TwseTraderHisDBHandler(object):
                     yield i['stockid'] if base == 'stock' else i['traderid']
 
     def to_map(self, cursor):
+        """ as new group after histrader map/reduce/finalize """
         keys = [k for k,v in TraderMapColl._fields.iteritems()]
         for it in cursor:
             cursor = self._mapcoll.objects(Q(date=it['date']) & Q(buf_win=it['bufwin']) & Q(stockid=it['stockid']) & Q(order=it['traderid']) & Q(order=it['order']))
@@ -492,7 +492,7 @@ class TwseTraderHisDBHandler(object):
             [setattr(coll, "%s" %(k), it[k]) for k in keys]
             coll.save()
 
-    def query_map(self, ):
+    def query_map(self,):
         pass
 
     def delete_map(self,):
@@ -503,14 +503,13 @@ class TwseCreditDBHandler(object):
     def __init__(self, **kwargs):
         self._coll = kwargs.pop('coll', None)
         self._debug = kwargs.pop('debug', False)
-        self._opt = kwargs.pop('opt', 'twse')
         host, port = MongoDBDriver._host, MongoDBDriver._port
         db = 'creditmapdb' if not self._debug else 'testcreditmapdb'
         connect(db, host=host, port=port, alias=db)
         kwargs = {
             'id': {
                 'debug': self._debug,
-                'opt': self._opt
+                'opt': 'twse'
             }
         }
         self._id = TwseIdDBHandler(**kwargs['id'])
@@ -559,17 +558,17 @@ class TwseCreditDBHandler(object):
                 try {
                     var key =  { stockid : this.stockid };
                     var value = {
-                        finance_trend = (this.finance.curremain - this.finance.preremain) / this.finance.preremain
-                        finance_used = this.finance.curremain / this.finance.limit * 100
-                        bearish_trend = (this.bearish.curremain - this.bearish.preremain) / this.bearish.preremain
-                        bearish_used = this.bearish.curremain / this.bearish.limit * 100
+                        finance_trend: (this.finance.curremain - this.finance.preremain) / this.finance.preremain,
+                        finance_used: this.finance.curremain / this.finance.limit * 100,
+                        bearish_trend: (this.bearish.curremain - this.bearish.preremain) / this.bearish.preremain,
+                        bearish_used: this.bearish.curremain / this.bearish.limit * 100,
                         data: [{
-                            finance_buyvolume = this.finance.buyvolume,
-                            finance_sellvolume = this.finance.sellvolume,
-                            finance_used = finance_used,
-                            bearish_buyvolume = this.bearish.buyvolume,
-                            bearish_sellvolume = this.bearish.sellvolume,
-                            bearish_used = bearish_used
+                            finance_buyvolume: this.finance.buyvolume,
+                            finance_sellvolume: this.finance.sellvolume,
+                            finance_used: finance_used,
+                            bearish_buyvolume: this.bearish.buyvolume,
+                            bearish_sellvolume: this.bearish.sellvolume,
+                            bearish_used: bearish_used
                         }]
                     };
                     emit(key, value);
@@ -587,7 +586,7 @@ class TwseCreditDBHandler(object):
                     bearish_trend: 0,
                     data: []
                 };
-                if (values.length) == 0) {
+                if (values.length == 0) {
                     return redval;
                 }
                 for (var i=0; i < values.length; i++) {
@@ -597,6 +596,8 @@ class TwseCreditDBHandler(object):
                 }
                 return redval;
             }
+        """
+        finalize_f = """
         """
         decorder = ['incfinance', 'incbearish', 'totalvolume']
         incorder = ['decfinance', 'decbearish']
@@ -620,6 +621,7 @@ class TwseCreditDBHandler(object):
         return callback(retval) if callback else retval
 
     def to_pandas(self, cursor):
+        """ callback to pandas df """
         item = OrderedDict()
         for it in cursor:
             index, data = [], []
@@ -644,18 +646,33 @@ class TwseCreditDBHandler(object):
 
 class OtcStockHisDBHandler(TwseStockHisDBHandler):
     def __init__(self, **kwargs):
-        ckwargs = kwargs.copy()
+        ckwargs = {
+            'id': {
+                'debug': kwargs['debug'],
+                'opt': 'otc'
+            }
+        }
         super(OtcStockHisDBHandler, self).__init__(**kwargs)
         self._id = OtcIdDBHandler(**ckwargs)
 
 class OtcTraderHisDBHandler(TwseTraderHisDBHandler):
     def __init__(self, **kwargs):
-        ckwargs = kwargs.copy()
+        ckwargs = {
+            'id': {
+                'debug': kwargs['debug'],
+                'opt': 'otc'
+            }
+        }
         super(OtcTraderHisDBHandler, self).__init__(**kwargs)
         self._id = OtcIdDBHandler(**ckwargs)
 
 class OtcCreditHisDBHandler(TwseCreditDBHandler):
     def __init__(self, **kwargs):
-        ckwargs = kwargs.copy()
+        ckwargs = {
+            'id': {
+                'debug': kwargs['debug'],
+                'opt': 'otc'
+            }
+        }
         super(OtcCreditHisDBHandler, self).__init__(**kwargs)
         self._id = OtcIdDBHandler(**ckwargs)

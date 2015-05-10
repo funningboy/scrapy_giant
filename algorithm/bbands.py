@@ -116,12 +116,12 @@ def run(opt='twse', debug=False, limit=0):
         'limit': limit,
         'opt': opt
     }
-    idhandler = TwseIdDBHandler() if kwargs['opt'] == 'twse' else OtcIdDBHandler()
-    for stockid in idhandler.stock.get_ids(**kwargs):
+    idhandler = TwseIdDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcIdDBHandler(**kwargs)
+    for stockid in idhandler.stock.get_ids():
         try:
             dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
             dbhandler.stock.ids = [stockid]
-            data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
+            data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], ['totalvolume']*3, 10)
             if len(data[stockid].index) < maxlen:
                 continue
             bbands = BBandsAlgorithm(dbhandler=dbhandler, buf_win=maxlen, debug=True)

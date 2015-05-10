@@ -25,14 +25,6 @@ class AlgSummaryColl(Document):
     }
 
 
-class TwseAlgSummaryColl(AlgSummaryColl):
-    pass
-
-
-class OtcAlgSummaryColl(AlgSummaryColl):
-    pass
-
-
 class AlgDetailColl(Document):
     time = DateTimeField(default=datetime.utcnow())
     open = FloatField(min_value=0.0, max_value=9999.0)
@@ -49,12 +41,3 @@ class AlgDetailColl(Document):
     meta = {
         'allow_inheritance': True,
     }
-
-
-class TwseAlgDetailColl(AlgDetailColl):
-    pass
-
-
-class OtcAlgDetailColl(AlgDetailColl):
-    pass
-

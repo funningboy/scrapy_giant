@@ -38,13 +38,22 @@ class TwseHisCreditPipeline(BasePipeline):
         return self._decode_item(jstream)
 
     def _update_item(self, item):
-        item = item['data']
+        frame = pd.DataFrame.from_dict(item['data']).dropna()
+        if frame.empty:
+            return
         def _encode_datetime(it):
             yy, mm, dd = it.split('-')
             return datetime(int(yy), int(mm), int(dd), 0, 0, 0, 0, pytz.utc)
-        for it in item:
-            it['date'] = _encode_datetime(it['date'])
-        # use pd frame as sorted item and trans unicode to each item type
+        frame['date'] = [_encode_datetime(it) for it in frame['date']]
+        frame['stockid'] = frame['stockid']
+        frame['stocknm'] = frame['stocknm']
+        frame['preremain'] = frame['preremain'].astype(int) // 1000
+        frame['buyvolume'] = frame['buyvolume'].astype(int) // 1000
+        frame['sellvolume'] = frame['sellvolume'].astype(int) // 1000
+        frame['daytrade'] = frame['daytrade'].astype(int) // 1000
+        frame['curremain'] = frame['curremain'].astype(int) // 1000
+        frame['limit'] = frame['limit'].astype(int) // 1000
+        item = frame.T.to_dict().values()
         log.msg("item: %s" % (item), level=log.DEBUG)
         return item
 

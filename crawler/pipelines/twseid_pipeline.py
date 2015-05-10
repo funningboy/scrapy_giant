@@ -24,7 +24,6 @@ class TwseIdPipeline(BasePipeline):
             'opt': 'twse'
         }
         self._id = TwseIdDBHandler(**kwargs)
-        self._id.stock.coll.drop_collection()
 
     def process_item(self, item, spider):
         if spider.name not in [self._name]:

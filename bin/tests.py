@@ -79,7 +79,7 @@ class TestThreadService(TestRunScrapyService):
 
     def test_on_run(self):
         # id
-        jobs = ['twseid', 'otcid', 'traderid'] 
+        jobs = ['twseid', 'otcid', 'traderid']
         tasks = group([
             run_scrapy_service.subtask(scrapy_tests[k]) for k in jobs
         ])
@@ -88,11 +88,11 @@ class TestThreadService(TestRunScrapyService):
         self.assertTrue(results.ready())
         self.assertTrue(results.successful())
         [self.assertTrue(self.has_pass(scrapy_tests[k][2])) for k in jobs]
-        
+
         # twse
         jobs = ['twsehisstock', 'twsehistrader', 'twsehistrader2', 'twsehiscredit']
         tasks = group([
-            run_scrapy_service.subtask(scrapy_tests[k]) for k in jobs 
+            run_scrapy_service.subtask(scrapy_tests[k]) for k in jobs
         ])
         t = timeit.Timer()
         results = tasks.apply_async()
@@ -135,7 +135,15 @@ class TestTraderId(TestRunScrapyService):
         stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
         print stream
 
-class
+class TestTwseId():
+    pass
 
-class 
+class TestOtcId():
+    pass
+
+class TestTwseHisStock():
+    pass
+
+class TwstTwseHisTrader():
+    pass
 

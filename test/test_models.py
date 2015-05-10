@@ -38,7 +38,7 @@ class TestTwseIdColl(TestBase):
         TwseIdColl.ensure_index([('stockid', 1), ('stocknm', 1)])
 
     def test_on_run(self):
-        TwseIdColl(stockid='2317', stocknm=u'紅海').save()
+        TwseIdColl(stockid='2317', stocknm=u'鴻海').save()
         TwseIdColl(stockid='2330', stocknm=u'台積電').save()
         cursor = TwseIdColl._collection.find({'stockid': '2317'}).limit(1)
         # update as latest

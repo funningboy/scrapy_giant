@@ -2,9 +2,11 @@
 
 from __future__ import absolute_import
 
-#from main.celery import app
+import pandas as pd
+import json
+from bson import json_util
 from celery import shared_task
-
+from datetime import datetime, timedelta
 from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
 from handler.hisdb_handler import TwseHisDBHandler, OtcHisDBHandler
 
@@ -21,39 +23,91 @@ iddb_tasks = {
     'otc': OtcIdDBHandler
 }
 
-def trans_hisframe(opt, starttime, endtime, stockids=[], traderids=[], base='stock', order=['totalvolume']*3, limit=10, debug=False):
-    """  as middleware trans raw hisstock/histoptrader/hiscredit to df
-    order[0:3] : [stock, trader, credit] 
+def collect_hisframe(**kwargs):
+    """  as middleware collect raw hisstock/histoptrader/hiscredit to df
     """
-    kwargs = {
-        'opt': opt,
-        'debug': debug
+    collect = {
+        # hisstock frame collect
+        'hisstock': {
+            'on': False,
+            # hisstock query_raw
+            'starttime': datetime.utcnow() - timedelta(days=100),
+            'endtime': datetime.utcnow(),
+            'stockids': ['2317'],
+            'order': 'totalvolume',
+            'limit': 10
+        },
+        # histrader frame collect
+        'histrader': {
+            'on': False,
+            # histrader query_raw
+            'starttime': datetime.utcnow() - timedelta(days=10),
+            'endtime': datetime.utcnow(),
+            'stockids': ['2317'],
+            'traderids':[],
+            'base': 'stock',
+            'order': 'totalvolume',
+            'limit': 10
+        },
+        # hiscredit frame collect
+        'hiscredit': {
+            'on': False,
+            # hiscredit query_raw
+            'starttime': datetime.utcnow() - timedelta(days=100),
+            'endtime': datetime.utcnow(),
+            'stockids': ['2317'],
+            'order': 'decfinance',
+            'limit': 10
+        }
     }
-    db = hisdb_tasks[opt](**kwargs)
+    if 'debug' in kwargs and kwargs['debug']:
+        print json.dumps(dict(kwargs), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
     group = []
-    if base == 'stock':
-        for i, k in enumerate(order):
-            if i == 0 and k not None:
-                db.stock.ids = stockids
-                args = (starttime, endtime, stockids, order[0], limit, db.stock.to_pandas)
-                group.append(db.stock.query_raw(*args))
-            elif i == 1 and k not None:
-                db.trader.ids = stockids 
-                args = (starttime, endtime, stockids, traderids, base, order[1], limit, db.trader.to_pandas)
-                group.append(db.trader.query_raw(*args))
-            elif i == 2 and k not None:
-                db.credit.ids = stockids
-                args = (starttime, endtime, stockids, order[2], limit, db.credit.to_pandas)
-                group.append(db.credit.query_raw(*args))
-    elif base == 'trader':
-        for i, k in enumerate(order):
-            if i == 1 and k not None:
-                db.trader.ids = traderids
-                args = (starttime, endtime, stockids, traderids, base, order[1], limit, db.trader.to_pandas)
-                group.append(db.trader.query_raw(*args))
-    if group:
-    panel = pd.concat(group, inx=2)
-    return panel, db
+    #populate to each query kwargss
+    opt = kwargs['opt']
+    assert(opt in ['twse', 'otc'])
+    cols = kwargs['frame'].keys()
+    assert(cols <= ['hisstock', 'histrader', 'hiscredit'])
+    for col in cols:
+        assert(set(collect[col].keys()) >= set(kwargs['frame'][col].keys()))
+        collect[col].update(**kwargs['frame'][col])
+        collect[col]['on'] = True
 
-def trans_relframe():
+    group = []
+    db = hisdb_tasks[opt](**kwargs)
+    for it in collect:
+        # collect hisstock df
+        if it == 'hisstock':
+            if collect[it]['on']:
+                collect[it].pop('on')
+                db.stock.ids = collect[it]['stockids']
+                collect[it].update({'callback': db.stock.to_pandas})
+                df = db.stock.query_raw(**collect[it])
+                if not df.empty:
+                    group.append(df)
+        # collect histrader df
+        if it == 'histrader':
+            if collect[it]['on']:
+                collect[it].pop('on')
+                assert(collect[it]['base'] == 'stock')
+                db.trader.ids = collect[it]['stockids']
+                collect[it].update({'callback': db.trader.to_pandas})
+                df = db.trader.query_raw(**collect[it])
+                if not df.empty:
+                    group.append(df)
+        # collect hiscredit df
+        if it == 'hiscredit':
+            if collect[it]['on']:
+                collect[it].pop('on')
+                db.credit.ids = collect[it]['stockids']
+                collect[it].update({'callback': db.credit.to_pandas})
+                df = db.credit.query_raw(**collect[it])
+                if not df.empty:
+                    group.append(df)
+    if group:
+        panel = pd.concat(group, axis=2).fillna(0)
+        return panel, db
+    return pd.Panel(), db
+
+def collect_relframe(**kwargs):
     pass

@@ -14,12 +14,7 @@ from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
 #    endtime = datetime(int(endtime[0:4]), int(endtime[4:6]), int(endtime[6:8]))
 #    args = (opt, alg, starttime, endtime, limit)
 #    run_algorithm_service.delay(*args).get()
-#
-#def dualema_detail(request, opt, stockid, starttime, endtime, traderids=[], order='totalvolume', limit=10):
-#
-#
-#def dualema_detail(request,)
-#
-#
-#def besttrader_detail(request, opt, starttime, endtime,):
-#
+
+
+def algorithm_detail(request):
+
