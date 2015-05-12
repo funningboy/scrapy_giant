@@ -1,0 +1,58 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<! https://github.com/bradleyayers/django-tables2/blob/master/django_tables2/templates/django_tables2/table.html>
+{% load staticfiles %}
+{% load i18n %}
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <title> - grouplist - </title>
+        {% if groupitem %} 
+        {% for item in groupitem %}
+            <p>{{ item.groupnm }}</p>
+            <table id="grouplist{{ item.index }}" class="tablesorter">
+                 <thead>
+                    <tr>
+                    <th></th>
+                    <th>stockid-stocknm</th>
+                    <th>totalvolume</th>
+                    <th>totalbuyvolume</th>
+                    <th>totalsellvolume</th>
+                    <th>totalhit</th>
+                    <th>totaltradeprice</th>
+                    <th>totaltradvolume</th>
+                    </tr>
+                </thead> 
+                <tbody>
+                    {% for it in item.traderitem %}
+                    <tr>
+                    <th><a href="{{ it.traderid }}">{{ it.traderid }}-{{ it.tradernm }}</a></th>
+                    <th><a href="../../../../hisstock/{{ it.opt }}/{{ it.starttime }}/{{ it.endtime }}/{{ it.stockid }}">{{ it.stockid }}-{{ it.stocknm }}</a></th>
+                    <th>{{ it.totalvolume }}</th>
+                    <th>{{ it.totalbuyvolume }}</th>
+                    <th>{{ it.totalsellvolume }}</th>
+                    <th>{{ it.totalhit }}</th>
+                    <th>{{ it.totaltradeprice }}</th>
+                    <th>{{ it.totaltradevolume }}</th>
+                    </tr>
+                    {% endfor %}
+                </tbody> 
+            </table>
+        {% endfor %}
+        {% endif %}
+    </head>
+    <body>
+        <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+        <script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.4/js/jquery.tablesorter.js"></script>
+        <! use jquery.tablesorter>
+        {% if groupitem %}
+        {% for item in groupitem %}
+        <script>
+            $(document).ready(function() {
+                $("#grouplist{{ item.index }}").tablesorter(); 
+            } );
+        </script>
+        {% endfor %}
+        {% endif %}
+    </body>
+</html>

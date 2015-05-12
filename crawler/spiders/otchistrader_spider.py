@@ -137,7 +137,7 @@ class OtcHisTraderSpider(CrawlSpider):
                 'auth': content['auth_num']
             }
             yy, mm, dd = map(int, stk_date)
-            item['date'] = "%s-%s-%s" % (yy+1911, mm, dd)
+            item['date'] = "%s-%s-%s" % (1911+yy, mm, dd)
             request = Request(
                 URL,
                 meta = {

@@ -30,24 +30,24 @@ class TestTwseHisTraderQuery(NoSQLTestCase):
                     'order': 'totalvolume',
                     'limit': limit
                 },
-#                # histrader frame collect
-#                'histrader': {
-#                    'starttime': starttime,
-#                    'endtime': endtime,
-#                    'stockids': [stockid],
-#                    'traderids':[],
-#                    'base': 'stock',
-#                    'order': 'totalvolume',
-#                    'limit': limit
-#                },
-#                # hiscredit frame collect
-#                'hiscredit': {
-#                    'starttime': starttime,
-#                    'endtime': endtime,
-#                    'stockids': [stockid],
-#                    'order': 'decfinance',
-#                    'limit': limit
-#                }
+                # histrader frame collect
+                'histrader': {
+                    'starttime': starttime,
+                    'endtime': endtime,
+                    'stockids': [stockid],
+                    'traderids':[],
+                    'base': 'stock',
+                    'order': 'totalvolume',
+                    'limit': limit
+                },
+                # hiscredit frame collect
+                'hiscredit': {
+                    'starttime': starttime,
+                    'endtime': endtime,
+                    'stockids': [stockid],
+                    'order': 'decfinance',
+                    'limit': limit
+                }
             }
         }
         t = timeit.Timer()

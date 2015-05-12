@@ -61,12 +61,11 @@ class TwseHisCreditSpider(CrawlSpider):
         sel = Selector(response)
         item = response.meta['item']
         index = response.meta['index']
-        item['data'] = []
         date = sel.xpath('.//*[@id="dirname"]/@value').extract()[0][-8:]
         elems = sel.xpath('.//*[@id="tbl-containerx"]/table/tbody/tr') if index == 0 else sel.xpath('.//*[@id="tbl-container"]/table/tbody/tr')
         for elem in elems[:-1]:
             its = elem.xpath('./td/text()').extract()
-            if len(its) <= 8:
+            if len(its) < 8:
                 continue
             its = [it.strip(string.whitespace).replace(',', '') for it in its]
             sub = {

@@ -112,9 +112,8 @@ class TwseHisStockSpider(CrawlSpider):
             sub = {}
             for indx, elem in enumerate(nwelem):
                 if indx == 0:
-                    yy, mm, dd = elem.split('/')
-                    yy = int(yy) + 1911
-                    sub[self._headers[indx][1]] = "%s-%s-%s" % (yy, mm, dd)
+                    yy, mm, dd = map(int, elem.split('/'))
+                    sub[self._headers[indx][1]] = "%s-%s-%s" % (1911+yy, mm, dd)
                     sub['stockid'] = item['stockid']
                 else:
                     sub[self._headers[indx][1]] = elem.replace(',', '')

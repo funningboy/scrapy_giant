@@ -78,7 +78,7 @@ class TraderIdColl(Document):
         'indexes': [('traderid', 'tradernm')]
     }
 
-# collect stcok feature
+# collect stock feature
 class StockMapColl(Document):
     # key
     date = DateTimeField(default=datetime.utcnow())

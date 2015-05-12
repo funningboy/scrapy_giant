@@ -25,9 +25,9 @@ __all__ = [
     'TwseBestTraderAlg',
     'OtcBestTraderAlg',
     'TwseBBandsAlg',
-#    'OtcBBandsAlg',
-#    'TwseRandForestAlg',
-#    'OtcRandForestAlg'
+    'OtcBBandsAlg',
+    'TwseRandForestAlg',
+    'OtcRandForestAlg'
     ]
 
 # alg db map
@@ -42,7 +42,7 @@ class TwseAlgDBHandler(object):
 
     def __init__(self, **kwargs):
         self._debug = kwargs.pop('debug', False)
-        self._cfg = kwargs.pop('cfg', {})
+        self._cfg = kwargs.pop('cfg', {'debug': self._debug, 'buf_win': 30})
         db = "twse%s" %(algdbmap[self._alg])
         db = db if not self._debug else 'test' + db
         host, port = MongoDBDriver._host, MongoDBDriver._port
@@ -134,6 +134,7 @@ class TwseDualemaAlg(TwseAlgDBHandler):
         self._alg = DualEMAAlgorithm
         super(TwseDualemaAlg, self).__init__(**kwargs)
         self._collect = {
+            'debug': self._debug,
             'opt': self._opt,
             'frame': {
                 # hisstock frame collect
@@ -156,7 +157,7 @@ class TwseDualemaAlg(TwseAlgDBHandler):
             })
             data, db = collect_hisframe(**self._collect)
             if not data.empty and db:
-                if len(data[stockid].index) < 30:
+                if len(data[stockid].index) < self._cfg['buf_win']:
                     continue
                 alg = self._alg(dbhandler=db, **self._cfg)
                 results = alg.run(data).fillna(0)
@@ -174,7 +175,7 @@ class TwseBestTraderAlg(TwseAlgDBHandler):
     # find trader
     >>> starttime = datetime.utcnow() - timedelta(days=10)
     >>> endtime = datetime.utcnow()
-    >>> kwargs = {'debug': True, 'opt': opt}
+    >>> kwargs = {'debug': True, 'opt': otc}
     >>> dbhandler = TwseHisDBHandler(**kwargs)
     >>> args = (starttime, endtime, ['2317'], [], 'stock', 'totalvolume', 10)
     >>> dbhandler.trader.query_raw(*args)
@@ -190,6 +191,7 @@ class TwseBestTraderAlg(TwseAlgDBHandler):
         self._alg = BestTraderAlgorithm
         super(TwseBestTraderAlg, self).__init__(**kwargs)
         self._collect = {
+            'debug': self._debug,
             'opt': self._opt,
             'frame': {
                 # hisstock frame collect
@@ -223,7 +225,7 @@ class TwseBestTraderAlg(TwseAlgDBHandler):
                 })
                 data, db = collect_hisframe(**self._collect)
                 if not data.empty or db:
-                    if len(data[stockid].index) < 30:
+                    if len(data[stockid].index) < self._cfg['buf_win']:
                         continue
                     alg = self._alg(dbhandler=db, **self._cfg)
                     results = alg.run(data).fillna(0)
@@ -244,6 +246,7 @@ class TwseBBandsAlg(TwseAlgDBHandler):
         self._alg = BBandsAlgorithm
         super(TwseBBandsAlg, self).__init__(**kwargs)
         self._collect = {
+            'debug': self._debug,
             'opt': self._opt,
             'frame': {
                 # hisstock frame collect
@@ -266,7 +269,7 @@ class TwseBBandsAlg(TwseAlgDBHandler):
             })
             data, db = collect_hisframe(**self._collect)
             if not data.empty and db:
-                if len(data[stockid].index) < 30:
+                if len(data[stockid].index) < self._cfg['buf_win']:
                     continue
                 alg = self._alg(dbhandler=db, **self._cfg)
                 results = alg.run(data).fillna(0)
@@ -279,27 +282,49 @@ class TwseBBandsAlg(TwseAlgDBHandler):
         return self._report.summary()
 
 
-class OtcAlgDBHandler(TwseAlgDBHandler):
+class OtcDualemaAlg(TwseDualemaAlg):
 
     def __init__(self, **kwargs):
-        super()
-        self._kwargs = kwargs
+        super(OtcDualemaAlg, self).__init__(**kwargs)
         db = "otc%s" %(algdbmap[self._alg])
+        db = db if not self._debug else 'test' + db
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect(db, host=host, port=port, alias=db)
         self._sumycoll = switch(AlgSummaryColl, db)
-        self._report = Report(sort=[('buy_count', False), ('sell_count', False), ('portfolio_value', False)], limit=20)
+        self._opt = 'otc'
+        self._collect.update({
+            'debug': self._debug,
+            'opt': self._opt,
+        })
 
 
-class OtcDualemaAlg(OtcAlgDBHandler):
-
-    def __init__(self, **kwargs):
-        self._alg = DualEMAAlgorithm
-        super(OtcDualemaAlg, self).__init__(**kwargs)
-
-class OtcBestTraderAlg(OtcAlgDBHandler):
+class OtcBestTraderAlg(TwseBestTraderAlg):
 
     def __init__(self, **kwargs):
-        self._alg = BestTraderAlgorithm
         super(OtcBestTraderAlg, self).__init__(**kwargs)
+        db = "otc%s" %(algdbmap[self._alg])
+        db = db if not self._debug else 'test' + db
+        host, port = MongoDBDriver._host, MongoDBDriver._port
+        connect(db, host=host, port=port, alias=db)
+        self._sumycoll = switch(AlgSummaryColl, db)
+        self._opt = 'otc'
+        self._collect.update({
+            'debug': self._debug,
+            'opt': self._opt
+        })
+
+class OtcBBandsAlg(TwseBBandsAlg):
+
+    def __init__(self, **kwargs):
+        super(OtcBBandsAlg, self).__init__(**kwargs)
+        db = "otc%s" %(algdbmap[self._alg])
+        db = db if not self._debug else 'test' + db
+        host, port = MongoDBDriver._host, MongoDBDriver._port
+        connect(db, host=host, port=port, alias=db)
+        self._sumycoll = switch(AlgSummaryColl, db)
+        self._opt = 'otc'
+        self._collect.update({
+            'debug': self._debug,
+            'opt': self._opt
+        })
 

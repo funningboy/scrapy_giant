@@ -89,7 +89,7 @@ class TwseStockHisDBHandler(object):
     def __init__(self, **kwargs):
         self._coll = kwargs.pop('coll', None)
         self._debug = kwargs.pop('debug', False)
-        db = 'stcokmapdb' if not self._debug else 'teststcokmapdb'
+        db = 'stockmapdb' if not self._debug else 'teststockmapdb'
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect(db, host=host, port=port, alias=db)
         kwargs = {
@@ -293,7 +293,7 @@ class TwseTraderHisDBHandler(object):
         pass
 
     def insert_raw(self, item):
-        """ as update hisstcok trader part """
+        """ as update hisstock trader part """
         keys = [k for k,v in TraderData._fields.iteritems()]
         toplist = []
         for it in item['toplist']:
@@ -417,6 +417,9 @@ class TwseTraderHisDBHandler(object):
         results = cursor.map_reduce(map_f, reduce_f, 'toptradermap')
         results = list(results)
         retval = []
+        mkey = 'stockid' if base == 'stock' else 'traderid'
+        mids = stockids if base == 'stock' else traderids
+        results = [i for i in results if i.key[mkey] in mids]
         pool = sorted(results, key=lambda x: x.value[order], reverse=True if order in decorder else False)[:limit]
         for i, it in enumerate(pool):
              coll = { 'datalist': [] }

@@ -50,6 +50,8 @@ class Report(object):
             yield symbol
 
     def iter_report(self, symbol, dtype=None):
+        if symbol not in self._pool:
+            return pd.DataFrame()
         columns = self._pool[symbol].columns
         if dtype == 'json':
             return self._pool[symbol].to_json()

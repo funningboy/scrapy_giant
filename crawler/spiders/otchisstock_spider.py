@@ -112,11 +112,10 @@ class OtcHisStockSpider(CrawlSpider):
                 if indx == 0:
                     # pass empty data
                     try:
-                        yy, mm, dd = elem.split('/')
+                        yy, mm, dd = map(int, elem.split('/'))
                     except Exception:
                         continue
-                    yy = int(yy) + 1911
-                    sub[self._headers[indx][1]] = u"%s-%s-%s" % (yy, mm, dd)
+                    sub[self._headers[indx][1]] = u"%s-%s-%s" % (1911+yy, mm, dd)
                     sub['stockid'] = item['stockid']
                 elif indx == 1:
                     sub[self._headers[indx][1]] = u"%d" % (int(elem) * 1000)

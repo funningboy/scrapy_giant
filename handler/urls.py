@@ -43,5 +43,10 @@ urlpatterns = patterns('',
     url(r'^histrader/(?P<opt>\w+)/(?P<starttime>\d{8})/(?P<endtime>\d{8})/$',
         view=views.histrader_list,
         name='histrader_list'
+    ),
+    # ex:
+    url(r'^hisgroup/(?P<opt>\w+)/(?P<starttime>\d{8})/(?P<endtime>\d{8})/$',
+        view=views.hisgroup_list,
+        name='hisgroup_list'
     )
 )

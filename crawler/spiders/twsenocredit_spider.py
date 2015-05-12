@@ -42,10 +42,10 @@ class TwseNoCreditSpider(CrawlSpider):
             its = [it.strip(string.whitespace).replace(',', '') for it in its]
             sub['stockid'] = it[0] if it[0] else None
             sub['stocknm'] = it[1] if it[1]else None
-            yy, mm, dd = its[2].split('/') if its[2] else [None]*3
-            sub['nocredit_starttime'] = u"%s-%s-%s" % (1911+int(yy), mm, dd) if None not in [yy, mm, dd] else None
+            yy, mm, dd = map(int, its[2].split('/')) if its[2] else [None]*3
+            sub['nocredit_starttime'] = u"%s-%s-%s" % (1911+yy, mm, dd) if None not in [yy, mm, dd] else None
             yy, mm, dd = its[2].split('/') if its[3] else [None]*3
-            sub['nocredit_endtime'] = u"%s-%s-%s" %(1911+int(yy), mm, dd) if None not in [yy, mm, dd] else None
+            sub['nocredit_endtime'] = u"%s-%s-%s" %(1911+yy, mm, dd) if None not in [yy, mm, dd] else None
             item['data'].append(sub)
         log.msg("item[0] %s ..." % (item['data'][0]), level=log.DEBUG)
         yield item

@@ -59,8 +59,38 @@ class OtcHisCreditSpider(CrawlSpider):
         log.msg("URL: %s" % (response.url), level=log.DEBUG)
         item = response.meta['item']
         index = response.meta['index']
-        item['data'] = []
-        print response.body
-        item = json.load(response.body, encoding='utf-8')
-        print item
+        stream = json.loads(response.body, encoding='cp950')
+        yy, mm, dd = map(int, stream['reportDate'].split('/'))
+        for it in stream['aaData']:
+            if len(it) < 20:
+               continue
+            it = [i.replace(',', '') for i in it]
+            sub = {
+                'date': "%s-%s-%s" %(1911+yy, mm, dd),
+                'type': 'finance',
+                'stockid': it[0],
+                'stocknm': it[1],
+                'preremain': it[2],
+                'buyvolume': it[3],
+                'sellvolume': it[4],
+                'daytrade': it[5],
+                'curremain': it[6],
+                'limit': it[9]
+            }
+            item['data'].append(sub)
+            sub = {
+                'date': "%s-%s-%s" %(1911+yy, mm, dd),
+                'type': 'bearish',
+                'stockid': it[0],
+                'stocknm': it[1],
+                'preremain': it[10],
+                'buyvolume': it[11],
+                'sellvolume': it[12],
+                'daytrade': it[13],
+                'curremain': it[14],
+                'limit': it[17]
+            }
+            item['data'].append(sub)
+        log.msg("item[0] %s ..." %(item['data'][0]), level=log.DEBUG)
+        yield item
 
