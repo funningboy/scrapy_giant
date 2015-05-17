@@ -1,8 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<!DOCTYPE use ajax to GET http json request >
-{% load staticfiles %}
-<html>
-    <head>
+{% extends "base.html" %}
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
         <title> - stockdetail - </title>
         <style type='text/css'>
@@ -394,8 +390,6 @@
         }
 // ]]>
 </script>
-    </head>
-    <body>
         <script type="text/javascript" src="http://www.amcharts.com/lib/3/amcharts.js"></script>
         <script type="text/javascript" src="http://www.amcharts.com/lib/3/pie.js"></script>
         <script type="text/javascript" src="http://www.amcharts.com/lib/3/serial.js"></script>
@@ -409,7 +403,5 @@
             <div id="chartdiv3"></div>
             <div id="chartdiv2"></div>
         </div>
-    </body>
-</html>
 
 

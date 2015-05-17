@@ -11,25 +11,25 @@
             <th>buy</th> 
             <th>sell</th> 
             <th>portfolio_value</th> 
-            <th>open</th> 
-            <th>high</th>
-
+            <th>portfolio_value</th>
+            <th>ending_value</th>
+            <th>ending_cash</th>
         </tr> 
         </thead> 
         <tbody> 
          <tr> 
                 {% if message %}<p>{{ message }}</p>{% endif %}
             <td>it.time</td> 
+            <td>item.buy</td> 
+            <td>item.sell</td> 
+            <td>it.portfolio_value</td> 
+            <td>it.ending_value</td>
+            <td>it.ending_cash</td>
             <td>it.open</td>
             <td>it.high</td>
             <td>it.low</td>
             <td>it.close</td>
             <td>it.volume</td>
-            <td>it.portfilio_value</td> 
-            <td>it.ending_value</td>
-            <td>it.ending_cash</td>
-            <td>item.buy</td> 
-            <td>item.sell</td> 
         </tr> 
         </tbody> 
     </table>
