@@ -83,7 +83,6 @@ class StockIdDBHandler(object):
         self._coll = kwargs.pop('coll', None)
         self._debug = kwargs.pop('debug', False)
         self._opt = kwargs.pop('opt', None)
-        self._db = kwargs.pop('db', None)
         assert(self._coll)
 
     @property

@@ -1,0 +1,89 @@
+<!-- Sidebar Menu Items - These collapse to the responsive navigation menu on small screens -->
+<div class="collapse navbar-collapse navbar-ex1-collapse">
+    <ul class="nav navbar-nav side-nav">
+        <li class="sidebar-search">
+        <a href="javascript:;" data-toggle="collapse" data-target="#search"><i class="fa fa-fw fa-arrows-v"></i> Search <i class="fa fa-fw fa-caret-down"></i></a>
+        <ul id="search" class="collapse">
+            <form class="form-horizontal" id="searchform" method="get">
+                <!-- starttime -->
+                <div class="input-group input-group-sm">
+                    <span class="input-group-addon"><i class="fa fa-calendar fa-fw"></i></span>
+                    <input class="form-control" id="starttime" name="starttime" type="text" placeholder="starttime"/>
+                </div>
+                <!-- endtime -->
+                <div class="input-group input-group-sm">
+                    <span class="input-group-addon"><i class="fa fa-calendar fa-fw"></i></span>
+                    <input class="form-control" id="endtime" name="endtime" type="text" placeholder="endtime"/>
+                </div>
+                <!-- stockids -->
+                <div class="input-group input-group-sm">
+                    <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
+                    <input class="form-control" id="stockids" name="stockids"
+                    type="text" placeholder="stockids: 2330,2317" autocomplete="off">
+                </div>
+                <!-- traderids -->
+                <div class="input-group input-group-sm">
+                    <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
+                    <input class="form-control" id="traderids" name="traderids" type="text" placeholder="traderids: 1440,1470">
+                </div>
+                <!-- algorithm --> 
+                <div class="input-group input-group-sm">
+                    <span class="input-group-addon"><i class="fa fa-list-ol fa-fw"></i></span>
+                    <select class="form-control" id="algorithm" name="algorithm">
+                        <option selected disabled>algorithm</option>
+                        <option>########</option>
+                    </select>
+                </div>
+                <!-- base --> 
+                <div class="input-group input-group-sm">
+                    <span class="input-group-addon"><i class="fa fa-list-ol fa-fw"></i></span>
+                    <select class="form-control" id="base" name="base">
+                        <option selected disabled>base</option>
+                        <option>########</option>
+                    </select>
+                </div>
+                <!-- search -->
+                <div class="input-group input-group-sm">
+                    <span class="input-group-addon"><i class="fa fa-coffee fa-fw"></i></span>
+                    <button class="btn btn-default" type="submit"><i class="fa fa-search fa-fw"></i></button>
+                </div>
+            </form>
+        </ul>
+        </li>
+        <li class="sidebar-portfilo">
+        </li> 
+    </ul>
+</div>
+
+{% block script %}
+<script type="text/javascript">
+    $(document).ready(function () {
+            $('#starttime').datetimepicker({
+format: 'YYYY/MM/DD'
+});
+            $('#endtime').datetimepicker({
+format: 'YYYY/MM/DD'
+});
+            //            $("#stockids").autocomplete({source: 
+            //              function(request, response) {
+            //                $.ajax({
+            //                  url:  'handler/get_stockids_list.html',
+            //                  data: {term: request.term},
+            //                  success: function(data) {
+            //                             //alert(data);
+            //                             var result=$.map(data, function(item){
+            //                               var label=item.label + " (" + item.value + ")";
+            //                               var value=item.value;
+            //                               return {label: label, value: value};
+            //                               }
+            //                             //var result=["1","2"];
+            //                             response(result);
+            //                             } //end of function
+            //                  }); //end of ajax
+            //                } //end of function    
+            //              });
+            //                }); 
+
+});
+</script>
+{% endblock %}

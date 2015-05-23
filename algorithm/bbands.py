@@ -33,14 +33,14 @@ class BBandsAlgorithm(TradingAlgorithm):
     sell:
     """
 
-    def __init__(self, dbhandler, *args, **kwargs):
+    def __init__(self, dbhandler, **kwargs):
         self._debug = kwargs.pop('debug', False)
         self._buf_win = kwargs.pop('buf_win', 70)
         self._buy_hold = kwargs.pop('buy_hold', 5)
         self._sell_hold = kwargs.pop('sell_hold', 5)
         self._buy_amount = kwargs.pop('buy_amount', 1000)
         self._sell_amount = kwargs.pop('sell_amount', 1000)
-        super(BBandsAlgorithm, self).__init__(*args, **kwargs)
+        super(BBandsAlgorithm, self).__init__(**kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
         self.tids = self.dbhandler.trader.ids
@@ -119,15 +119,22 @@ def run(opt='twse', debug=False, limit=0):
     idhandler = TwseIdDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcIdDBHandler(**kwargs)
     for stockid in idhandler.stock.get_ids():
         try:
-            dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
+            # run
+            kwargs = {
+                'debug': True,
+                'opt': opt
+            }
+            dbhandler = TwseHisDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcHisDBHandler(**kwargs)
             dbhandler.stock.ids = [stockid]
-            data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], ['totalvolume']*3, 10)
+            args = (starttime, endtime, [stockid], 'totalvolume', 10)
+            cursor = dbhandler.stock.query_raw(*args)
+            data = dbhandler.stock.to_pandas(cursor)
             if len(data[stockid].index) < maxlen:
                 continue
             bbands = BBandsAlgorithm(dbhandler=dbhandler, buf_win=maxlen, debug=True)
             results = bbands.run(data).fillna(0)
             report.collect(stockid, results)
-            print "%s" %(stockid)
+            print "%s pass" %(stockid)
         except:
             print traceback.format_exc()
             continue

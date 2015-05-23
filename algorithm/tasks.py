@@ -28,11 +28,21 @@ algdb_tasks = {
 @shared_task
 def run_algorithm_service(opt, alg, starttime, endtime, debug=False):
     id = iddb_tasks[opt](debug=debug)
-    id.stock.get_ids()
-    id.trader.get_ids()
+    stockids = id.stock.get_ids()
+    traderids = id.trader.get_ids()
+    alg = algdb_tasks[opt][alg](debug=debug)
+    args = (starttime, endtime, stockids, traderids, alg.to_summary)
+    if alg not in ['btrader']:
+        args.pop(3)
+    alg.run(*args)
 
-    alg = algdb_tasks[opt][alg](**kwargs)
-    alg.run(alg.to_summary)
-
-def collect_algframe():
+def collect_algframe(**kwargs):
+    collect = {
+        'dualema': {
+        },
+        'btrader': {
+        },
+        'bbands': {
+        },
+    }
     pass

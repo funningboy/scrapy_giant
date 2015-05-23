@@ -16,7 +16,21 @@ __all__ = ['TwseHisDBHandler', 'OtcHisDBHandler']
 
 
 class TwseHisDBHandler(object):
-
+    """
+    >>> starttime = datetime.utcnow() - timedelta(days=10)
+    >>> endtime = datetime.utcnow()
+    >>> db = TwseHisDBHandler(debug=True, opt='twse')
+    >>> db.stock.ids = ['2317']
+    >>> args = (starttime, endtime, [stockid], 'totalvolume', 10)
+    >>> cursor = dbhandler.stock.query_raw(*args)
+    >>> data = dbhandler.stock.to_pandas(cursor)
+    >>> print data
+    >>> db.trader.ids = ['2317']
+    >>> args = (starttime, endtime, ['2317'], ['1440'], 'stock', 'totalvolume', 10)
+    >>> cursor = dbhandler.trader.query_raw(*args)
+    >>> data = dbhandler.trader.to_pandas(cursor)
+    >>> print data
+    """
     def __init__(self, **kwargs):
         self._debug = kwargs.pop('debug', False)
         db = 'twsehisdb' if not self._debug else 'testtwsehisdb'
@@ -39,7 +53,7 @@ class TwseHisDBHandler(object):
         }
         self._stock = TwseStockHisDBHandler(**kwargs['stock'])
         self._trader = TwseTraderHisDBHandler(**kwargs['trader'])
-        self._credit = TwseCreditDBHandler(**kwargs['credit'])
+        self._credit = TwseCreditHisDBHandler(**kwargs['credit'])
         # news
 
     @property
@@ -81,7 +95,7 @@ class OtcHisDBHandler(TwseHisDBHandler):
         }
         self._stock = OtcStockHisDBHandler(**kwargs['stock'])
         self._trader = OtcTraderHisDBHandler(**kwargs['trader'])
-        #self._credit = OtcCreditDBHandler(**kwargs['credit'])
+        self._credit = OtcCreditHisDBHandler(**kwargs['credit'])
         # news
 
 class TwseStockHisDBHandler(object):
@@ -426,26 +440,26 @@ class TwseTraderHisDBHandler(object):
              for data in sorted(it.value['data'], key=lambda x: x['date']):
                  coll['datalist'].append(data)
              coll.update({
-                 # html link
-                 'opt': 'twse' if self.__class__.__name__ == 'TwseTraderHisDBHandler' else 'otc',
-                 'starttime': datetime.strftime(starttime, "%Y%m%d"),
-                 'endtime': datetime.strftime(endtime, "%Y%m%d"),
-                 # key
-                 'date': endtime,
-                 'bufwin': bufwin.days,
-                 'traderid': it.key['traderid'],
-                 'stockid': it.key['stockid'],
-                 'order': order,
-                 'tradernm': self._id.trader.get_name(it.key['traderid']),
-                 'stocknm': self._id.stock.get_name(it.key['stockid']),
-                 # value
-                 'totalvolume': it.value['totalvolume'],
-                 'totalbuyvolume': it.value['totalbuyvolume'],
-                 'totalsellvolume': it.value['totalsellvolume'],
-                 'totalhit': it.value['totalhit'],
-                 'totaltradeprice': it.value['totaltradeprice'],
-                 'totaltradevolume': it.value['totaltradevolume'],
-                 'alias': "top%d" % (i)
+                # html link
+                'opt': 'twse' if self.__class__.__name__ == 'TwseTraderHisDBHandler' else 'otc',
+                'starttime': datetime.strftime(starttime, "%Y%m%d"),
+                'endtime': datetime.strftime(endtime, "%Y%m%d"),
+                # key
+                'date': endtime,
+                'bufwin': bufwin.days,
+                'traderid': it.key['traderid'],
+                'stockid': it.key['stockid'],
+                'order': order,
+                'tradernm': self._id.trader.get_name(it.key['traderid']),
+                'stocknm': self._id.stock.get_name(it.key['stockid']),
+                # value
+                'totalvolume': it.value['totalvolume'],
+                'totalbuyvolume': it.value['totalbuyvolume'],
+                'totalsellvolume': it.value['totalsellvolume'],
+                'totalhit': it.value['totalhit'],
+                'totaltradeprice': it.value['totaltradeprice'],
+                'totaltradevolume': it.value['totaltradevolume'],
+                'alias': "top%d" % (i)
              })
              retval.append(coll)
         self._cache = retval
@@ -501,7 +515,7 @@ class TwseTraderHisDBHandler(object):
     def delete_map(self,):
         pass
 
-class TwseCreditDBHandler(object):
+class TwseCreditHisDBHandler(object):
 
     def __init__(self, **kwargs):
         self._coll = kwargs.pop('coll', None)
@@ -526,6 +540,14 @@ class TwseCreditDBHandler(object):
     @ids.setter
     def ids(self, ids):
         self._ids = ids
+
+    @property
+    def coll(self):
+        return self._coll
+
+    @property
+    def mapcoll(self):
+        return self._mapcoll
 
     def update_raw(self, item):
         pass
@@ -656,7 +678,7 @@ class OtcStockHisDBHandler(TwseStockHisDBHandler):
             }
         }
         super(OtcStockHisDBHandler, self).__init__(**kwargs)
-        self._id = OtcIdDBHandler(**ckwargs)
+        self._id = OtcIdDBHandler(**ckwargs['id'])
 
 class OtcTraderHisDBHandler(TwseTraderHisDBHandler):
     def __init__(self, **kwargs):
@@ -667,9 +689,9 @@ class OtcTraderHisDBHandler(TwseTraderHisDBHandler):
             }
         }
         super(OtcTraderHisDBHandler, self).__init__(**kwargs)
-        self._id = OtcIdDBHandler(**ckwargs)
+        self._id = OtcIdDBHandler(**ckwargs['id'])
 
-class OtcCreditHisDBHandler(TwseCreditDBHandler):
+class OtcCreditHisDBHandler(TwseCreditHisDBHandler):
     def __init__(self, **kwargs):
         ckwargs = {
             'id': {
@@ -678,4 +700,4 @@ class OtcCreditHisDBHandler(TwseCreditDBHandler):
             }
         }
         super(OtcCreditHisDBHandler, self).__init__(**kwargs)
-        self._id = OtcIdDBHandler(**ckwargs)
+        self._id = OtcIdDBHandler(**ckwargs['id'])

@@ -103,3 +103,5 @@ run as celery task
 trader/stock data align 
 ```
 
+TBDO
+#https://eonasdan.github.io/bootstrap-datetimepicker/Installing/#minimal-requirements 

@@ -128,17 +128,18 @@ class TestCaptcha(unittest.TestCase):
         cap = TestTwseHisTraderCaptcha()
         record = defaultdict(list)
         tests = [
-            TwseHisTraderCaptcha0(debug),
-    #        TwseHisTraderCaptcha1(debug),
-    #       TwseHisTraderCaptcha2(debug)
+            (TwseHisTraderCaptcha0(debug), True),
+            (TwseHisTraderCaptcha1(debug), False),
+            (TwseHisTraderCaptcha2(debug), False)
         ]
         for test in tests:
-            print test.__class__.__name__
             # as thread
-            for stockid in ['2317', '2330', '2412']:
-                runtime = cap.fetch_trader_info(test.run, stockid, debug)
-                if runtime:
-                    record[runtime].append((test.__class__.__name__))
+            if test[1]:
+                print test[0].__class__.__name__
+                for stockid in ['2317', '2330', '2412']:
+                    runtime = cap.fetch_trader_info(test[0].run, stockid, debug)
+                    if runtime:
+                        record[runtime].append((test[0].__class__.__name__))
         print json.dumps(record, sort_keys=True, indent=4, separators=(',', ': '))
 
 if __name__ == '__main__':

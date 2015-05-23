@@ -43,8 +43,8 @@ class TwseHisTraderSpider2(CrawlSpider):
 
     def start_requests(self):
         for i,stockid in enumerate(self._id.stock.get_ids()):
-#           if not idhandler.stock.is_warrant(stockid):
-#               continue
+            if self._id.stock.is_warrant(stockid):
+               continue
             item = TwseHisTraderItem()
             item.update({
                 'stockid': stockid,
@@ -102,7 +102,7 @@ class TwseHisTraderSpider2(CrawlSpider):
         elems = sel.xpath('.//table[@id="ctl00_ContentPlaceHolder1_GridView2"]//td/font/text()').extract()
         for i in xrange(0, len(elems)-20, 4):
             tradernm = elems[i].replace('-', '').replace(u'\u3000', u'').replace(u' ', u'')
-            traderid = u"%s" %(TwseIdDBHandler().trader.get_id(tradernm))
+            traderid = u"%s" %(self._id.trader.get_id(tradernm))
             sub = {
                 'index': u'0',
                 'traderid': traderid,

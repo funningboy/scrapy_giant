@@ -48,6 +48,8 @@ class TwseHisStockSpider(CrawlSpider):
 
     def start_requests(self):
         for i,stockid in enumerate(self._id.stock.get_ids()):
+            if self._id.stock.is_warrant(stockid):
+                continue
             for mon in range(2, -1, -1):
                 timestamp = datetime.utcnow() - relativedelta(months=mon)
                 if mon == 0:

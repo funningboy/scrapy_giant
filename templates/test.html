@@ -1,0 +1,42 @@
+{% load staticfiles %}
+<html>
+<head>
+    <title>Search</title>
+</head>
+<body>
+    {% if error %}
+    <p style="color: red;">Please submit a search term.</p>
+    {% endif %}
+    <form class="form-horizontal" action="./" id="searchform" method="get">
+        <div class="input-group input-group-sm">
+            <span class="input-group-addon"><i class="fa fa-calendar fa-fw"></i></span>
+            <input class="form-control" id="title" name='title' type="text" placeholder="starttime"/>
+        </div>
+         <div class="input-group input-group-sm">
+            <span class="input-group-addon"><i class="fa fa-coffee fa-fw"></i></span>
+                <button class="btn btn-default" type="submit"><i class="fa fa-search fa-fw"></i></button>
+        </div>
+    </form>
+<fieldset>
+{% for field in form.visible_fields %}
+<div class="clearfix {% if field.errors %}error{% endif %}">
+  {{ field.label_tag }}
+  <div class="input">
+    {{ field }}
+    {% if field.errors or field.help_text %}
+      <span class="help-inline">
+      {% if field.errors %}
+        {{ field.errors|join:' ' }}
+      {% else %}
+        {{ field.help_text }}
+      {% endif %}
+      </span>
+    {% endif %}
+  </div>
+</div>
+{% endfor %}
+{% csrf_token %}
+<div style="display:none">{% for h in form.hidden_fields %} {{ h }}{% endfor %}</div>
+</fieldset>
+</body>
+</html>
