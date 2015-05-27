@@ -15,19 +15,19 @@ from handler.iddb_handler import *
 from handler.hisdb_handler import *
 
 skip_tests = {
-    'TestTraderId': False,
-    'TestTwseId': False,
-    'TestOtcId': False,
-    'TestTwseHisTrader': False,
-    'TestTwseHisTrader2': False,
-    'TestTwseHisStock': False,
+    'TestTraderId': True,
+    'TestTwseId': True,
+    'TestOtcId': True,
+    'TestTwseHisTrader': True,
+    'TestTwseHisTrader2': True,
+    'TestTwseHisStock': True,
     'TestTwseHisCredit': False,
-    'TestTwseHisAll': False,
-    'TestOtcHisTrader': False,
-    'TestOtcHisTrader2': False,
-    'TestOtcHisStock': False,
-    'TestOtcHisCredit': False,
-    'TestOtcHisAll': False
+    'TestTwseHisAll': True,
+    'TestOtcHisTrader': True,
+    'TestOtcHisTrader2': True,
+    'TestOtcHisStock': True,
+    'TestOtcHisCredit': True,
+    'TestOtcHisAll': True
 }
 
 class TestBase(unittest.TestCase):

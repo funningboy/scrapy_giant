@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from mongodbforms import DocumentForm
-from main.models import TestItem
+from mongoengine import *
+from main.models import SearchItem
 
-class FormTestItem(DocumentForm):
-    meta = {
-        'document': TestItem,
-        'fields': ('id', 'name')
-    }
+class FormSearchItem(DocumentForm):
+    class Meta:
+        document = SearchItem
+        fields = ['starttime','endtime', 'stockids', 'traderids', 'algorithm']

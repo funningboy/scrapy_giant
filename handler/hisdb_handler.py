@@ -3,7 +3,7 @@
 import pandas as pd
 import pytz
 from collections import OrderedDict, defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from mongoengine import *
 from bin.start import switch
@@ -19,16 +19,20 @@ class TwseHisDBHandler(object):
     """
     >>> starttime = datetime.utcnow() - timedelta(days=10)
     >>> endtime = datetime.utcnow()
-    >>> db = TwseHisDBHandler(debug=True, opt='twse')
-    >>> db.stock.ids = ['2317']
+    >>> dbhandler = TwseHisDBHandler(debug=True, opt='twse')
+    >>> dbhandler.stock.ids = ['2317']
     >>> args = (starttime, endtime, [stockid], 'totalvolume', 10)
     >>> cursor = dbhandler.stock.query_raw(*args)
     >>> data = dbhandler.stock.to_pandas(cursor)
     >>> print data
-    >>> db.trader.ids = ['2317']
+    >>> dbhandler.trader.ids = ['2317']
     >>> args = (starttime, endtime, ['2317'], ['1440'], 'stock', 'totalvolume', 10)
     >>> cursor = dbhandler.trader.query_raw(*args)
     >>> data = dbhandler.trader.to_pandas(cursor)
+    >>> print data
+    >>> args = (starttime, endtime, [stockid], 'decfinance', 10)
+    >>> cursor = dbhandler.credit.query_raw(*args)
+    >>> data = dbhandler.credit.to_pandas(cursor)
     >>> print data
     """
     def __init__(self, **kwargs):
@@ -54,7 +58,7 @@ class TwseHisDBHandler(object):
         self._stock = TwseStockHisDBHandler(**kwargs['stock'])
         self._trader = TwseTraderHisDBHandler(**kwargs['trader'])
         self._credit = TwseCreditHisDBHandler(**kwargs['credit'])
-        # news
+        # news, future
 
     @property
     def stock(self):
@@ -377,7 +381,14 @@ class TwseTraderHisDBHandler(object):
                             totalhit: hit,
                             totaltradeprice: tradeprice,
                             totaltradevolume: tradevolume,
-                            data: [{ date: this.date, ratio: ratio, avgbuyprice: avgbuyprice, avgsellprice: avgsellprice, buyvolume: buyvolume, sellvolume: sellvolume }]
+                            data: [{
+                                date: this.date,
+                                ratio: ratio,
+                                avgbuyprice: avgbuyprice,
+                                avgsellprice: avgsellprice,
+                                buyvolume: buyvolume,
+                                sellvolume: sellvolume
+                            }]
                         };
                         emit(key, value);
                     }
@@ -571,7 +582,7 @@ class TwseCreditHisDBHandler(object):
                 coll.bearish = data
             coll.save()
 
-    def query_raw(self, starttime, endtime, stockids=[], order='totalvolume', limit=10, callback=None):
+    def query_raw(self, starttime, endtime, stockids=[], order='decfinance', limit=10, callback=None):
         """ return orm
         <stockid>                                                | <stockid> ...
                     finance_buy| finance_sely| finance_limit| ...|
@@ -582,18 +593,35 @@ class TwseCreditHisDBHandler(object):
             function () {
                 try {
                     var key =  { stockid : this.stockid };
+                    var financetrend = 0;
+                    var financeused = 0;
+                    var bearishtrend = 0;
+                    var bearishused = 0;
+                    if (this.finance.preremain > 0) {
+                        financetrend = (this.finance.curremain - this.finance.preremain) / this.finance.preremain;
+                    }
+                    if (this.finance.limit > 0) {
+                        financeused = this.finance.curremain / this.finance.limit * 100;
+                    }
+                    if (this.bearish.preremain > 0) {
+                        bearishtrend = (this.bearish.curremain - this.bearish.preremain) / this.bearish.preremain;
+                    }
+                    if (this.bearish.limit > 0) {
+                        bearishused = this.bearish.curremain / this.bearish.limit * 100;
+                    }
                     var value = {
-                        finance_trend: (this.finance.curremain - this.finance.preremain) / this.finance.preremain,
-                        finance_used: this.finance.curremain / this.finance.limit * 100,
-                        bearish_trend: (this.bearish.curremain - this.bearish.preremain) / this.bearish.preremain,
-                        bearish_used: this.bearish.curremain / this.bearish.limit * 100,
+                        financetrend: financetrend,
+                        financeused: financeused,
+                        bearishtrend: bearishtrend,
+                        bearishused: bearishused,
                         data: [{
-                            finance_buyvolume: this.finance.buyvolume,
-                            finance_sellvolume: this.finance.sellvolume,
-                            finance_used: finance_used,
-                            bearish_buyvolume: this.bearish.buyvolume,
-                            bearish_sellvolume: this.bearish.sellvolume,
-                            bearish_used: bearish_used
+                            date: this.date,
+                            financebuyvolume: this.finance.buyvolume,
+                            financesellvolume: this.finance.sellvolume,
+                            financeused: financeused,
+                            bearishbuyvolume: this.bearish.buyvolume,
+                            bearishsellvolume: this.bearish.sellvolume,
+                            bearishused: bearishused
                         }]
                     };
                     emit(key, value);
@@ -607,16 +635,20 @@ class TwseCreditHisDBHandler(object):
         reduce_f = """
           function (key, values) {
                 var redval = {
-                    finance_trend: 0,
-                    bearish_trend: 0,
+                    financetrend: 0,
+                    financeused: 0,
+                    bearishtrend: 0,
+                    bearishtrend: 0,
                     data: []
                 };
                 if (values.length == 0) {
                     return redval;
                 }
                 for (var i=0; i < values.length; i++) {
-                    redval.finance_trend += values[i].finance_trend;
-                    redval.bearish_trend += values[i].bearish_trend;
+                    redval.financetrend += values[i].financetrend;
+                    redval.financeused += values[i].financeused;
+                    redval.bearishtrend += values[i].bearishtrend;
+                    redval.bearishused += values[i].bearishused;
                     redval.data = values[i].data.concat(redval.data);
                 }
                 return redval;
@@ -624,14 +656,15 @@ class TwseCreditHisDBHandler(object):
         """
         finalize_f = """
         """
-        decorder = ['incfinance', 'incbearish', 'totalvolume']
+        decorder = ['incfinance', 'incbearish']
         incorder = ['decfinance', 'decbearish']
         bufwin = endtime - starttime
         assert(order in decorder + incorder)
         cursor = self._coll.objects(Q(date__gte=starttime) & Q(date__lte=endtime) & Q(stockid__in=stockids))
         results = cursor.map_reduce(map_f, reduce_f, 'creditmap')
         results = list(results)
-        pool = sorted(results, key=lambda x: x.value[order], reverse=True if order in decorder else False)[:limit]
+        reorder = 'financeused' if order in ['incfinance', 'decfinance'] else 'bearishused'
+        pool = sorted(results, key=lambda x: x.value[reorder], reverse=True if order in decorder else False)[:limit]
         retval = []
         for it in pool:
             coll = { 'datalist': [] }

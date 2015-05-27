@@ -1,6 +1,8 @@
 
 function loadChartData() {
-    var URL = "http://127.0.0.1:8000/handler/hisstock/twse/20150510/20150530/1101/json/"
+    var URL = "http://127.0.0.1:8000/handler/hisstock/twse/20150401/20150530/2330/json/"
+    //http://127.0.0.1:8000/search/?starttime=2015%2F05%2F04&endtime=2015%2F05%2F24&stockids=2330
+    //http://127.0.0.1:8000/?starttime=2015%2F04%2F26&endtime=2015%2F05%2F24&stockids=2330%2C1314%2C&traderids=1440%2C1447&algorithm=%23%23%23%23%23%23%203%23&base=%23%23%23%23%23%23%23%23
     $.ajax({
         url: URL,
         data: {},
@@ -23,7 +25,9 @@ function loadChartData() {
         },
 
         success: function (result) {
+            //
             generateChartData(result);
+            generateTableData(result);
         },
 
         error: function (xhr, ajaxOptions, thrownError) {
@@ -45,22 +49,20 @@ function generateChartData(result) {
     var cdata;
 
     // populate stockitem 
-    $.each(stockitem, function(s_idx, s_it) {
-        $.each(s_it.datalist, function(d_idx, d_it) {
-            data.push({
-                "date": new Date(d_it.date),
-                "stockopen": d_it.open,
-                "stockclose": d_it.close,
-                "stockhigh": d_it.high,
-                "stocklow": d_it.low,
-                "stockprice": d_it.close,
-                "stockvolume": d_it.volume,
-                "traderavgbuyprice": 0,
-                "traderavgsellprice": 0,
-                "traderbuyvolume": 0,
-                "tradersellvolume": 0,
-                "event": ""
-            });
+    $.each(stockitem[0].datalist, function(d_idx, d_it) {
+        data.push({
+            "date": new Date(d_it.date),
+            "stockopen": d_it.open.toFixed(2),
+            "stockclose": d_it.close.toFixed(2),
+            "stockhigh": d_it.high.toFixed(2),
+            "stocklow": d_it.low.toFixed(2),
+            "stockprice": d_it.close.toFixed(2),
+            "stockvolume": d_it.volume.toFixed(1),
+            "traderavgbuyprice": 0.00,
+            "traderavgsellprice": 0.00,
+            "traderbuyvolume": 0.00,
+            "tradersellvolume": 0.00,
+            "event": ""
         });
     });
 
@@ -71,10 +73,10 @@ function generateChartData(result) {
             var date = new Date(d_it.date);
             var rst = $.grep(ndata, function(e){ return e.date.getTime() == date.getTime(); });
             if (rst.length != 0) {
-                rst[0].traderavgbuyprice = d_it.avgbuyprice;
-                rst[0].traderavgsellprice = d_it.avgsellprice;
-                rst[0].traderbuyvolume = d_it.buyvolume;
-                rst[0].tradersellvolume = d_it.sellvolume;
+                rst[0].traderavgbuyprice = d_it.avgbuyprice.toFixed(2);
+                rst[0].traderavgsellprice = d_it.avgsellprice.toFixed(2);
+                rst[0].traderbuyvolume = d_it.buyvolume.toFixed(1);
+                rst[0].tradersellvolume = d_it.sellvolume.toFixed(1);
             }
         });
 
@@ -95,8 +97,11 @@ function generateChartData(result) {
     schart = createTopSellPieChart(pdata);
     mchart = createTopMapColumnChart(cdata);
     createCallBackListener(bchart, schart, mchart, cdata);
-    console.log(pdata);
-    console.log(cdata); 
+
+
+    // debug
+        console.log(pdata);
+        console.log(cdata);
 }
 
 function generateCollectiveData(pdata){
@@ -143,12 +148,6 @@ function createTopBuyPieChart(pdata) {
         "valueField": "totalbuyvolume",
         "titleField": "traderidnm",
         "labelText": "[[title]]: [[value]]",
-        "legend": {
-            "markerType": "circle",
-            "position": "right",
-            "marginRight": 80, 
-            "autoMargins": false
-        },
         "pullOutOnlyOne": true,
          "export": {
                  "enabled": true
@@ -167,12 +166,6 @@ function createTopSellPieChart(pdata) {
         "valueField": "totalsellvolume",
         "titleField": "traderidnm",
         "labelText": "[[title]]: [[value]]",
-        "legend": {
-            "markerType": "circle",
-            "position": "right",
-            "marginRight": 80, 
-            "autoMargins": false
-        },
         "pullOutOnlyOne": true,
          "export": {
                  "enabled": true
@@ -242,6 +235,57 @@ function createTopMapColumnChart(cdata) {
             "newStack": true, 
             "valueField": "stockvolume",
             "valueAxis": "volumeAxis"
+        },
+        {
+            "balloonText": "p:[[value]]",
+            "bullet": "round",
+            "bulletBorderAlpha": 1,
+            "useLineColorForBulletBorder": true,
+            "bulletColor": "#FFFFFF",
+            "bulletSizeField": "townSize",
+            "dashLengthField": "dashLength",
+            "descriptionField": "event",
+            "labelPosition": "right",
+            "labelText": "[[event]]",
+            "legendValueText": "p: [[value]]",
+            "title": "traderavgbuyprice",
+            "fillAlphas": 0,
+            "valueField": "traderavgbuyprice",
+            "valueAxis": "priceAxis"
+        },
+        {
+            "balloonText": "p:[[value]]",
+            "bullet": "round",
+            "bulletBorderAlpha": 1,
+            "useLineColorForBulletBorder": true,
+            "bulletColor": "#FFFFFF",
+            "bulletSizeField": "townSize",
+            "dashLengthField": "dashLength",
+            "descriptionField": "event",
+            "labelPosition": "right",
+            "labelText": "[[event]]",
+            "legendValueText": "p: [[value]]",
+            "title": "traderavgsellprice",
+            "fillAlphas": 0,
+            "valueField": "traderavgsellprice",
+            "valueAxis": "priceAxis"
+        },
+        {
+            "balloonText": "p: [[value]]",
+            "bullet": "round",
+            "bulletBorderAlpha": 1,
+            "useLineColorForBulletBorder": true,
+            "bulletColor": "#FFFFFF",
+            "bulletSizeField": "townSize",
+            "dashLengthField": "dashLength",
+            "descriptionField": "event",
+            "labelPosition": "right",
+            "labelText": "[[event]]",
+            "legendValueText": "p: [[value]]",
+            "title": "stockprice",
+            "fillAlphas": 0,
+            "valueField": "stockprice",
+            "valueAxis": "priceAxis"
         }], 
         "chartCursor": {
             "categoryBalloonDateFormat": "WW",
@@ -342,5 +386,47 @@ function createCallBackListener(bchart, schart, mchart, cdata){
         }
         schart.out = false;
     });
+}
+
+function generateTableData(result){
+    stockitem = result.stockitem;
+    credititem = result.credititem;
+    var data = [];
+
+    // try iter to fill all fields
+    // populate stockitem 
+    $.each(stockitem[0].datalist, function(d_idx, d_it) {
+        data.push({
+            "date": new Date(d_it.date),
+            "open": d_it.open.toFixed(2),
+            "close": d_it.close.toFixed(2),
+            "high": d_it.high.toFixed(2),
+            "low": d_it.low.toFixed(2),
+            "volume": d_it.volume.toFixed(),
+            "financeused" : 0.00,
+            "bearishused": 0.00,
+        });
+    });
+
+    // populate credititem
+    var ndata = $.extend(true, [], data);
+    $.each(credititem[0].datalist, function(d_idx, d_it) {
+        var date = new Date(d_it.date);
+        var rst = $.grep(ndata, function(e){ return e.date.getTime() == date.getTime(); });
+        if (rst.length != 0) {
+            rst[0].financeused = d_it.financeused.toFixed(2);
+            rst[0].bearishused = d_it.bearishused.toFixed(2);
+        }
+    });
+
+    $('#stockdetail_table').dynatable({
+        dataset: {
+            records: ndata
+        }
+    });
+
+    // debug
+    console.log(data);
+    console.log(credititem);
 }
 

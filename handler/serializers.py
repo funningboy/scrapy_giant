@@ -1,42 +1,51 @@
 # -*- coding: utf-8 -*-
 
-from datetime import datetime, timedelta
+from rest_framework.renderers import JSONRenderer
 
-from django.http import HttpResponse
-from django.shortcuts import render
+class JSONResponse(HttpResponse):
+    def __init__(self, data, **kwargs):
+        content = JSONRenderer().render(data)
+        kwargs['content_type'] = 'application/json'
+        super(JSONResponse, self).__init__(content, **kwargs)
 
-from handler.tasks import *
-from handler.group import *
-
-def get_hisstock_list(request):
+@api_view
+def get_hisstock_list_json():
     try:
-        if request.method == 'GET':
-            return render(request, 'handler/hisstock_list.html', {})
+        if request.
+            kwargs = {}
+            dbhandler = hisdb_tasks[opt](**kwargs)
+            kwargs = {}
+            idhandler = iddb_tasks[opt](**kwargs)
+            stockids = set([id for id in idhandler.stock.get_ids()])
+            args = (starttime, endtime, stockids, order, limit)
+            stockitem = dbhandler.stock.query_raw(*args)
+            nstockids =
+            args = (starttime, endtime, )
+            data = {'stockitem': }
+            return render(request, 'handler/hisstock_list.html')
     except:
         return HttpResponse(404)
 
-
-def get_hisstock_detail_html(request):
+@api_view(['GET'])
+def get_hisstock_detail_json(request):
     try:
         if request.method == 'GET':
-            return render(request, 'handler/hisstock_detail.html', {})
+            unpackage(request.)
+            kwargs = {'opt': opt, 'debug': False }
+            dbhandler = hisdb_tasks[opt](**kwargs)
+            traderids = set(traderids.split(',') if traderids else [])
+            args = (starttime, endtime, [stockid], stock_order, limit)
+            stockitem = dbhandler.stock.query_raw(*args)
+            args = (starttime, endtime, [stockid], traderids, 'stock', trader_order, limit)
+            traderitem = dbhandler.trader.query_raw(*args)
+            args = (starttime, endtime, [stockid], credit_order, limit)
+            credititem = dbhandler.credit.query_raw(*args)
+            data = {'stockitem': stockitem, 'traderitem': traderitem, 'credititem': credititem}
+            return JSONResponse(data)
     except:
         return HttpResponse(404)
 
-#def get_histrader_list(request, opt, starttime, endtime, order='totalvolume', limit=100):
-#    try:
-#        if request
-#    db = hisdb_tasks[opt]()
-#    id = iddb_tasks[opt]()
-#    starttime = datetime(int(starttime[0:4]), int(starttime[4:6]), int(starttime[6:8]))
-#    endtime = datetime(int(endtime[0:4]), int(endtime[4:6]), int(endtime[6:8]))
-#    traderids = [id for id in id.trader.get_ids()]
-#    args = (starttime, endtime, [], traderids, 'trader', order, limit)
-#    traderitem = db.trader.query_raw(*args)
-#    return render(request,'handler/histrader_list.html', {'traderitem': traderitem})
-##    except:
-##        404
-#
+@api_view
 #def histrader_detail(request, opt, traderid, starttime, endtime, stockids=None, order='totalvolume', limit=10):
 #    db = hisdb_tasks[opt]()
 #    starttime = datetime(int(starttime[0:4]), int(starttime[4:6]), int(starttime[6:8]))
@@ -48,9 +57,9 @@ def get_hisstock_detail_html(request):
 #    args = (starttime, endtime, stockids, order, limit)
 #    stockitem = db.stock.query_raw(*args)
 #    return render(request,'handler/histrader_detail.html', {'stockitem': stockitem, 'traderitem': traderitem})
-#
-#
-#def histrader_group(request, opt, starttime, endtime, order='totalvolume', limit=10):
+
+
+##def histrader_group(request, opt, starttime, endtime, order='totalvolume', limit=10):
 #    db = hisdb_tasks[opt]()
 #    starttime = datetime(int(starttime[0:4]), int(starttime[4:6]), int(starttime[6:8]))
 #    endtime = datetime(int(endtime[0:4]), int(endtime[4:6]), int(endtime[6:8]))

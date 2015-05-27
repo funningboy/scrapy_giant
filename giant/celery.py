@@ -7,12 +7,12 @@ from celery import Celery
 
 from django.conf import settings
 
-from main.settings import BROKER_URL, BACKEND_URL
+from giant.settings import BROKER_URL, BACKEND_URL
 
 # set the default Django settings module for the 'celery' program.
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'main.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'giant.settings')
 
-app = Celery('main', backend=BACKEND_URL, broker=BROKER_URL)
+app = Celery('giant', backend=BACKEND_URL, broker=BROKER_URL)
 
 # Using a string here means the worker will not have to
 # pickle the object when using Windows.

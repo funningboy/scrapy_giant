@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-
 from mongoengine import *
 
 class TraderData(EmbeddedDocument):
@@ -12,7 +11,7 @@ class TraderData(EmbeddedDocument):
     totalvolume = IntField(min_value=0, max_value=9999999)
 
 class TraderInfo(EmbeddedDocument):
-    traderid = StringField()
+    traderid = StringField(primary_key=True)
     data = EmbeddedDocumentField(TraderData)
 
 class StockData(EmbeddedDocument):
@@ -41,7 +40,8 @@ class StockHisColl(Document):
     meta = {
         'db_alias': 'stockhisdb',
         'allow_inheritance': True,
-        'indexes': [('stockid', 'date')]
+        'indexes': [('stockid', 'date')],
+        'ordering': [('-date')]
     }
 
 class TwseHisColl(StockHisColl):
@@ -51,7 +51,7 @@ class OtcHisColl(StockHisColl):
     pass
 
 class StockIdColl(Document):
-    stockid = StringField()
+    stockid = StringField(primary_key=True)
     stocknm = StringField()
     industry = StringField()
     onmarket = StringField()
@@ -70,7 +70,7 @@ class OtcIdColl(StockIdColl):
 
 
 class TraderIdColl(Document):
-    traderid = StringField()
+    traderid = StringField(primary_key=True)
     tradernm = StringField()
     meta = {
         'db_alias': 'traderiddb',
@@ -91,12 +91,9 @@ class StockMapColl(Document):
     meta = {
         'db_alias': 'stockmapdb',
         'allow_inheritance': True,
-        'indexes': [('date', 'bufwin', 'stockid', 'order')]
+        'indexes': [('date', 'bufwin', 'stockid', 'order')],
+        'ordering': [('-date')]
     }
-
-#    @property
-#    def values(self):
-#        return [self.__dict__['_data'].values ]
 
 
 # collect trader feature
@@ -117,7 +114,8 @@ class TraderMapColl(Document):
     meta = {
         'db_alias': 'tradermapdb',
         'allow_inheritance': True,
-        'indexes': [('date', 'bufwin', 'traderid', 'stockid')]
+        'indexes': [('date', 'bufwin', 'traderid', 'stockid')],
+        'ordering':[('-date', '-totalvolume')]
     }
 
 # collect credit feature

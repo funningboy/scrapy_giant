@@ -4,42 +4,50 @@
         <li class="sidebar-search">
         <a href="javascript:;" data-toggle="collapse" data-target="#search"><i class="fa fa-fw fa-arrows-v"></i> Search <i class="fa fa-fw fa-caret-down"></i></a>
         <ul id="search" class="collapse">
-            <form class="form-horizontal" id="searchform" method="get">
+            <form class="form-horizontal" id="searchform" action="./main/" method="get">
+                {% csrf_token %}
                 <!-- starttime -->
-                <div class="input-group input-group-sm">
-                    <span class="input-group-addon"><i class="fa fa-calendar fa-fw"></i></span>
-                    <input class="form-control" id="starttime" name="starttime" type="text" placeholder="starttime"/>
+                <div class="input-group input-group-sm{% if form.starttime.errors %} has-error{% endif %}">
+                    <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
+                    <input type="text" class="form-control" id="{{ form.starttime.auto_id }}" name="{{ form.starttime.name }}" placeholder="{{ form.starttime.help_text }}" autocomplete="off">
+                    {% for error in form.starttime.errors %}
+                    <p class="help-block">{{ error }}</p>
+                    {% endfor %}
                 </div>
                 <!-- endtime -->
-                <div class="input-group input-group-sm">
-                    <span class="input-group-addon"><i class="fa fa-calendar fa-fw"></i></span>
-                    <input class="form-control" id="endtime" name="endtime" type="text" placeholder="endtime"/>
+                <div class="input-group input-group-sm{% if form.endtime.errors %} has-error{% endif %}">
+                    <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
+                    <input type="text" class="form-control" id="{{ form.endtime.auto_id }}" name="{{ form.endtime.name }}" placeholder="{{ form.endtime.help_text }}" autocomplete="off">
+                    {% for error in form.endtime.errors %}
+                    <p class="help-block">{{ error }}</p>
+                    {% endfor %}
                 </div>
                 <!-- stockids -->
-                <div class="input-group input-group-sm">
+                <div class="input-group input-group-sm{% if form.stockids.errors %} has-error{% endif %}">
                     <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
-                    <input class="form-control" id="stockids" name="stockids"
-                    type="text" placeholder="stockids: 2330,2317" autocomplete="off">
+                    <input type="text" class="form-control" id="{{ form.stockids.auto_id }}" name="{{ form.stockids.name }}" placeholder="{{ form.stockids.help_text }}" autocomplete="off">
+                    {% for error in form.stockids.errors %}
+                    <p class="help-block">{{ error }}</p>
+                    {% endfor %}
                 </div>
                 <!-- traderids -->
-                <div class="input-group input-group-sm">
+                <div class="input-group input-group-sm{% if form.traderids.errors %} has-error{% endif %}">
                     <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
-                    <input class="form-control" id="traderids" name="traderids" type="text" placeholder="traderids: 1440,1470">
+                    <input type="text" class="form-control" id="{{ form.traderids.auto_id }}" name="{{ form.traderids.name }}" placeholder="{{ form.traderids.help_text }}" autocomplete="off">
+                    {% for error in form.traderids.errors %}
+                    <p class="help-block">{{ error }}</p>
+                    {% endfor %}
                 </div>
-                <!-- algorithm --> 
-                <div class="input-group input-group-sm">
-                    <span class="input-group-addon"><i class="fa fa-list-ol fa-fw"></i></span>
-                    <select class="form-control" id="algorithm" name="algorithm">
-                        <option selected disabled>algorithm</option>
-                        <option>########</option>
-                    </select>
-                </div>
-                <!-- base --> 
-                <div class="input-group input-group-sm">
-                    <span class="input-group-addon"><i class="fa fa-list-ol fa-fw"></i></span>
-                    <select class="form-control" id="base" name="base">
-                        <option selected disabled>base</option>
-                        <option>########</option>
+                <!-- algorithm choice -->
+                <div class="input-group input-group-sm{% if form.algorithm.errors %} has-error{% endif %}">
+                    <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
+                    <select class="form-control" id="{{ form.algorithm.auto_id }}" name="{{ form.algorithm.name }}">
+                    {% for error in form.algorithm.errors %}
+                    <p class="help-block">{{ error }}</p>
+                    {% endfor %}
+                    {% for k, v in form.algorithm.field.choices %}
+                    <option>{{ v|stringformat:"s" }}</option>
+                    {% endfor %}
                     </select>
                 </div>
                 <!-- search -->
@@ -51,39 +59,22 @@
         </ul>
         </li>
         <li class="sidebar-portfilo">
-        </li> 
+        </li>
     </ul>
 </div>
 
 {% block script %}
 <script type="text/javascript">
     $(document).ready(function () {
-            $('#starttime').datetimepicker({
-format: 'YYYY/MM/DD'
-});
-            $('#endtime').datetimepicker({
-format: 'YYYY/MM/DD'
-});
-            //            $("#stockids").autocomplete({source: 
-            //              function(request, response) {
-            //                $.ajax({
-            //                  url:  'handler/get_stockids_list.html',
-            //                  data: {term: request.term},
-            //                  success: function(data) {
-            //                             //alert(data);
-            //                             var result=$.map(data, function(item){
-            //                               var label=item.label + " (" + item.value + ")";
-            //                               var value=item.value;
-            //                               return {label: label, value: value};
-            //                               }
-            //                             //var result=["1","2"];
-            //                             response(result);
-            //                             } //end of function
-            //                  }); //end of ajax
-            //                } //end of function    
-            //              });
-            //                }); 
+        $("#{{ form.starttime.auto_id }}").datetimepicker({
+            format: 'YYYY/MM/DD'
+        });
 
-});
+        $("#{{ form.endtime.auto_id }}").datetimepicker({
+            format: 'YYYY/MM/DD'
+        });
+
+
+    });
 </script>
 {% endblock %}

@@ -59,6 +59,7 @@ def collect_hisframe(**kwargs):
             'order': 'decfinance',
             'limit': 10
         }
+        # hisfuture frame collect
     }
     if 'debug' in kwargs and kwargs['debug']:
         print json.dumps(dict(kwargs), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)

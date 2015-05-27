@@ -176,7 +176,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'main.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'main.wsgi.application'
+WSGI_APPLICATION = 'giant.wsgi.application'
 
 TEMPLATE_DIRS = (
     root('templates')
@@ -203,6 +203,7 @@ INSTALLED_APPS = (
     #'social.apps.django_app.default',
     'rest_framework',
     'compressor',
+    'main',
     'bin',
     'handler',
     'algorithm'

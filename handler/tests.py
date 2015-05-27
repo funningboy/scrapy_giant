@@ -55,6 +55,8 @@ class TestTwseHisTraderQuery(NoSQLTestCase):
         self.assertTrue(panel is not None)
         self.assertFalse(panel.empty)
         self.assertFalse(panel[stockid].empty)
+        for k in ['open', 'high', 'low', 'close', 'volume']:
+            self.assertFalse(self.panel[stockid][k].empty)
 
 class TestOtcHisTraderQuery(NoSQLTestCase):
 

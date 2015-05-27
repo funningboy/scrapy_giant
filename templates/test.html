@@ -1,42 +1,69 @@
-{% load staticfiles %}
+<!DOCTYPE html>
+{% load bootstrap %}
 <html>
-<head>
-    <title>Search</title>
-</head>
-<body>
-    {% if error %}
-    <p style="color: red;">Please submit a search term.</p>
-    {% endif %}
-    <form class="form-horizontal" action="./" id="searchform" method="get">
-        <div class="input-group input-group-sm">
-            <span class="input-group-addon"><i class="fa fa-calendar fa-fw"></i></span>
-            <input class="form-control" id="title" name='title' type="text" placeholder="starttime"/>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Bootstrap form example</title>
+        <style type="text/css">
+            .multiple-checkbox ul { /* Used to hide <li> elements in multiple checkbox forms */
+              padding-left: 0px;
+              list-style: none;
+            }
+        </style>
+
+    </head>
+    <body>
+        <div class="container">
+            <div class="row">
+                <div class="span12">
+                    <h1>Bootstrap form example</h1>
+
+                    <p>below demostate how the form looks with bootstrap</p>
+                </div>
+            </div>
+
+            <!-- basic example -->
+            <div class="row">
+                <div class="span12">
+                    <h2>Basic example</h2>
+
+                    <hr />
+
+                    <form class="form" role="form">
+                        {{ form|bootstrap }}
+                        <div class="form-group">
+                            <div class="col-sm-12">
+                                <input type="button" class="btn btn-primary" value="Submit" />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+
+            <!-- horizontal form -->
+            <div class="row">
+                <div class="span12">
+                    <h2>Horizontal form</h2>
+
+                    <hr />
+
+                    <form class="form-horizontal" role="form">
+                        {{ form|bootstrap_horizontal }}
+                        <div class="form-group">
+                            <div class="col-sm-offset-2 col-sm-10">
+                                <input type="button" class="btn btn-primary" value="Submit" />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
         </div>
-         <div class="input-group input-group-sm">
-            <span class="input-group-addon"><i class="fa fa-coffee fa-fw"></i></span>
-                <button class="btn btn-default" type="submit"><i class="fa fa-search fa-fw"></i></button>
-        </div>
-    </form>
-<fieldset>
-{% for field in form.visible_fields %}
-<div class="clearfix {% if field.errors %}error{% endif %}">
-  {{ field.label_tag }}
-  <div class="input">
-    {{ field }}
-    {% if field.errors or field.help_text %}
-      <span class="help-inline">
-      {% if field.errors %}
-        {{ field.errors|join:' ' }}
-      {% else %}
-        {{ field.help_text }}
-      {% endif %}
-      </span>
-    {% endif %}
-  </div>
-</div>
-{% endfor %}
-{% csrf_token %}
-<div style="display:none">{% for h in form.hidden_fields %} {{ h }}{% endfor %}</div>
-</fieldset>
-</body>
+
+        <!-- scripts -->
+        <script src="http://code.jquery.com/jquery.js"></script>
+        <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
+    </body>
 </html>

@@ -4,7 +4,7 @@ from django.conf.urls import patterns, url
 from handler import views
 
 urlpatterns = patterns('',
-    url(r'^hisstock/(?P<opt>\w+)/(?P<starttime>\d{8})/(?P<endtime>\d{8})/(?P<stockid>\w+)/$',
+    url(r'^$',
         view=views.get_hisstock_detail,
         name='get_hisstock_detail'
     ),
