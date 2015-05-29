@@ -35,6 +35,7 @@ def collect_hisframe(**kwargs):
             'endtime': datetime.utcnow(),
             'stockids': ['2317'],
             'order': 'totalvolume',
+            'callback': None,
             'limit': 10
         },
         # histrader frame collect
@@ -47,6 +48,7 @@ def collect_hisframe(**kwargs):
             'traderids':[],
             'base': 'stock',
             'order': 'totalvolume',
+            'callback': None,
             'limit': 10
         },
         # hiscredit frame collect
@@ -57,6 +59,7 @@ def collect_hisframe(**kwargs):
             'endtime': datetime.utcnow(),
             'stockids': ['2317'],
             'order': 'decfinance',
+            'callback': None,
             'limit': 10
         }
         # hisfuture frame collect
@@ -74,16 +77,15 @@ def collect_hisframe(**kwargs):
         collect[col].update(**kwargs['frame'][col])
         collect[col]['on'] = True
 
-    group = []
-    db = hisdb_tasks[opt](**kwargs)
+    dbhandler = hisdb_tasks[opt](**kwargs)
     for it in collect:
         # collect hisstock df
         if it == 'hisstock':
             if collect[it]['on']:
                 collect[it].pop('on')
-                db.stock.ids = collect[it]['stockids']
-                collect[it].update({'callback': db.stock.to_pandas})
-                df = db.stock.query_raw(**collect[it])
+                dbhandler.stock.ids = collect[it]['stockids']
+                collect[it].update({'callback': dbhandler.stock.to_pandas})
+                df = dbhandler.stock.query_raw(**collect[it])
                 if not df.empty:
                     group.append(df)
         # collect histrader df
@@ -91,24 +93,24 @@ def collect_hisframe(**kwargs):
             if collect[it]['on']:
                 collect[it].pop('on')
                 assert(collect[it]['base'] == 'stock')
-                db.trader.ids = collect[it]['stockids']
-                collect[it].update({'callback': db.trader.to_pandas})
-                df = db.trader.query_raw(**collect[it])
+                dbhandler.trader.ids = collect[it]['stockids']
+                collect[it].update({'callback': dbhandler.trader.to_pandas})
+                df = dbhandler.trader.query_raw(**collect[it])
                 if not df.empty:
                     group.append(df)
         # collect hiscredit df
         if it == 'hiscredit':
             if collect[it]['on']:
                 collect[it].pop('on')
-                db.credit.ids = collect[it]['stockids']
-                collect[it].update({'callback': db.credit.to_pandas})
-                df = db.credit.query_raw(**collect[it])
+                dbhandler.credit.ids = collect[it]['stockids']
+                collect[it].update({'callback': dbhandler.credit.to_pandas})
+                df = dbhandler.credit.query_raw(**collect[it])
                 if not df.empty:
                     group.append(df)
     if group:
         panel = pd.concat(group, axis=2).fillna(0)
-        return panel, db
-    return pd.Panel(), db
+        return panel, dbhandler
+    return pd.Panel(), dbhandler
 
 def collect_relframe(**kwargs):
     pass

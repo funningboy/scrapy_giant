@@ -69,8 +69,12 @@ def spawn_scrapys(debug=False):
     cmds = []
     tasks = [
         ['twsehistrader', debug],
+        ['twsehistrader2', debug],
+        ['twsehiscredit'. debug],
         ['twsehisstock', debug],
         ['otchistrader', debug],
+        ['otchistrader2', debug],
+        ['otchiscredit', debug],
         ['otchisstock', debug]
     ]
     for it in tasks:

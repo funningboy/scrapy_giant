@@ -28,6 +28,7 @@ class TestTwseHisTraderQuery(NoSQLTestCase):
                     'endtime': endtime,
                     'stockids': [stockid],
                     'order': 'totalvolume',
+                    'callback': 'to_pandas',
                     'limit': limit
                 },
                 # histrader frame collect
@@ -38,6 +39,7 @@ class TestTwseHisTraderQuery(NoSQLTestCase):
                     'traderids':[],
                     'base': 'stock',
                     'order': 'totalvolume',
+                    'callback': 'to_pandas',
                     'limit': limit
                 },
                 # hiscredit frame collect
@@ -46,6 +48,7 @@ class TestTwseHisTraderQuery(NoSQLTestCase):
                     'endtime': endtime,
                     'stockids': [stockid],
                     'order': 'decfinance',
+                    'callback': 'to_pandas',
                     'limit': limit
                 }
             }
