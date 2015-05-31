@@ -3,12 +3,15 @@
 # using as celery worker
 # main.INSTALLED_APPS has included bin task
 
+# start rabbitmq, mongodb, celery
 import timeit
 import unittest
+from mongoengine import *
 import re
 from celery import group
 from main.tests import NoSQLTestCase
 from bin.tasks import *
+from handler.tasks import iddb_tasks
 from bin.start import wap_scrapy_cmd
 
 # scrapy tests
@@ -16,7 +19,7 @@ scrapy_tests = {
     # id table [0:3]
     'twseid': ('twseid', 'INFO', './log/twseid.log', True, False),
     'otcid': ('otcid', 'INFO', './log/otcid.log', True, False),
-    'tradeerid': ('traderid', 'INFO', './log/traderid.log', True, False),
+    'traderid': ('traderid', 'INFO', './log/traderid.log', True, False),
     # twsehisdb table [3:8]
     'twsehistrader': ('twsehistrader', 'INFO', './log/twsehistrader.log', True, True),
     'twsehistrader2': ('twsehistrader2', 'INFO', './log/twsehistrader2.log', True, True),
@@ -59,8 +62,7 @@ class TestAdd(NoSQLTestCase):
 class TestRunScrapyService(NoSQLTestCase):
 
     def setUp(self):
-        """ make sure mongodb has start """
-        self.assertTrue(has_service())
+        pass
 
     def has_pass(self, fpath):
         try:
@@ -119,7 +121,7 @@ class TestThreadService(TestRunScrapyService):
 class TestTraderId(TestRunScrapyService):
 
     def test_on_run(self):
-        self._id = TwseIdDBHandler(**scrapy_kwargs['traderid'])
+        self._id = iddb_tasks['twse'](**scrapy_kwargs['traderid'])
         self._id.trader.coll.drop_collection()
         jobs = ['traderid']
         tasks = group([

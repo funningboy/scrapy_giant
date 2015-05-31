@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 import pytz
 from datetime import datetime
+import json
+from bson import json_util
 
 from scrapy import log
 from crawler.pipelines.base_pipeline import BasePipeline

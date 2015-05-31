@@ -94,18 +94,18 @@ def run(opt='twse', debug=False, limit=0):
         'limit': limit,
         'opt': opt
     }
-    # fetch 
+    # fetch
     idhandler = TwseIdDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcIdDBHandler(**kwargs)
     for stockid in idhandler.stock.get_ids():
         try:
-            # run 
+            # run
             kwargs = {
                 'debug': True,
                 'opt': opt
             }
             dbhandler = TwseHisDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcHisDBHandler(**kwargs)
             dbhandler.stock.ids = [stockid]
-            args = (starttime, endtime, [stockid], 'totalvolume', 10)
+            args = (starttime, endtime, [stockid], ['-totalvolume'], 10)
             cursor = dbhandler.stock.query_raw(*args)
             data = dbhandler.stock.to_pandas(cursor)
             if len(data[stockid].index) < maxlen:
@@ -157,6 +157,6 @@ if __name__ == '__main__':
     parser.add_argument('--opt', dest='opt', action='store', type=str, default='twse', help='twse/otc')
     parser.add_argument('--limit', dest='limit', action='store', type=int, default=0, help='limit')
     args = parser.parse_args()
-    proc = start_main_service(args.debug)
+    #proc = start_main_service(args.debug)
     run(args.opt, args.debug, args.limit)
-    close_main_service(proc, args.debug)
+    #close_main_service(proc, args.debug)

@@ -11,8 +11,7 @@ class JSONResponse(HttpResponse):
 @api_view
 def get_hisstock_list_json():
     try:
-        if request.
-            data = {'stockitem': }
+        if request.method == 'GET':
             return render(request, 'handler/hisstock_list.html')
     except:
         return HttpResponse(404)
@@ -21,13 +20,12 @@ def get_hisstock_list_json():
 def get_hisstock_detail_json(request):
     try:
         if request.method == 'GET':
-            tasks
             data = {'stockitem': stockitem, 'traderitem': traderitem, 'credititem': credititem}
             return JSONResponse(data)
     except:
         return HttpResponse(404)
 
-@api_view
+#@api_view
 #def histrader_detail(request, opt, traderid, starttime, endtime, stockids=None, order='totalvolume', limit=10):
 #    db = hisdb_tasks[opt]()
 #    return render(request,'handler/histrader_detail.html', {'stockitem': stockitem, 'traderitem': traderitem})

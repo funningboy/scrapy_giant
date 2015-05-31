@@ -14,13 +14,13 @@ algdb_tasks = {
             'dualema': TwseDualemaAlg,
             'btrader': TwseBestTraderAlg,
             'bbands': TwseBBandsAlg,
-            'rforest': TwseRandForestAlg
+            #'rforest': TwseRandForestAlg
             },
         'otc': {
             'dualema': OtcDualemaAlg,
             'btrader': OtcBestTraderAlg,
             'bbands': OtcBBandsAlg,
-            'rforest': OtcRandForestAlg
+            #'rforest': OtcRandForestAlg
             }
 }
 

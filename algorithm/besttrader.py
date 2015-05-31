@@ -115,7 +115,7 @@ def run(opt='twse', debug=False, limit=0):
             }
             # pre find traderid as top0
             dbhandler = TwseHisDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcHisDBHandler(**kwargs)
-            args = (starttime, endtime, [stockid], [], 'stock', 'totalvolume', 10)
+            args = (starttime, endtime, [stockid], [], 'stock', ['-totalvolume'], 10)
             dbhandler.trader.query_raw(*args)
             tops = list(dbhandler.trader.get_alias([stockid], 'trader', ["top%d" %i for i in range(10)]))
             print "prefound:%s" %(tops)
@@ -125,10 +125,10 @@ def run(opt='twse', debug=False, limit=0):
             dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
             dbhandler.stock.ids = [stockid]
             dbhandler.trader.ids = [stockid]
-            # group sub df to main df 
-            args = (starttime, endtime, [stockid], [traderid], 'stock', 'totalvolume', 10, dbhandler.trader.to_pandas)
+            # group sub df to main df
+            args = (starttime, endtime, [stockid], [traderid], 'stock', ['-totalvolume'], 10, dbhandler.trader.to_pandas)
             traderdt = dbhandler.trader.query_raw(*args)
-            args = (starttime, endtime, [stockid] , 'totalvolume', 10, dbhandler.stock.to_pandas)
+            args = (starttime, endtime, [stockid] , ['-totalvolume'], 10, dbhandler.stock.to_pandas)
             stockdt = dbhandler.stock.query_raw(*args)
             data = pd.concat([stockdt, traderdt], axis=2).fillna(0)
             if len(data[stockid].index) < maxlen:
@@ -180,6 +180,6 @@ if __name__ == '__main__':
     parser.add_argument('--opt', dest='opt', action='store', type=str, help='twse/otc')
     parser.add_argument('--limit', dest='limit', action='store', type=int, default=0, help='limit')
     args = parser.parse_args()
-    proc = start_main_service(args.debug)
+    #proc = start_main_service(args.debug)
     run(args.opt, args.debug, args.limit)
-    close_main_service(proc, args.debug)
+    #close_main_service(proc, args.debug)

@@ -4,14 +4,16 @@ from mongoengine import *
 
 ALG_CHOICES = (
 
-    # map as get_hisstock_detail 
-    ('0', 'StockProfile0'),
-    ('1', 'StockProfile1'),
+    # map as get_hisstock_detail
+    ('0', 'StockProfile0+'),
+    ('1', 'StockProfile0-'),
+    ('2', 'StockProfile1+'),
+    ('3', 'StockProfile1-'),
     # map as get_histrader_detail,
-    ('2', 'TraderProfile0'),
-    ('3', 'TraderProfile1'),
+    ('4', 'TraderProfile0+'),
+    ('5', 'TraderProfile0-'),
     # map as dualema alg
-    ('4', 'Dualema'),
+    ('6', 'Dualema+'),
 )
 
 class SearchItem(Document):
@@ -23,4 +25,4 @@ class SearchItem(Document):
 
 class PortfolioItem(Document):
     pass
-    
+

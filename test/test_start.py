@@ -15,12 +15,12 @@ from handler.iddb_handler import *
 from handler.hisdb_handler import *
 
 skip_tests = {
-    'TestTraderId': True,
-    'TestTwseId': True,
+    'TestTraderId': False,
+    'TestTwseId': False,
     'TestOtcId': True,
-    'TestTwseHisTrader': True,
+    'TestTwseHisTrader': False,
     'TestTwseHisTrader2': True,
-    'TestTwseHisStock': True,
+    'TestTwseHisStock': False,
     'TestTwseHisCredit': False,
     'TestTwseHisAll': True,
     'TestOtcHisTrader': True,

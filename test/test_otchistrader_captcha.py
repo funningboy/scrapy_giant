@@ -18,7 +18,7 @@ import time
 import re
 from datetime import datetime
 from collections import defaultdict
-from crawler.spiders.otchistrader_captcha import OtcHisTraderCaptcha0, OtcHisTraderCaptcha1
+from crawler.spiders.otchistrader_captcha import *
 from crawler.spiders.pytesser import *
 
 import unittest
@@ -129,8 +129,7 @@ class TestCaptcha(unittest.TestCase):
         record = defaultdict(list)
         tests = [
             (OtcHisTraderCaptcha0(debug), False),
-            (OtcHisTraderCaptcha1(debug), True),
-            (OtcHisTraderCaptcha2(debug), False)
+            (OtcHisTraderCaptcha1(debug), True)
         ]
         for test in tests:
             if test[1]:

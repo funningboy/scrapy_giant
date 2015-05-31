@@ -26,8 +26,8 @@ __all__ = [
     'OtcBestTraderAlg',
     'TwseBBandsAlg',
     'OtcBBandsAlg',
-    'TwseRandForestAlg',
-    'OtcRandForestAlg'
+#    'TwseRandForestAlg',
+#    'OtcRandForestAlg'
     ]
 
 # alg db map

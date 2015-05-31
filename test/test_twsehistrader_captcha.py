@@ -16,7 +16,7 @@ import json
 import cookielib
 import time
 from collections import defaultdict
-from crawler.spiders.twsehistrader_captcha import TwseHisTraderCaptcha0, TwseHisTraderCaptcha1
+from crawler.spiders.twsehistrader_captcha import *
 from crawler.spiders.pytesser import *
 
 import unittest
@@ -129,8 +129,7 @@ class TestCaptcha(unittest.TestCase):
         record = defaultdict(list)
         tests = [
             (TwseHisTraderCaptcha0(debug), True),
-            (TwseHisTraderCaptcha1(debug), False),
-            (TwseHisTraderCaptcha2(debug), False)
+            (TwseHisTraderCaptcha1(debug), False)
         ]
         for test in tests:
             # as thread

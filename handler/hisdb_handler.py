@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import pandas as pd
+import json
+from bson import json_util
 import pytz
 from collections import OrderedDict, defaultdict
 from datetime import datetime, timedelta
-
 from mongoengine import *
 from bin.start import switch
 from bin.mongodb_driver import MongoDBDriver
@@ -21,16 +22,16 @@ class TwseHisDBHandler(object):
     >>> endtime = datetime.utcnow()
     >>> dbhandler = TwseHisDBHandler(debug=True, opt='twse')
     >>> dbhandler.stock.ids = ['2317']
-    >>> args = (starttime, endtime, [stockid], 'totalvolume', 10)
+    >>> args = (starttime, endtime, [stockid], ['-totalvolume'], 10)
     >>> cursor = dbhandler.stock.query_raw(*args)
     >>> data = dbhandler.stock.to_pandas(cursor)
     >>> print data
     >>> dbhandler.trader.ids = ['2317']
-    >>> args = (starttime, endtime, ['2317'], ['1440'], 'stock', 'totalvolume', 10)
+    >>> args = (starttime, endtime, ['2317'], ['1440'], 'stock', ['-totalvolume'], 10)
     >>> cursor = dbhandler.trader.query_raw(*args)
     >>> data = dbhandler.trader.to_pandas(cursor)
     >>> print data
-    >>> args = (starttime, endtime, [stockid], 'decfinance', 10)
+    >>> args = (starttime, endtime, [stockid], ['-financeused'], 10)
     >>> cursor = dbhandler.credit.query_raw(*args)
     >>> data = dbhandler.credit.to_pandas(cursor)
     >>> print data
@@ -58,7 +59,6 @@ class TwseHisDBHandler(object):
         self._stock = TwseStockHisDBHandler(**kwargs['stock'])
         self._trader = TwseTraderHisDBHandler(**kwargs['trader'])
         self._credit = TwseCreditHisDBHandler(**kwargs['credit'])
-        # news, future
 
     @property
     def stock(self):
@@ -157,7 +157,7 @@ class TwseStockHisDBHandler(object):
             coll.data = data
             coll.save()
 
-    def query_raw(self, starttime, endtime, stockids=[], order='totalvolume', limit=10, callback=None):
+    def query_raw(self, starttime, endtime, stockids=[], base='stock', order=['-totalvolume'], limit=10, callback=None):
         """ return orm
         <stockid>                               | <stockid> ...
                     open| high| low|close|volume|          | open | ...
@@ -210,14 +210,13 @@ class TwseStockHisDBHandler(object):
         """
         finalize_f = """
         """
-        decorder = ['totalvolume', 'totaldiff', 'maxhigh']
-        incorder = ['minlow', 'minhigh']
+        assert(set([o[1:] for o in order]) <= set(['totalvolume', 'totaldiff']))
         bufwin = endtime - starttime
-        assert(order in decorder + incorder)
         cursor = self._coll.objects(Q(date__gte=starttime) & Q(date__lte=endtime) & Q(stockid__in=stockids))
         results = cursor.map_reduce(map_f, reduce_f, 'stockmap')
         results = list(results)
-        pool = sorted(results, key=lambda x: x.value[order], reverse=True if order in decorder else False)[:limit]
+        reorder = lambda k: map(lambda x: k.value[x[1:]] if x.startswith('+') else -k.value[x[1:]], order)
+        pool = sorted(results, key=reorder)[:limit]
         retval = []
         for it in pool:
             coll = { 'datalist': [] }
@@ -314,6 +313,7 @@ class TwseTraderHisDBHandler(object):
         """ as update hisstock trader part """
         keys = [k for k,v in TraderData._fields.iteritems()]
         toplist = []
+        print json.dumps(dict(item['toplist']), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
         for it in item['toplist']:
             data = {k:v for k, v in it['data'].items() if k in keys}
             info = {
@@ -329,8 +329,7 @@ class TwseTraderHisDBHandler(object):
         coll.toplist = toplist
         coll.save()
 
-    def query_raw(self, starttime, endtime, stockids=[], traderids=[],
-            base='stock', order='totalvolume', limit=10, callback=None):
+    def query_raw(self, starttime, endtime, stockids=[], traderids=[], base='stock', order=['-totalvolume'], limit=10, callback=None):
         """ get rank toplist volume stock/trader data
             <stockid>                                          <stockid>
                      | top0_v/p_<traderid>| top1  | ... top10 |          | top0_<traderid>
@@ -427,10 +426,8 @@ class TwseTraderHisDBHandler(object):
         """
         finalize_f = """
         """
+        assert(set([o[1:] for o in order]) <= set(['totalvolume', 'totalbuyvolume', 'totalsellvolume']))
         bufwin = endtime - starttime
-        decorder = ['totalvolume', 'totalhit', 'totalbuyvolume', 'totalsellvolume', 'totaltradeprice', 'totaltradevolume']
-        incorder = []
-        assert(order in decorder + incorder)
         if stockids and traderids:
             cursor = self._coll.objects(
                 Q(date__gte=starttime) & Q(date__lte=endtime) &
@@ -445,7 +442,8 @@ class TwseTraderHisDBHandler(object):
         mkey = 'stockid' if base == 'stock' else 'traderid'
         mids = stockids if base == 'stock' else traderids
         results = [i for i in results if i.key[mkey] in mids]
-        pool = sorted(results, key=lambda x: x.value[order], reverse=True if order in decorder else False)[:limit]
+        reorder = lambda k: map(lambda x: k.value[x[1:]] if x.startswith('x') else -k.value[x[1:]], order)
+        pool = sorted(results, key=reorder)[:limit]
         for i, it in enumerate(pool):
              coll = { 'datalist': [] }
              for data in sorted(it.value['data'], key=lambda x: x['date']):
@@ -582,12 +580,12 @@ class TwseCreditHisDBHandler(object):
                 coll.bearish = data
             coll.save()
 
-    def query_raw(self, starttime, endtime, stockids=[], order='decfinance', limit=10, callback=None):
+    def query_raw(self, starttime, endtime, stockids=[], base='stock', order=['-financeused'], limit=10, callback=None):
         """ return orm
-        <stockid>                                                | <stockid> ...
-                    finance_buy| finance_sely| finance_limit| ...|
-        20140928    100        | 101         |          999 | ...|
-        20140929    100        | 102         |          999 | ...|
+        <stockid>                                         | <stockid> ...
+                    financeused| financetrend| bearishused| ...|
+        20140928    100        | 101         |        999 | ...|
+        20140929    100        | 102         |        999 | ...|
         """
         map_f = """
             function () {
@@ -656,21 +654,20 @@ class TwseCreditHisDBHandler(object):
         """
         finalize_f = """
         """
-        decorder = ['incfinance', 'incbearish']
-        incorder = ['decfinance', 'decbearish']
+        assert(set([o[1:] for o in order]) <= set(['financeused', 'bearishused']))
         bufwin = endtime - starttime
-        assert(order in decorder + incorder)
         cursor = self._coll.objects(Q(date__gte=starttime) & Q(date__lte=endtime) & Q(stockid__in=stockids))
         results = cursor.map_reduce(map_f, reduce_f, 'creditmap')
         results = list(results)
-        reorder = 'financeused' if order in ['incfinance', 'decfinance'] else 'bearishused'
-        pool = sorted(results, key=lambda x: x.value[reorder], reverse=True if order in decorder else False)[:limit]
+        reorder = lambda k: map(lambda x: k.value[x[1:]] if x.startswith('x') else -k.value[x[1:]], order)
+        pool = sorted(results, key=reorder)[:limit]
         retval = []
         for it in pool:
             coll = { 'datalist': [] }
             for data in sorted(it.value['data'], key=lambda x: x['date']):
                 coll['datalist'].append(data)
             coll.update({
+                'date': endtime,
                 'stockid': it.key['stockid'],
                 'bufwin': bufwin.days,
                 'order': order

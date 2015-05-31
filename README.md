@@ -73,14 +73,14 @@ rabbitmq-server
 #sudo netstat -tulpn | grep :27017
 # kill -9 <pid> if proc has running the same port
 mongod --dbpath ./tmp --journal
-export DJANGO_SETTINGS_MODULE=main.settings 
+export DJANGO_SETTINGS_MODULE=giant.settings 
 export DJANGO_PROJECT_DIR=`pwd`
 export C_FORCE_ROOT=true
 # for normal mode
 export ROOTPATH=./data
 # for test mode
 export ROOTPATH=./tmp
-celery -A main worker -B -l info
+celery -A giant worker -B -l info
 python manage.py syncdb
 python manage.py shell
 celery scheduler
@@ -89,7 +89,7 @@ scrapy crawl twsehisstock -s LOG_FILE=twsehisstock.log -s GIANT_DEBUG=1 -s GIANT
 
 0.6 as django unittest run
 ```
-celery -A main worker -l info
+celery -A giant worker -l info
 nosetests --nocapture test/test_start.py
 nosetests --nocapture test/test_... 
 python manage.py test bin --traceback

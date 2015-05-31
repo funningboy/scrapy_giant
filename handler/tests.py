@@ -11,10 +11,71 @@ from main.tests import NoSQLTestCase
 from handler.tasks import *
 from django.template import Context, Template
 
-class TestTwseHisTraderQuery(NoSQLTestCase):
+skip_tests = {
+    'TestTwseHisItemQuery': False,
+    'TestTwseHisFrameQuery': True
+}
+
+@unittest.skipIf(skip_tests['TestTwseHisItemQuery'], "skip")
+class TestTwseHisItemQuery(NoSQLTestCase):
 
     def test_on_run(self):
-        starttime = datetime.utcnow() - timedelta(days=10)
+        starttime = datetime.utcnow() - timedelta(days=3)
+        endtime = datetime.utcnow()
+        stockid = '2317'
+        limit = 10
+        collect = {
+            'debug': True,
+            'opt': 'twse',
+            'frame': {
+                # hisstock item collect
+                'hisstock': {
+                    'starttime': starttime,
+                    'endtime': endtime,
+                    'stockids': [stockid],
+                    'base': 'stock',
+                    'order': ['-totalvolume', '-totaldiff'],
+                    'callback': None,
+                    'limit': limit,
+                    'priority': 1
+                },
+                # histrader iteme collect
+                'histrader': {
+                    'starttime': starttime,
+                    'endtime': endtime,
+                    'stockids': [stockid],
+                    'traderids':[],
+                    'base': 'stock',
+                    'order': ['-totalvolume', '-totalbuyvolume', '+totalsellvolume'],
+                    'callback': None,
+                    'limit': limit,
+                    'priority': 0
+                },
+                # hiscredit item collect
+                'hiscredit': {
+                    'starttime': starttime,
+                    'endtime': endtime,
+                    'stockids': [stockid],
+                    'base': 'stock',
+                    'order': ['-financeused', '-bearishused'],
+                    'callback': None,
+                    'limit': limit,
+                    'priority': 2
+                }
+            }
+        }
+        t = timeit.Timer()
+        item, db = collect_hisitem(**collect)
+#        self.assertTrue(item)
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+
+
+@unittest.skipIf(skip_tests['TestTwseHisFrameQuery'], "skip")
+class TestTwseHisFrameQuery(NoSQLTestCase):
+    """ makre sure db contains the data """
+
+    def test_on_run(self):
+        starttime = datetime.utcnow() - timedelta(days=3)
         endtime = datetime.utcnow()
         stockid = '2317'
         limit = 10
@@ -27,7 +88,8 @@ class TestTwseHisTraderQuery(NoSQLTestCase):
                     'starttime': starttime,
                     'endtime': endtime,
                     'stockids': [stockid],
-                    'order': 'totalvolume',
+                    'base': 'stock',
+                    'order': ['-totalvolume', '-totaldiff'],
                     'callback': 'to_pandas',
                     'limit': limit
                 },
@@ -38,7 +100,7 @@ class TestTwseHisTraderQuery(NoSQLTestCase):
                     'stockids': [stockid],
                     'traderids':[],
                     'base': 'stock',
-                    'order': 'totalvolume',
+                    'order': ['-totalvolume', '-totalbuyvolume', '+totalsellvolume'],
                     'callback': 'to_pandas',
                     'limit': limit
                 },
@@ -47,7 +109,8 @@ class TestTwseHisTraderQuery(NoSQLTestCase):
                     'starttime': starttime,
                     'endtime': endtime,
                     'stockids': [stockid],
-                    'order': 'decfinance',
+                    'base': 'stock',
+                    'order': ['-financeused', '-bearishused'],
                     'callback': 'to_pandas',
                     'limit': limit
                 }
@@ -58,10 +121,6 @@ class TestTwseHisTraderQuery(NoSQLTestCase):
         self.assertTrue(panel is not None)
         self.assertFalse(panel.empty)
         self.assertFalse(panel[stockid].empty)
-        for k in ['open', 'high', 'low', 'close', 'volume']:
-            self.assertFalse(self.panel[stockid][k].empty)
-
-class TestOtcHisTraderQuery(NoSQLTestCase):
-
-    def test_on_run(self):
-        pass
+        #for k in ['open', 'high', 'low', 'close', 'volume', 'financeused', 'bearishused']:
+        #    self.assertFalse(panel[stockid][k].empty)
+        print panel['2317']
