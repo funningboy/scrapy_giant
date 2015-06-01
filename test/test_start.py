@@ -17,17 +17,17 @@ from handler.hisdb_handler import *
 skip_tests = {
     'TestTraderId': False,
     'TestTwseId': False,
-    'TestOtcId': True,
+    'TestOtcId': False,
     'TestTwseHisTrader': False,
-    'TestTwseHisTrader2': True,
+    'TestTwseHisTrader2': False,
     'TestTwseHisStock': False,
     'TestTwseHisCredit': False,
-    'TestTwseHisAll': True,
-    'TestOtcHisTrader': True,
-    'TestOtcHisTrader2': True,
-    'TestOtcHisStock': True,
-    'TestOtcHisCredit': True,
-    'TestOtcHisAll': True
+    'TestTwseHisAll': False,
+    'TestOtcHisTrader': False,
+    'TestOtcHisTrader2': False,
+    'TestOtcHisStock': False,
+    'TestOtcHisCredit': False,
+    'TestOtcHisAll': False
 }
 
 class TestBase(unittest.TestCase):

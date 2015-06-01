@@ -24,6 +24,7 @@ _dbport = int(os.environ.get('DBPORT', '27017'))
 _amqport = int(os.environ.get('AMQPORT', '5672'))
 _mongod = os.environ.get('MONGOD', 'mongod')
 _debug = os.environ.get('DEBUG', False)
+_siteid = os.environ.get('SITE_ID', 1)
 
 CELERY_DISABLE_RATE_LIMITS = True
 CELERY_RESULT_BACKEND = 'mongodb'
@@ -97,7 +98,7 @@ LANGUAGE_CODE = 'en-us'
 #>>> s = Site()
 #>>> s.save()
 #python ./manage.py tellsiteid
-SITE_ID=u'55600b221fd21c128c12a7c1'
+SITE_ID=_siteid
 #SITE_ID=1
 
 # If you set this to False, Django will make some optimizations so as not

@@ -11,7 +11,7 @@ class TraderData(EmbeddedDocument):
     totalvolume = IntField(min_value=0, max_value=9999999)
 
 class TraderInfo(EmbeddedDocument):
-    traderid = StringField(primary_key=True)
+    traderid = StringField()
     data = EmbeddedDocumentField(TraderData)
 
 class StockData(EmbeddedDocument):
@@ -51,7 +51,7 @@ class OtcHisColl(StockHisColl):
     pass
 
 class StockIdColl(Document):
-    stockid = StringField(primary_key=True)
+    stockid = StringField()
     stocknm = StringField()
     industry = StringField()
     onmarket = StringField()
@@ -70,7 +70,7 @@ class OtcIdColl(StockIdColl):
 
 
 class TraderIdColl(Document):
-    traderid = StringField(primary_key=True)
+    traderid = StringField()
     tradernm = StringField()
     meta = {
         'db_alias': 'traderiddb',

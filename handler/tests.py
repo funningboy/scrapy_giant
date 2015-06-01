@@ -13,7 +13,7 @@ from django.template import Context, Template
 
 skip_tests = {
     'TestTwseHisItemQuery': False,
-    'TestTwseHisFrameQuery': True
+    'TestTwseHisFrameQuery': False
 }
 
 @unittest.skipIf(skip_tests['TestTwseHisItemQuery'], "skip")
@@ -46,7 +46,7 @@ class TestTwseHisItemQuery(NoSQLTestCase):
                     'stockids': [stockid],
                     'traderids':[],
                     'base': 'stock',
-                    'order': ['-totalvolume', '-totalbuyvolume', '+totalsellvolume'],
+                    'order': ['-totalvolume'],
                     'callback': None,
                     'limit': limit,
                     'priority': 0
@@ -66,7 +66,9 @@ class TestTwseHisItemQuery(NoSQLTestCase):
         }
         t = timeit.Timer()
         item, db = collect_hisitem(**collect)
-#        self.assertTrue(item)
+        self.assertTrue(item)
+        for k in ['stockitem', 'traderitem', 'credititem']:
+            self.assertTrue(item[k])
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
 
 
@@ -121,6 +123,6 @@ class TestTwseHisFrameQuery(NoSQLTestCase):
         self.assertTrue(panel is not None)
         self.assertFalse(panel.empty)
         self.assertFalse(panel[stockid].empty)
-        #for k in ['open', 'high', 'low', 'close', 'volume', 'financeused', 'bearishused']:
-        #    self.assertFalse(panel[stockid][k].empty)
+        for k in ['open', 'high', 'low', 'close', 'volume', 'financeused', 'bearishused']:
+            self.assertFalse(panel[stockid][k].empty)
         print panel['2317']

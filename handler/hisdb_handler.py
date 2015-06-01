@@ -313,7 +313,6 @@ class TwseTraderHisDBHandler(object):
         """ as update hisstock trader part """
         keys = [k for k,v in TraderData._fields.iteritems()]
         toplist = []
-        print json.dumps(dict(item['toplist']), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
         for it in item['toplist']:
             data = {k:v for k, v in it['data'].items() if k in keys}
             info = {
@@ -347,7 +346,6 @@ class TwseTraderHisDBHandler(object):
         """
         map_f = """
             function () {
-                try {
                     for (var i=0; i < this.toplist.length; i++) {
                         var key =  { traderid: this.toplist[i].traderid, stockid: this.stockid };
                         var totalvolume = this.toplist[i].data.totalvolume;
@@ -382,6 +380,9 @@ class TwseTraderHisDBHandler(object):
                             totaltradevolume: tradevolume,
                             data: [{
                                 date: this.date,
+                            traderid: this.toplist[i].traderid,
+                            tradernm: this.toplist[i].tradernm,
+
                                 ratio: ratio,
                                 avgbuyprice: avgbuyprice,
                                 avgsellprice: avgsellprice,
@@ -391,12 +392,7 @@ class TwseTraderHisDBHandler(object):
                         };
                         emit(key, value);
                     }
-                }
-                catch(e){
-                }
-                finally{
-                }
-            }
+           }
         """
         reduce_f = """
             function (key, values) {
