@@ -4,8 +4,19 @@
         <li class="sidebar-search">
         <a href="javascript:;" data-toggle="collapse" data-target="#search"><i class="fa fa-fw fa-arrows-v"></i> Search <i class="fa fa-fw fa-caret-down"></i></a>
         <ul id="search" class="collapse">
-            <form class="form-horizontal" id="searchform" action="./main/" method="get">
-                {% csrf_token %}
+            <form class="form-horizontal" id="searchform" action="./router_search/" method="get">
+                <!-- opt -->
+                <div class="input-group input-group-sm{% if form.opt.errors %} has-error{% endif %}">
+                    <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
+                    <select class="form-control" id="{{ form.opt.auto_id }}" name="{{ form.opt.name }}">
+                    {% for error in form.opt.errors %}
+                    <p class="help-block">{{ error }}</p>
+                    {% endfor %}
+                    {% for k, v in form.opt.field.choices %}
+                    <option>{{ v|stringformat:"s" }}</option>
+                    {% endfor %}
+                    </select>
+                </div>
                 <!-- starttime -->
                 <div class="input-group input-group-sm{% if form.starttime.errors %} has-error{% endif %}">
                     <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>

@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import json
-from bson import json_util
-
 def default_hiscollect(**kwargs):
     starttime = kwargs.pop('starttime', None)
     endtime = kwargs.pop('endtime', None)

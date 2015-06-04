@@ -1,33 +1,55 @@
 # -*- coding: utf-8 -*-
 
-def router_search(**cmd):
-    """ register to router search table """
-    pass
-#    is_hisstock_detail, hisstock_detail_html(**cmds),
-#    is_hisstock_list, hisstock_list_html
+from main.router import *
 
-idhandler = {
-    'twse': iddb_tasks['twse'](**kwargs),
-    'otc': iddb_tasks['otc'](**kwargs)
-}
-
-def is_hisstock_detail(**cmd):
-    if cmds['algorithm'] not in [
-        '0+', 'StockProfile0-',
-        'StockProfile1+', 'StockProfile1-']:
+def is_hisstock_detail(**collect):
+    router = [
+        StockProfile0_buy,
+        StockProfile0_sell,
+        StockProfile1_buy,
+        StockProfile1_sell
+    ]
+    if collect['algorithm'] not in [i[1] for i in ALG_CHOICES if i[0] in range(0,4)]:
         return False
-    if cmds['starttime'] >= cmds['endtime'] or len(cmds['stockids']) != 1:
+    if collect['starttime'] >= collect['endtime'] or len(collect['stockids']) != 1:
         return False
+    [r(**collect) for r in router]
     return True
 
-def is_hisstock_list(**cmd):
-    if cmds[algorithm] not in [
-        'StockProfile0+', 'StockProfile0-',
-        'StockProfile1+', 'StockProfile1-']:
+def is_hisstock_list(**collect):
+    router = [
+        StockProfile0_buy,
+        StockProfile0_sell,
+        StockProfile1_buy,
+        StockProfile1_sell
+    ]
+    if collect['algorithm'] not in [i[1] for i in ALG_CHOICES if i[0] in range(0,4)]:
         return False
-    if cmds['starttime'] >= cmds['endtime']:
+    if collect['starttime'] >= collect['endtime']:
         return False
+    [r(**collect) for r in router]
     return True
 
+def is_histrader_detail(**collect):
+    router = [
+        TraderProfile0_buy,
+        TraderProfile0_sell
+    ]
+    if collect['algorithm'] not in [i[1] for i in ALG_CHOICES if i[0] in range(4,6)]:
+        return False
+    if collect['starttime'] >= collect['endtime'] and len(collect['traderids']) != 1:
+        return False
+    [r(**collect) for r in router]
+    return True
 
-
+def is_histrader_list(**collect):
+    router = [
+        TraderProfile0_buy,
+        TraderProfile0_sell
+    ]
+    if collect['algorithm'] not in [i[1] for i in ALG_CHOICES if i[0] in range(4,6)]:
+        return False
+    if collect['starttime'] >= collect['endtime']:
+       return False
+    [r(**collect) for r in router]
+    return True

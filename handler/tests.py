@@ -9,6 +9,7 @@ import unittest
 from datetime import datetime, timedelta
 from main.tests import NoSQLTestCase
 from handler.tasks import *
+from handler.table import default_hiscollect
 from django.template import Context, Template
 
 skip_tests = {
@@ -20,50 +21,18 @@ skip_tests = {
 class TestTwseHisItemQuery(NoSQLTestCase):
 
     def test_on_run(self):
-        starttime = datetime.utcnow() - timedelta(days=3)
-        endtime = datetime.utcnow()
-        stockid = '2317'
-        limit = 10
-        collect = {
-            'debug': True,
+        kwargs = {
+            'starttime': datetime.utcnow() - timedelta(days=3),
+            'endtime': datetime.utcnow(),
+            'stockids': ['2317'],
+            'traderids': [],
             'opt': 'twse',
-            'frame': {
-                # hisstock item collect
-                'hisstock': {
-                    'starttime': starttime,
-                    'endtime': endtime,
-                    'stockids': [stockid],
-                    'base': 'stock',
-                    'order': ['-totalvolume', '-totaldiff'],
-                    'callback': None,
-                    'limit': limit,
-                    'priority': 1
-                },
-                # histrader iteme collect
-                'histrader': {
-                    'starttime': starttime,
-                    'endtime': endtime,
-                    'stockids': [stockid],
-                    'traderids':[],
-                    'base': 'stock',
-                    'order': ['-totalvolume'],
-                    'callback': None,
-                    'limit': limit,
-                    'priority': 0
-                },
-                # hiscredit item collect
-                'hiscredit': {
-                    'starttime': starttime,
-                    'endtime': endtime,
-                    'stockids': [stockid],
-                    'base': 'stock',
-                    'order': ['-financeused', '-bearishused'],
-                    'callback': None,
-                    'limit': limit,
-                    'priority': 2
-                }
-            }
+            'debug': True
         }
+        collect = default_hiscollect(**kwargs)
+        for k in ['hisstock', 'hiscredit', 'histrader']:
+            collect['frame'][k].update({'on': True })
+
         t = timeit.Timer()
         item, db = collect_hisitem(**collect)
         self.assertTrue(item)
@@ -77,52 +46,23 @@ class TestTwseHisFrameQuery(NoSQLTestCase):
     """ makre sure db contains the data """
 
     def test_on_run(self):
-        starttime = datetime.utcnow() - timedelta(days=3)
-        endtime = datetime.utcnow()
-        stockid = '2317'
-        limit = 10
-        collect = {
-            'debug': True,
+        kwargs = {
+            'starttime': datetime.utcnow() - timedelta(days=3),
+            'endtime': datetime.utcnow(),
+            'stockids': ['2317'],
+            'traderids': [],
             'opt': 'twse',
-            'frame': {
-                # hisstock frame collect
-                'hisstock': {
-                    'starttime': starttime,
-                    'endtime': endtime,
-                    'stockids': [stockid],
-                    'base': 'stock',
-                    'order': ['-totalvolume', '-totaldiff'],
-                    'callback': 'to_pandas',
-                    'limit': limit
-                },
-                # histrader frame collect
-                'histrader': {
-                    'starttime': starttime,
-                    'endtime': endtime,
-                    'stockids': [stockid],
-                    'traderids':[],
-                    'base': 'stock',
-                    'order': ['-totalvolume', '-totalbuyvolume', '+totalsellvolume'],
-                    'callback': 'to_pandas',
-                    'limit': limit
-                },
-                # hiscredit frame collect
-                'hiscredit': {
-                    'starttime': starttime,
-                    'endtime': endtime,
-                    'stockids': [stockid],
-                    'base': 'stock',
-                    'order': ['-financeused', '-bearishused'],
-                    'callback': 'to_pandas',
-                    'limit': limit
-                }
-            }
+            'debug': True
         }
+        collect = default_hiscollect(**kwargs)
+        for k in ['hisstock', 'hiscredit', 'histrader']:
+            collect['frame'][k].update({'on': True })
+
         t = timeit.Timer()
         panel, db = collect_hisframe(**collect)
         self.assertTrue(panel is not None)
         self.assertFalse(panel.empty)
-        self.assertFalse(panel[stockid].empty)
+        self.assertFalse(panel['2317'].empty)
         for k in ['open', 'high', 'low', 'close', 'volume', 'financeused', 'bearishused']:
-            self.assertFalse(panel[stockid][k].empty)
+            self.assertFalse(panel['2317'][k].empty)
         print panel['2317']

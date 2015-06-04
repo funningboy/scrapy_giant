@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from django.http import HttpResponse
 from rest_framework.renderers import JSONRenderer
+from rest_framework.decorators import api_view
 
 class JSONResponse(HttpResponse):
     def __init__(self, data, **kwargs):
@@ -8,27 +10,21 @@ class JSONResponse(HttpResponse):
         kwargs['content_type'] = 'application/json'
         super(JSONResponse, self).__init__(content, **kwargs)
 
-@api_view
-def get_hisstock_list_json():
-    try:
-        if request.method == 'GET':
-            return render(request, 'handler/hisstock_list.html')
-    except:
-        return HttpResponse(404)
-
 @api_view(['GET'])
-def get_hisstock_detail_json(request):
+def hisstock_list_json():
     try:
         if request.method == 'GET':
-            data = {'stockitem': stockitem, 'traderitem': traderitem, 'credititem': credititem}
             return JSONResponse(data)
     except:
         return HttpResponse(404)
 
-#@api_view
-#def histrader_detail(request, opt, traderid, starttime, endtime, stockids=None, order='totalvolume', limit=10):
-#    db = hisdb_tasks[opt]()
-#    return render(request,'handler/histrader_detail.html', {'stockitem': stockitem, 'traderitem': traderitem})
+@api_view(['GET'])
+def hisstock_detail_json(request):
+    try:
+        if request.method == 'GET':
+            return JSONResponse(data)
+    except:
+        return HttpResponse(404)
 
 
 ##def histrader_group(request, opt, starttime, endtime, order='totalvolume', limit=10):

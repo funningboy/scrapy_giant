@@ -3,9 +3,13 @@
 from datetime import datetime, timedelta
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
-from main.forms import FormSearchItem
 
+from giant.settings import _debug
 from handler.tasks import *
+from handler.views import *
+from handler.table import default_hiscollect
+from main.forms import FormSearchItem
+from main.tasks import *
 
 def home(request):
     form = FormSearchItem()
@@ -15,18 +19,42 @@ def about(request):
     return render(request, 'about.htm')
 
 def router_search(request):
-    cmds = {
-   }
+    collect = default_search(request)
+    router = [
+        # query
+        (is_hisstock_detail, hisstock_detail_html),
+        #(is_histrader_detail, histrader_detail_html),
+        #(is_dualema_detail, dualema_detail_html),
+        #(is_btrader_detail, btader_detail_html),
+        #(is_bbands_detail, bbands_detail_html),
+        ## alg
+        (is_hisstock_list, hisstock_list_html)
+        #(is_histrader_list, histrader_list_html),
+    ]
+    for r in router:
+        if (r[0](**collect)):
+            return r[1](request, **collect)
+    return home(request)
 
+def router_portfolio(request):
+    collect = default_portfolio(request)
+    router = [
+        #(is_dualema_list, dualema_list_html),
+        #(is_btrader_list, btader_list_html),
+        #(is_bbands_list, bbands_list_html)
+    ]
+    for r in router:
+        if r[0](**collect):
+            return r[1](request, **collect)
+    return home(request)
 
-def update(request):
-    starttime = datetime.utcnow() - timedelta(days=100)
+def default_search(request):
+    starttime = datetime.utcnow() - timedelta(days=150)
     endtime = datetime.utcnow()
     stockids = []
     traderids = []
     algorithm = None
 
-    # populate
     if 'starttime' in request.GET and request.GET['starttime']:
         starttime = datetime(*map(int, request.GET['starttime'].split('/')))
     if 'endtime' in request.GET and request.GET['endtime']:
@@ -35,15 +63,24 @@ def update(request):
         stockids =  set(request.GET['stockids'].split(','))
     if 'traderids' in request.GET and request.GET['traderids']:
         traderids = set(request.GET['traderids'].split(','))
+    if 'opt' in request.GET and request.GET['opt']:
+        opt = request.GET['opt']
     if 'algorithm' in request.GET and request.GET['algorithm']:
         algorithm = request.GET['algorithm']
 
-    cmd = {
+    kwargs = {
+        'stock': {'debug': _debug},
+        'trader': {'debug': _debug}
+    }
+    stockids = stockids if stockids else iddb_tasks[opt](**kwargs['stock'])
+    traderids = traderids if traderids else iddb_tasks[opt](**kwargs['trader'])
+    kwargs = {
         'starttime': starttime,
         'endtime': endtime,
         'stockids': stockids,
         'traderids': traderids,
+        'opt': opt,
         'algorithm': algorithm,
-        'opt': opt
+        'debug': _debug
     }
-    return cmd
+    return default_hiscollect(**kwargs)

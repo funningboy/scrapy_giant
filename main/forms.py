@@ -7,4 +7,4 @@ from main.models import SearchItem
 class FormSearchItem(DocumentForm):
     class Meta:
         document = SearchItem
-        fields = ['starttime','endtime', 'stockids', 'traderids', 'algorithm']
+        fields = ['opt', 'starttime','endtime', 'stockids', 'traderids', 'algorithm']

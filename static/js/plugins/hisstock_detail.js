@@ -1,6 +1,6 @@
 
 function loadChartData() {
-    var URL = "http://127.0.0.1:8000/handler/hisstock/twse/20150401/20150530/2330/json/"
+    var URL = "http://"
     //http://127.0.0.1:8000/search/?starttime=2015%2F05%2F04&endtime=2015%2F05%2F24&stockids=2330
     //http://127.0.0.1:8000/?starttime=2015%2F04%2F26&endtime=2015%2F05%2F24&stockids=2330%2C1314%2C&traderids=1440%2C1447&algorithm=%23%23%23%23%23%23%203%23&base=%23%23%23%23%23%23%23%23
     $.ajax({
