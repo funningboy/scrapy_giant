@@ -8,34 +8,38 @@ from giant.settings import _debug
 from handler.tasks import *
 from handler.views import *
 from handler.table import default_hiscollect
-from main.forms import FormSearchItem
 from main.tasks import *
+from main.table import *
 
+#
 def home(request):
-    form = FormSearchItem()
-    return render(request, 'base.html', {'form': form})
+    if request.method == 'GET':
+        tags = home_tags()
+        return render(request, 'base.html', tags)
 
 def about(request):
-    return render(request, 'about.htm')
+    pass
 
+# @
 def router_search(request):
-    collect = default_search(request)
-    router = [
-        # query
-        (is_hisstock_detail, hisstock_detail_html),
-        #(is_histrader_detail, histrader_detail_html),
-        #(is_dualema_detail, dualema_detail_html),
-        #(is_btrader_detail, btader_detail_html),
-        #(is_bbands_detail, bbands_detail_html),
-        ## alg
-        (is_hisstock_list, hisstock_list_html)
-        #(is_histrader_list, histrader_list_html),
-    ]
-    for r in router:
-        if (r[0](**collect)):
-            return r[1](request, **collect)
-    return home(request)
-
+    if request.method == 'GET':
+        collect = default_search(request)
+        router = [
+            # query
+            (is_hisstock_detail, hisstock_detail_html),
+            #(is_histrader_detail, histrader_detail_html),
+            #(is_dualema_detail, dualema_detail_html),
+            #(is_btrader_detail, btader_detail_html),
+            #(is_bbands_detail, bbands_detail_html),
+            ## alg
+            (is_hisstock_list, hisstock_list_html)
+            #(is_histrader_list, histrader_list_html),
+        ]
+        for r in router:
+            if (r[0](**collect)):
+                return r[1](request, **collect)
+        return home(request)
+#
 def router_portfolio(request):
     collect = default_portfolio(request)
     router = [
@@ -60,9 +64,9 @@ def default_search(request):
     if 'endtime' in request.GET and request.GET['endtime']:
         endtime = datetime(*map(int, request.GET['endtime'].split('/')))
     if 'stockids' in request.GET and request.GET['stockids']:
-        stockids =  set(request.GET['stockids'].split(','))
+        stockids =  list(set(request.GET['stockids'].split(',')))
     if 'traderids' in request.GET and request.GET['traderids']:
-        traderids = set(request.GET['traderids'].split(','))
+        traderids = list(set(request.GET['traderids'].split(',')))
     if 'opt' in request.GET and request.GET['opt']:
         opt = request.GET['opt']
     if 'algorithm' in request.GET and request.GET['algorithm']:
@@ -72,8 +76,8 @@ def default_search(request):
         'stock': {'debug': _debug},
         'trader': {'debug': _debug}
     }
-    stockids = stockids if stockids else iddb_tasks[opt](**kwargs['stock'])
-    traderids = traderids if traderids else iddb_tasks[opt](**kwargs['trader'])
+    stockids = stockids if stockids else [i for i in iddb_tasks[opt](**kwargs['stock']).stock.get_ids()]
+    traderids = traderids if traderids else [i for i in iddb_tasks[opt](**kwargs['trader']).trader.get_ids()]
     kwargs = {
         'starttime': starttime,
         'endtime': endtime,
@@ -84,3 +88,12 @@ def default_search(request):
         'debug': _debug
     }
     return default_hiscollect(**kwargs)
+
+def default_portfolio(request):
+    watchtime = datetime.utcnow()
+
+    if 'watchtime' in request.GET and request.GET['watchtime']:
+        watchtime = datetime(*map(int, request.GET['watchtime'].split('/')))
+
+    kwargs = {}
+    return default_hisprofolio(**kwargs)

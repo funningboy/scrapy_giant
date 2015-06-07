@@ -19,7 +19,7 @@ __all__ = ['OtcHisTraderSpider2']
 class OtcHisTraderSpider2(CrawlSpider):
     name = 'otchistrader2'
     allowed_domains = ['http://www.wantgoo.com']
-    download_delay = 20
+    download_delay = 6
     _headers = [
         (u'序號', u'index'),
         (u'券商', u'traderid'),

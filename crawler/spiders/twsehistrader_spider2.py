@@ -18,7 +18,7 @@ __all__ = ['TwseHisTraderSpider2']
 class TwseHisTraderSpider2(CrawlSpider):
     name = 'twsehistrader2'
     allowed_domains = ['http://www.wantgoo.com']
-    download_delay = 2
+    download_delay = 6
     _headers = [
         (u'序號', u'index'),
         (u'券商', u'traderid'),

@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from mongodbforms import DocumentForm
 from mongoengine import *
-from main.models import SearchItem
+from mongodbforms import DocumentForm
+from main.models import SearchItem, PortfolioItem
 
 class FormSearchItem(DocumentForm):
     class Meta:
         document = SearchItem
         fields = ['opt', 'starttime','endtime', 'stockids', 'traderids', 'algorithm']
+
+class FormPortfolioItem(DocumentForm):
+    class Meta:
+        document = PortfolioItem
+        fields = ['opt', 'watchtime', 'bufwin', 'algorithm']

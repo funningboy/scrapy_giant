@@ -1,8 +1,9 @@
 
 function loadChartData() {
-    var URL = "http://"
-    //http://127.0.0.1:8000/search/?starttime=2015%2F05%2F04&endtime=2015%2F05%2F24&stockids=2330
-    //http://127.0.0.1:8000/?starttime=2015%2F04%2F26&endtime=2015%2F05%2F24&stockids=2330%2C1314%2C&traderids=1440%2C1447&algorithm=%23%23%23%23%23%23%203%23&base=%23%23%23%23%23%23%23%23
+    var URL = "http://127.0.0.1:8000/handler/api/hisstock_detail/?opt=twse&starttime=2015%2F05%2F01&endtime=2015%2F06%2F05&stockids=2330&traderids=&algorithm=StockProfile0%2B"
+    //kwargs.starttime
+    //var URL = encodeURI(uri)
+    // csrf_token
     $.ajax({
         url: URL,
         data: {},
@@ -52,12 +53,12 @@ function generateChartData(result) {
     $.each(stockitem[0].datalist, function(d_idx, d_it) {
         data.push({
             "date": new Date(d_it.date),
-            "stockopen": d_it.open.toFixed(2),
-            "stockclose": d_it.close.toFixed(2),
-            "stockhigh": d_it.high.toFixed(2),
-            "stocklow": d_it.low.toFixed(2),
-            "stockprice": d_it.close.toFixed(2),
-            "stockvolume": d_it.volume.toFixed(1),
+            "stockopen": parseFloat(d_it.open.toFixed(2)),
+            "stockclose": parseFloat(d_it.close.toFixed(2)),
+            "stockhigh": parseFloat(d_it.high.toFixed(2)),
+            "stocklow": parseFloat(d_it.low.toFixed(2)),
+            "stockprice": parseFloat(d_it.close.toFixed(2)),
+            "stockvolume": parseInt(d_it.volume.toFixed()),
             "traderavgbuyprice": 0.00,
             "traderavgsellprice": 0.00,
             "traderbuyvolume": 0.00,
@@ -73,10 +74,10 @@ function generateChartData(result) {
             var date = new Date(d_it.date);
             var rst = $.grep(ndata, function(e){ return e.date.getTime() == date.getTime(); });
             if (rst.length != 0) {
-                rst[0].traderavgbuyprice = d_it.avgbuyprice.toFixed(2);
-                rst[0].traderavgsellprice = d_it.avgsellprice.toFixed(2);
-                rst[0].traderbuyvolume = d_it.buyvolume.toFixed(1);
-                rst[0].tradersellvolume = d_it.sellvolume.toFixed(1);
+                rst[0].traderavgbuyprice = parseFloat(d_it.avgbuyprice.toFixed(2));
+                rst[0].traderavgsellprice = parseFloat(d_it.avgsellprice.toFixed(2));
+                rst[0].traderbuyvolume = parseInt(d_it.buyvolume.toFixed());
+                rst[0].tradersellvolume = parseInt(d_it.sellvolume.toFixed());
             }
         });
 
@@ -84,8 +85,8 @@ function generateChartData(result) {
               "index": index++,
               "traderidnm": t_it.traderid + "-" + t_it.tradernm,
               "stockidnm": t_it.stockid + "-" + t_it.stocknm,
-              "totalbuyvolume": t_it.totalbuyvolume,
-              "totalsellvolume": t_it.totalsellvolume,
+              "totalbuyvolume": parseInt(t_it.totalbuyvolume.toFixed()),
+              "totalsellvolume": parseInt(t_it.totalsellvolume.toFixed()),
               "description": "",
               "data": ndata
         }
@@ -98,10 +99,8 @@ function generateChartData(result) {
     mchart = createTopMapColumnChart(cdata);
     createCallBackListener(bchart, schart, mchart, cdata);
 
-
-    // debug
-        console.log(pdata);
-        console.log(cdata);
+    // console.log(pdata);
+    // console.log(cdata);
 }
 
 function generateCollectiveData(pdata){
@@ -389,15 +388,16 @@ function createCallBackListener(bchart, schart, mchart, cdata){
 }
 
 function generateTableData(result){
-    stockitem = result.stockitem;
-    credititem = result.credititem;
+    var stockitem = result.stockitem;
+    var credititem = result.credititem;
     var data = [];
 
     // try iter to fill all fields
     // populate stockitem 
     $.each(stockitem[0].datalist, function(d_idx, d_it) {
+        var date = new Date(d_it.date);
         data.push({
-            "date": new Date(d_it.date),
+            "date": yyyymmdd(date),
             "open": d_it.open.toFixed(2),
             "close": d_it.close.toFixed(2),
             "high": d_it.high.toFixed(2),
@@ -412,7 +412,7 @@ function generateTableData(result){
     var ndata = $.extend(true, [], data);
     $.each(credititem[0].datalist, function(d_idx, d_it) {
         var date = new Date(d_it.date);
-        var rst = $.grep(ndata, function(e){ return e.date.getTime() == date.getTime(); });
+        var rst = $.grep(ndata, function(e){ return e.date == yyyymmdd(date); });
         if (rst.length != 0) {
             rst[0].financeused = d_it.financeused.toFixed(2);
             rst[0].bearishused = d_it.bearishused.toFixed(2);
@@ -425,8 +425,6 @@ function generateTableData(result){
         }
     });
 
-    // debug
-    console.log(data);
-    console.log(credititem);
+    //console.log(data);
 }
 

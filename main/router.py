@@ -6,7 +6,7 @@ def StockProfile0_buy(**collect):
     # StockProfile0+
     if collect['algorithm'] == ALG_CHOICES[0][1]:
         collect['frame']['hisstock'].update({
-            'order': ['+totaldiff', '-totalbuyvolume', '+totalsellvolume'],
+            'order': ['+totaldiff', '-totalvolume'],
             'priority': 0
         })
         collect['frame']['hiscredit'].update({
@@ -22,7 +22,7 @@ def StockProfile0_sell(**collect):
     # StockProfile0-
     if collect['algorithm'] == ALG_CHOICES[1][1]:
         collect['frame']['hisstock'].update({
-            'order': ['-totaldiff', '-totalsellvolume', '+totalbuyvolume'],
+            'order': ['-totaldiff', '-totalvolume'],
             'priority': 0
         })
         collect['frame']['hiscredit'].update({
@@ -38,7 +38,7 @@ def StockProfile1_buy(**collect):
     # StockProfile1+
     if collect['algorithm'] == ALG_CHOICES[2][1]:
         collect['frame']['hisstock'].update({
-            'order': ['-totalbuyvolume', '+totalsellvolume', '+totaldiff'],
+            'order': ['-totalvolume', '+totaldiff'],
             'priority': 0
         })
         collect['frame']['hiscredit'].update({
@@ -54,7 +54,7 @@ def StockProfile1_sell(**collect):
     # StockProfile1-
     if collect['algorithm'] == ALG_CHOICES[3][1]:
         collect['frame']['hisstock'].update({
-            'order': ['-totalsellvolume', '+totalbuyvolume', '-totaldiff'],
+            'order': ['-totalvolume', '-totaldiff'],
             'priority': 0
         })
         collect['frame']['hiscredit'].update({
@@ -70,7 +70,7 @@ def TraderProfile0_buy(**collect):
     # TraderProfile0+
     if collect['algorithm'] == ALG_CHOICES[4][1]:
         collect['frame']['histrader'].update({
-            'order': ['-totalbuyvolume', '+totalsellvolume'],
+            'order': ['-totalvolume'],
             'priority': 0
         })
         collect['frame']['hisstock'].update({
@@ -86,7 +86,7 @@ def TraderProfile0_sell(**collect):
     # TraderProfile0-
     if collect['algorithm'] == ALG_CHOICES[5][1]:
         collect['frame']['histrader'].update({
-            'order': ['-totalsellvolume', '+totalbuyvolume'],
+            'order': ['-totalvolume'],
             'priority': 0
         })
         collect['frame']['hisstock'].update({
