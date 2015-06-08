@@ -1,62 +1,64 @@
 <!-- Sidebar Menu Items - These collapse to the responsive navigation menu on small screens -->
 <div class="collapse navbar-collapse navbar-ex1-collapse">
     <ul class="nav navbar-nav side-nav">
+        <!--- search --->
         <li class="sidebar-search">
         <a href="javascript:;" data-toggle="collapse" data-target="#search"><i class="fa fa-fw fa-arrows-v"></i> Search <i class="fa fa-fw fa-caret-down"></i></a>
         <ul id="search" class="collapse">
-            <form class="form-horizontal" id="searchform" action="./router_search/" method="get">
+            <form class="form-horizontal" id="searchform" action="router_search" method="get">
+                {% csrf_token %}
                 <!-- opt -->
-                <div class="input-group input-group-sm{% if form.opt.errors %} has-error{% endif %}">
+                <div class="input-group input-group-sm{% if searchform.opt.errors %} has-error{% endif %}">
                     <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
-                    <select class="form-control" id="{{ form.opt.auto_id }}" name="{{ form.opt.name }}">
-                    {% for error in form.opt.errors %}
+                    <select class="form-control" id="{{ searchform.opt.auto_id}}" name="{{ searchform.opt.name }}">
+                    {% for error in searchform.opt.errors %}
                     <p class="help-block">{{ error }}</p>
                     {% endfor %}
-                    {% for k, v in form.opt.field.choices %}
+                    {% for k, v in searchform.opt.field.choices %}
                     <option>{{ v|stringformat:"s" }}</option>
                     {% endfor %}
                     </select>
                 </div>
                 <!-- starttime -->
-                <div class="input-group input-group-sm{% if form.starttime.errors %} has-error{% endif %}">
+                <div class="input-group input-group-sm{% if searchform.starttime.errors %} has-error{% endif %}">
                     <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
-                    <input type="text" class="form-control" id="{{ form.starttime.auto_id }}" name="{{ form.starttime.name }}" placeholder="{{ form.starttime.help_text }}" autocomplete="off">
-                    {% for error in form.starttime.errors %}
+                    <input type="text" class="form-control" id="{{ searchform.starttime.auto_id }}" name="{{ searchform.starttime.name }}" placeholder="{{ searchform.starttime.help_text }}" autocomplete="off">
+                    {% for error in searchform.starttime.errors %}
                     <p class="help-block">{{ error }}</p>
                     {% endfor %}
                 </div>
                 <!-- endtime -->
-                <div class="input-group input-group-sm{% if form.endtime.errors %} has-error{% endif %}">
+                <div class="input-group input-group-sm{% if searchform.endtime.errors %} has-error{% endif %}">
                     <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
-                    <input type="text" class="form-control" id="{{ form.endtime.auto_id }}" name="{{ form.endtime.name }}" placeholder="{{ form.endtime.help_text }}" autocomplete="off">
-                    {% for error in form.endtime.errors %}
+                    <input type="text" class="form-control" id="{{ searchform.endtime.auto_id }}" name="{{ searchform.endtime.name }}" placeholder="{{ searchform.endtime.help_text }}" autocomplete="off">
+                    {% for error in searchform.endtime.errors %}
                     <p class="help-block">{{ error }}</p>
                     {% endfor %}
                 </div>
                 <!-- stockids -->
-                <div class="input-group input-group-sm{% if form.stockids.errors %} has-error{% endif %}">
+                <div class="input-group input-group-sm{% if searchform.stockids.errors %} has-error{% endif %}">
                     <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
-                    <input type="text" class="form-control" id="{{ form.stockids.auto_id }}" name="{{ form.stockids.name }}" placeholder="{{ form.stockids.help_text }}" autocomplete="off">
-                    {% for error in form.stockids.errors %}
+                    <input type="text" class="form-control" id="{{ searchform.stockids.auto_id }}" name="{{ searchform.stockids.name }}" placeholder="{{ searchform.stockids.help_text }}" autocomplete="off">
+                    {% for error in searchform.stockids.errors %}
                     <p class="help-block">{{ error }}</p>
                     {% endfor %}
                 </div>
                 <!-- traderids -->
-                <div class="input-group input-group-sm{% if form.traderids.errors %} has-error{% endif %}">
+                <div class="input-group input-group-sm{% if searchform.traderids.errors %} has-error{% endif %}">
                     <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
-                    <input type="text" class="form-control" id="{{ form.traderids.auto_id }}" name="{{ form.traderids.name }}" placeholder="{{ form.traderids.help_text }}" autocomplete="off">
-                    {% for error in form.traderids.errors %}
+                    <input type="text" class="form-control" id="{{ searchform.traderids.auto_id }}" name="{{ searchform.traderids.name }}" placeholder="{{ searchform.traderids.help_text }}" autocomplete="off">
+                    {% for error in searchform.traderids.errors %}
                     <p class="help-block">{{ error }}</p>
                     {% endfor %}
                 </div>
                 <!-- algorithm choice -->
-                <div class="input-group input-group-sm{% if form.algorithm.errors %} has-error{% endif %}">
+                <div class="input-group input-group-sm{% if searchform.algorithm.errors %} has-error{% endif %}">
                     <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
-                    <select class="form-control" id="{{ form.algorithm.auto_id }}" name="{{ form.algorithm.name }}">
-                    {% for error in form.algorithm.errors %}
+                    <select class="form-control" id="{{ searchform.algorithm.auto_id }}" name="{{ searchform.algorithm.name }}">
+                    {% for error in searchform.algorithm.errors %}
                     <p class="help-block">{{ error }}</p>
                     {% endfor %}
-                    {% for k, v in form.algorithm.field.choices %}
+                    {% for k, v in searchform.algorithm.field.choices %}
                     <option>{{ v|stringformat:"s" }}</option>
                     {% endfor %}
                     </select>
@@ -69,23 +71,82 @@
             </form>
         </ul>
         </li>
-        <li class="sidebar-portfilo">
+        
+        <!-- portfoilo -->
+        <li class="sidebar-portfoilo">
+        <a href="javascript:;" data-toggle="collapse" data-target="#portfoilo"><i class="fa fa-fw fa-arrows-v"></i> Portfolio <i class="fa fa-fw fa-caret-down"></i></a>
+        <ul id="portfoilo" class="collapse">
+            <form class="form-horizontal" id="searchform" action="router_portfolio" method="get">
+                {% csrf_token %}
+                <!-- opt -->
+                <div class="input-group input-group-sm{% if portfolioform.opt.errors %} has-error{% endif %}">
+                    <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
+                    <select class="form-control" id="{{ portfolioform.opt.auto_id }}" name="{{ portfolioform.opt.name }}">
+                        {% for error in portfolioform.opt.errors %}
+                        <p class="help-block">{{ error }}</p>
+                        {% endfor %}
+                        {% for k, v in portfolioform.opt.field.choices %}
+                        <option>{{ v|stringformat:"s" }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!-- watchtime -->
+                <div class="input-group input-group-sm{% if portfolioform.watchtime.errors %} has-error{% endif %}">
+                    <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
+                    <input type="text" class="form-control" id="{{ portfolioform.watchtime.auto_id }}" name="{{ portfolioform.watchtime.name }}" placeholder="{{ portfolioform.watchtime.help_text }}" autocomplete="off">
+                    {% for error in portfolioform.watchtime.errors %}
+                    <p class="help-block">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                <!-- bufwin choice -->
+                <div class="input-group input-group-sm{% if portfolioform.bufwin.errors %} has-error{% endif %}">
+                    <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
+                    <select class="form-control" id="{{ portfolioform.bufwin.auto_id }}" name="{{ portfolioform.bufwin.name }}">
+                        {% for error in portfolioform.bufwin.errors %}
+                        <p class="help-block">{{ error }}</p>
+                        {% endfor %}
+                        {% for k, v in portfolioform.bufwin.field.choices %}
+                        <option>{{ v|stringformat:"s" }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!-- algorithm choice -->
+                <div class="input-group input-group-sm{% if portfolioform.algorithm.errors %} has-error{% endif %}">
+                    <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
+                    <select class="form-control" id="{{ portfolioform.algorithm.auto_id }}" name="{{ portfolioform.algorithm.name }}">
+                        {% for error in portfolioform.algorithm.errors %}
+                        <p class="help-block">{{ error }}</p>
+                        {% endfor %}
+                        {% for k, v in portfolioform.algorithm.field.choices %}
+                        <option>{{ v|stringformat:"s" }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!-- search -->
+                <div class="input-group input-group-sm">
+                    <span class="input-group-addon"><i class="fa fa-coffee fa-fw"></i></span>
+                    <button class="btn btn-default" type="submit"><i class="fa fa-search fa-fw"></i></button>
+                </div>
+            </form>
+        </ul>
         </li>
-    </ul>
+   </ul>
 </div>
 
 {% block script %}
 <script type="text/javascript">
     $(document).ready(function () {
-        $("#{{ form.starttime.auto_id }}").datetimepicker({
+        $("#{{ searchform.starttime.auto_id }}").datetimepicker({
             format: 'YYYY/MM/DD'
         });
 
-        $("#{{ form.endtime.auto_id }}").datetimepicker({
+        $("#{{ searchform.endtime.auto_id }}").datetimepicker({
             format: 'YYYY/MM/DD'
         });
 
-
+        $("#{{ portfolioform.watchtime.auto_id }}").datetimepicker({
+            format: 'YYYY/MM/DD'
+        });
     });
 </script>
 {% endblock %}

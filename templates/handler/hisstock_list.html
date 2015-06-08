@@ -1,52 +1,84 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<! https://github.com/bradleyayers/django-tables2/blob/master/django_tables2/templates/django_tables2/table.html>
 {% extends "base.html" %}
-<html>
-    <head>
-        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-        <title> - stocklist - </title>
-        {% if stockitem %}
-        <table id="stocklist" class="tablesorter">
-            <thead>
-                <tr>
-                <th></th>
-                <th>open</th>
-                <th>high</th>
-                <th>low</th>
-                <th>close</th>
-                <th>volume</th>
-                <th>totaldiff</th>
-                <th>totalvolume</th>
-                </tr>
-            </thead> 
-            <tbody>
-                {% for item in stockitem %}
-                <tr>
-                {% with item.datalist|last as it %}
-                <th><a href="{{ item.stockid }}">{{ item.stockid }}-{{ item.stocknm }}</a></th>
-                <th>{{ it.open }}</th>
-                <th>{{ it.high }}</th>
-                <th>{{ it.low }}</th>
-                <th>{{ it.close }}</th>
-                <th>{{ it.volume }}</th>
-                {% endwith %}
-                <th>{{ item.totaldiff }}</th>
-                <th>{{ item.totalvolume }}</th>
-                </tr>
-                {% endfor %}
-            </tbody> 
-        </table>
-        {% endif %}
-    </head>
-    <body>
-        <script src="//code.jquery.com/jquery-1.10.2.js"></script>
-        <script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.4/js/jquery.tablesorter.js"></script>
-        <! use jquery.tablesorter>
-        <script>
-            $(document).ready(function() {
-                $("#stocklist").tablesorter(); 
-            } );
-        </script>
-    </body>
-</html>
+{% load compress %}
+
+{% block page %}
+<!-- stock table  -->
+<div class="row">
+    <div class="col-lg-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="fa fa-bar-chart-o fa-fw"></i> Stock Table
+                <div class="pull-right">
+                    <div id="topmapbtn" class="btn-group">
+                        <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+                            Actions
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu pull-right" role="menu">
+                            <li><a href="#">Action</a></li>
+                            <li><a href="#">Another action</    a></li>
+                            <li><a href="#">hide</a></li>
+                            <li class="divider"></li>
+                            <li><a href="#">Separated link</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table id="stockdetail_table" class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>date</th>
+                                <th>stockidnm</th>
+                                <th>open</th>
+                                <th>high</th>
+                                <th>low</th>
+                                <th>close</th>
+                                <th>volume</th>
+                                <th>financeused</th>
+                                <th>bearishused</th>
+                                <th>future</th>
+                                <th>event</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- /.panel-body -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block script %}
+<link rel="stylesheet" href="http://amcharts.com/lib/3/plugins/export/export.css">
+<link rel="stylesheet" href="http://127.0.0.1:8000/static/css/jquery.dynatable.css">
+<script type="text/javascript" src="http://www.amcharts.com/lib/3/amcharts.js"></script>
+<script type="text/javascript" src="http://www.amcharts.com/lib/3/pie.js"></script>
+<script type="text/javascript" src="http://www.amcharts.com/lib/3/serial.js"></script>
+<script type="text/javascript" src="http://www.amcharts.com/lib/3/themes/none.js"></script>
+<script type="text/javascript" src="http://www.amcharts.com/lib/3/plugins/export/export.js""></script>
+<script type="text/javascript" src="http://127.0.0.1:8000/static/js/jquery.dynatable.js"></script>
+<script type="text/javascript" src="http://127.0.0.1:8000/static/js/plugins/util.js"></script>
+<script type="text/javascript" src="http://127.0.0.1:8000/static/js/plugins/hisstock_list.js"></script>
+<script type="text/javascript">
+// <![CDATA[
+// load topbuy_piechart, topsell_piechart, topmap_columnchart,
+window.onload=function(){
+    AmCharts.ready(function () {});
+    loadChartData();
+    kwargs = {
+        "starttime": "{{ starttime }}"
+    }
+    console.log(kwargs);
+
+}
+// ]]>
+</script>
+{% endblock %}

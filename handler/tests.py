@@ -6,6 +6,8 @@
 #from celery import chain, group
 import timeit
 import unittest
+import json
+from bson import json_util
 from datetime import datetime, timedelta
 from main.tests import NoSQLTestCase
 from handler.tasks import *
@@ -27,6 +29,7 @@ class TestTwseHisItemQuery(NoSQLTestCase):
             'stockids': ['2317'],
             'traderids': [],
             'opt': 'twse',
+            'algorithm': None,
             'debug': True
         }
         collect = default_hiscollect(**kwargs)
@@ -52,6 +55,7 @@ class TestTwseHisFrameQuery(NoSQLTestCase):
             'stockids': ['2317'],
             'traderids': [],
             'opt': 'twse',
+            'algorithm': None,
             'debug': True
         }
         collect = default_hiscollect(**kwargs)

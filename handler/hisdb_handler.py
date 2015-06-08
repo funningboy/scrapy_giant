@@ -665,6 +665,7 @@ class TwseCreditHisDBHandler(object):
             coll.update({
                 'date': endtime,
                 'stockid': it.key['stockid'],
+                'stocknm': self._id.stock.get_name(it.key['stockid']),
                 'bufwin': bufwin.days,
                 'order': order
             })

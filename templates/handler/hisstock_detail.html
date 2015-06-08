@@ -5,26 +5,26 @@
 <style type='text/css'>
     body {
         font-family: Verdana;
-        font-size: 12px;
-        padding: 10px;
+        font-size: 8px;
+        padding: 8px;
     }
     #topbuy_piechart {
         width : 100%;
         height : 300px;
-        font-size : 11px;
-        float: left;
+        font-size : 8px;
+        float: middle;
     }
     #topsell_piechart {
         width : 100%;
         height : 300px;
-        font-size : 11px;
-        float: left;
+        font-size : 8px;
+        float: middle;
     }
     #topmap_columnchart {
         width : 100%;
-        height : 300px;
-        font-size : 11px;
-        float: left;
+        height : 400px;
+        font-size : 8px;
+        float: middle;
     }
 </style>
 
@@ -211,12 +211,24 @@
 <script type="text/javascript" src="http://www.amcharts.com/lib/3/serial.js"></script>
 <script type="text/javascript" src="http://www.amcharts.com/lib/3/themes/none.js"></script>
 <script type="text/javascript" src="http://www.amcharts.com/lib/3/plugins/export/export.js""></script>
-<script type="text/javascript" src="http://127.0.0.1:8000/static/js/plugins/hisstock_detail.js"></script>
 <script type="text/javascript" src="http://127.0.0.1:8000/static/js/jquery.dynatable.js"></script>
+<script type="text/javascript" src="http://127.0.0.1:8000/static/js/plugins/util.js"></script>
+<script type="text/javascript" src="http://127.0.0.1:8000/static/js/plugins/hisstock_detail.js"></script>
 <script type="text/javascript">
 // <![CDATA[
 // load topbuy_piechart, topsell_piechart, topmap_columnchart,
 window.onload=function(){
+    var stockids = [];
+    var traderids = [];
+    var settings = {
+        "starttime": "{{ starttime }}",
+        "endtime": "{{ endtime }}",
+        "stockids": {% for i in %},
+        "traderids": {% for i in %},
+        "opt":
+        "algorithm":
+        "debug":
+    }
     AmCharts.ready(function () {});
     loadChartData();
 }
