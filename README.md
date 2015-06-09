@@ -89,7 +89,7 @@ scrapy crawl twsehisstock -s LOG_FILE=twsehisstock.log -s GIANT_DEBUG=1 -s GIANT
 
 0.6 as django unittest run
 ```
-celery -A giant worker -l info
+celery -A giant worker -B -l info
 nosetests --nocapture test/test_start.py
 nosetests --nocapture test/test_... 
 python manage.py test bin --traceback

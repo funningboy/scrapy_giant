@@ -13,6 +13,7 @@ def is_hisstock_detail(**collect):
         return False
     if collect['starttime'] >= collect['endtime'] or len(collect['stockids']) != 1:
         return False
+    collect.update({'type': 'detail'})
     [r(**collect) for r in router]
     return True
 
@@ -27,6 +28,7 @@ def is_hisstock_list(**collect):
         return False
     if collect['starttime'] >= collect['endtime']:
         return False
+    collect.update({'type': 'list'})
     [r(**collect) for r in router]
     return True
 
@@ -39,6 +41,7 @@ def is_histrader_detail(**collect):
         return False
     if collect['starttime'] >= collect['endtime'] and len(collect['traderids']) != 1:
         return False
+    collect.update({'type': 'detail'})
     [r(**collect) for r in router]
     return True
 
@@ -51,5 +54,6 @@ def is_histrader_list(**collect):
         return False
     if collect['starttime'] >= collect['endtime']:
        return False
+    collect.update({'type': 'list'})
     [r(**collect) for r in router]
     return True

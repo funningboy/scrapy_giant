@@ -74,6 +74,14 @@ def collect_hisitem(**collect):
                     item.update({'traderitem': dt})
                     stockids = [i['stockid'] for i in dt]
                     traderids = [i['traderid'] for i in dt]
+        if it == 'hisfuture':
+            if frame[it]['on']:
+                [frame[it].pop(k) for k in ['on', 'priority']]
+                frame[it]['stockids'] = stockids
+                dt = dbhandler.future.query_raw(**frame[it])
+                if dt:
+                    item.update({'futureitem': dt})
+                    stockids = [i['stockid'] for i in dt]
 
     return item, dbhandler
 
@@ -126,10 +134,20 @@ def collect_hisframe(**collect):
                 df = dbhandler.credit.query_raw(**frame[it])
                 if not df.empty:
                     group.append(df)
+        if it == 'hisfuture':
+            if frame[it]['on']:
+                frame[it].pop('on')
+                dbhandler.future.ids = frame[it]['stockids']
+                frame[it].update({'callback': dbhandler.future.to_pandas})
+                frame[it].pop('priority')
+                df = dbhandler.future.query_raw(**frame[it])
+                if not df.empty:
+                    group.append(df)
     if group:
         panel = pd.concat(group, axis=2).fillna(0)
         return panel, dbhandler
     return pd.Panel(), dbhandler
+
 
 def collect_relframe(**collect):
     pass

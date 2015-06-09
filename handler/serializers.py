@@ -21,59 +21,31 @@ class JSONResponse(HttpResponse):
 def hisstock_list_json(request):
     if request.method == 'GET':
         collect = default_search(request)
-        if not is_hisstock_list(**collect):
-            return HttpResponse(404)
-        for k in ['hisstock', 'hiscredit', 'histrader']:
-            collect['frame'][k].update({
-                'on': True,
-                'base': 'stock',
-                'limit': 50
-            })
-        data, _ = collect_hisitem(**collect)
-        return JSONResponse(data)
+        if is_hisstock_list(**collect):
+            data, _ = collect_hisitem(**collect)
+            return JSONResponse(data)
 
 # @
 @api_view(['GET'])
 def hisstock_detail_json(request):
     if request.method == 'GET':
         collect = default_search(request)
-        if not is_hisstock_detail(**collect):
-            return HttpResponse(404)
-        for k in ['hisstock', 'hiscredit', 'histrader']:
-            collect['frame'][k].update({
-                'on': True,
-                'base': 'stock',
-                'limit': 10
-            })
-        data, _ = collect_hisitem(**collect)
-        return JSONResponse(data)
+        if is_hisstock_detail(**collect):
+            data, _ = collect_hisitem(**collect)
+            return JSONResponse(data)
 
 @api_view(['GET'])
 def histrader_list_json(request):
     if request.method == 'GET':
         collect = default_search(request)
-        if not is_histrader_list(**collect):
-            return HttpResponse(404)
-        for k in ['histrader']:
-            collect['frame'][k].update({
-                'on': True,
-                'base': 'trader',
-                'limit': 50
-            })
-        data, _ = collect_hisitem(**collect)
-        return JSONResponse(data)
+        if is_histrader_list(**collect):
+            data, _ = collect_hisitem(**collect)
+            return JSONResponse(data)
 
 @api_view(['GET'])
 def histrader_detail_json(request):
     if request.method == 'GET':
         collect = default_search(request)
-        if not is_histrader_detail(**collect):
-            return HttpResponse(404)
-        for k in ['histrader']:
-            collect['frame'][k].update({
-                'on': True,
-                'base': 'trader',
-                'limit': 10
-             })
-        data, _ = collect_hisitem(**collect)
-        return JSONResponse(data)
+        if is_histrader_detail(**collect):
+            data, _ = collect_hisitem(**collect)
+            return JSONResponse(data)

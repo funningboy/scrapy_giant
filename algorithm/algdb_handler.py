@@ -39,7 +39,8 @@ algdbmap = {
 }
 
 class TwseAlgDBHandler(object):
-
+    """
+    """
     def __init__(self, **kwargs):
         self._debug = kwargs.pop('debug', False)
         self._cfg = kwargs.pop('cfg', {'debug': self._debug, 'buf_win': 30})
@@ -49,8 +50,7 @@ class TwseAlgDBHandler(object):
         connect(db, host=host, port=port, alias=db)
         self._sumycoll = switch(AlgSummaryColl, db)
         self._report = Report(sort=[('buy_count', False), ('sell_count', False), ('portfolio_value', False)], limit=100)
-        self._opt = 'twse'
-        self._collect = None
+        self._collect = default_hiscollect(**kwargs)
 
     def run(self):
         pass
@@ -123,8 +123,7 @@ class TwseAlgDBHandler(object):
 
 class TwseDualemaAlg(TwseAlgDBHandler):
     """
-    >>> starttime = datetime.utcnow() - timedelta(days=10)
-    >>> endtime = datetime.utcnow()
+    >>>
     >>> alg = TwseDualemaAlg(debug=True)
     >>> item = alg.run(starttime, endtime, ['2317'], alg.to_detail)
     >>> print item
@@ -133,20 +132,6 @@ class TwseDualemaAlg(TwseAlgDBHandler):
     def __init__(self, **kwargs):
         self._alg = DualEMAAlgorithm
         super(TwseDualemaAlg, self).__init__(**kwargs)
-        self._collect = {
-            'debug': self._debug,
-            'opt': self._opt,
-            'frame': {
-                # hisstock frame collect
-                'hisstock': {
-                    'starttime': datetime.utcnow() - timedelta(days=100),
-                    'endtime': datetime.utcnow(),
-                    'stockids': [],
-                    'order': 'totalvolume',
-                    'limit': 10
-                }
-            }
-        }
 
     def run(self, starttime, endtime, stockids=[], callback=None):
         for stockid in stockids:
@@ -177,7 +162,7 @@ class TwseBestTraderAlg(TwseAlgDBHandler):
     >>> endtime = datetime.utcnow()
     >>> kwargs = {'debug': True, 'opt': otc}
     >>> dbhandler = TwseHisDBHandler(**kwargs)
-    >>> args = (starttime, endtime, ['2317'], [], 'stock', 'totalvolume', 10)
+    >>> args = (starttime, endtime, ['2317'], [], 'stock', ['-totalvolume'], 10)
     >>> dbhandler.trader.query_raw(*args)
     >>> tops = list(dbhandler.trader.get_alias(['2317'], 'trader', ["top%d" %i for i in range(10)]))
     >>> print "%s" %(tops)
@@ -190,29 +175,6 @@ class TwseBestTraderAlg(TwseAlgDBHandler):
     def __init__(self, **kwargs):
         self._alg = BestTraderAlgorithm
         super(TwseBestTraderAlg, self).__init__(**kwargs)
-        self._collect = {
-            'debug': self._debug,
-            'opt': self._opt,
-            'frame': {
-                # hisstock frame collect
-                'hisstock': {
-                    'starttime': datetime.utcnow() - timedelta(days=100),
-                    'endtime': datetime.utcnow(),
-                    'stockids': [],
-                    'order': 'totalvolume',
-                    'limit': 10
-                },
-                'histrader': {
-                    'starttime': datetime.utcnow() - timedelta(days=10),
-                    'endtime': datetime.utcnow(),
-                    'stockids': [],
-                    'traderids':[],
-                    'base': 'stock',
-                    'order': 'totalvolume',
-                    'limit': 10
-                }
-            }
-        }
 
     def run(self, starttime, endtime, stockids=[], traderids=[], callback=None):
         for stockid in stockids:
@@ -230,7 +192,7 @@ class TwseBestTraderAlg(TwseAlgDBHandler):
                     alg = self._alg(dbhandler=db, **self._cfg)
                     results = alg.run(data).fillna(0)
                     self._report.collect("%s-%s" %(traderid, stockid), results)
-        #
+
         if callback == self.to_summary:
             return callback(self._report.summary())
         if callback == self.to_detail:
@@ -245,20 +207,6 @@ class TwseBBandsAlg(TwseAlgDBHandler):
     def __init__(self, **kwargs):
         self._alg = BBandsAlgorithm
         super(TwseBBandsAlg, self).__init__(**kwargs)
-        self._collect = {
-            'debug': self._debug,
-            'opt': self._opt,
-            'frame': {
-                # hisstock frame collect
-                'hisstock': {
-                    'starttime': datetime.utcnow() - timedelta(days=100),
-                    'endtime': datetime.utcnow(),
-                    'stockids': [],
-                    'order': 'totalvolume',
-                    'limit': 10
-                }
-            }
-        }
 
     def run(self, starttime, endtime, stockids=[], callback=None):
         for stockid in stockids:
@@ -291,11 +239,6 @@ class OtcDualemaAlg(TwseDualemaAlg):
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect(db, host=host, port=port, alias=db)
         self._sumycoll = switch(AlgSummaryColl, db)
-        self._opt = 'otc'
-        self._collect.update({
-            'debug': self._debug,
-            'opt': self._opt,
-        })
 
 
 class OtcBestTraderAlg(TwseBestTraderAlg):
@@ -307,11 +250,6 @@ class OtcBestTraderAlg(TwseBestTraderAlg):
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect(db, host=host, port=port, alias=db)
         self._sumycoll = switch(AlgSummaryColl, db)
-        self._opt = 'otc'
-        self._collect.update({
-            'debug': self._debug,
-            'opt': self._opt
-        })
 
 class OtcBBandsAlg(TwseBBandsAlg):
 
@@ -322,9 +260,4 @@ class OtcBBandsAlg(TwseBBandsAlg):
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect(db, host=host, port=port, alias=db)
         self._sumycoll = switch(AlgSummaryColl, db)
-        self._opt = 'otc'
-        self._collect.update({
-            'debug': self._debug,
-            'opt': self._opt
-        })
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+# as event
 from main.table import default_tags
 
 def hisstock_list_tags(**kwargs):
@@ -49,6 +50,7 @@ def default_hiscollect(**kwargs):
         'traderids': traderids,
         'algorithm': algorithm,
         'opt': opt,
+        'type': None,
         'debug': debug,
         'frame': {
             'hisstock': {
@@ -83,7 +85,18 @@ def default_hiscollect(**kwargs):
                 'order': ['-totalvolume'],
                 'callback': None,
                 'limit': 10,
-                'priority': 2,
+                'priority': 3,
+            },
+            'hisfuture': {
+                'on': False,
+                'starttime': starttime,
+                'endtime': endtime,
+                'stockids': stockids,
+                'base': 'stock',
+                'order': ['-totaldiff'],
+                'callback': None,
+                'limit': 10,
+                'priority': 2
             }
         }
     }

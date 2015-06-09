@@ -31,7 +31,7 @@ class TestTwseDualemaAlg():
         self.assertTrue(len(algitem)>0)
         self.assertTrue(algitem[-1].open>0)
 
-class TestTwseBestTraderAlg(TestTwseHisTrader2, TestTwseHisStock):
+class TestTwseBestTraderAlg():
 
     def test_on_run(self, opt='twse', alg='btrader'):
         super(TestTwseBestTraderAlg, self).test_on_run()
