@@ -4,10 +4,10 @@ from main.router import *
 
 def is_hisstock_detail(**collect):
     router = [
-        StockProfile0_buy,
-        StockProfile0_sell,
-        StockProfile1_buy,
-        StockProfile1_sell
+        StockProfileUp0,
+        StockProfileDown0,
+        StockProfileUp1,
+        StockProfileDown1
     ]
     if collect['algorithm'] not in [i[1] for i in ALG_CHOICES if i[0] in range(0,4)]:
         return False
@@ -19,10 +19,10 @@ def is_hisstock_detail(**collect):
 
 def is_hisstock_list(**collect):
     router = [
-        StockProfile0_buy,
-        StockProfile0_sell,
-        StockProfile1_buy,
-        StockProfile1_sell
+        StockProfileUp0,
+        StockProfileDown0,
+        StockProfileUp1,
+        StockProfileDown1
     ]
     if collect['algorithm'] not in [i[1] for i in ALG_CHOICES if i[0] in range(0,4)]:
         return False
@@ -34,8 +34,8 @@ def is_hisstock_list(**collect):
 
 def is_histrader_detail(**collect):
     router = [
-        TraderProfile0_buy,
-        TraderProfile0_sell
+        TraderProfileUp0,
+        TraderProfileDown0
     ]
     if collect['algorithm'] not in [i[1] for i in ALG_CHOICES if i[0] in range(4,6)]:
         return False
@@ -47,8 +47,8 @@ def is_histrader_detail(**collect):
 
 def is_histrader_list(**collect):
     router = [
-        TraderProfile0_buy,
-        TraderProfile0_sell
+        TraderProfileUp0,
+        TraderProfileDown0
     ]
     if collect['algorithm'] not in [i[1] for i in ALG_CHOICES if i[0] in range(4,6)]:
         return False

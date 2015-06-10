@@ -5,7 +5,7 @@ from main.models import ALG_CHOICES
 DETAIL_LIMIT = 10
 LIST_LIMIT = 50
 
-def StockProfile0_buy(**collect):
+def StockProfileUp0(**collect):
     # StockProfile0+
     if collect['algorithm'] == ALG_CHOICES[0][1]:
         limit = DETAIL_LIMIT if collect['type'] == 'detail' else LIST_LIMIT
@@ -31,7 +31,7 @@ def StockProfile0_buy(**collect):
             'priority': 2
         })
 
-def StockProfile0_sell(**collect):
+def StockProfileDown0(**collect):
     # StockProfile0-
     if collect['algorithm'] == ALG_CHOICES[1][1]:
         limit = DETAIL_LIMIT if collect['type'] == 'detail' else LIST_LIMIT
@@ -57,7 +57,7 @@ def StockProfile0_sell(**collect):
             'priority': 2
         })
 
-def StockProfile1_buy(**collect):
+def StockProfileUp1(**collect):
     # StockProfile1+
     if collect['algorithm'] == ALG_CHOICES[2][1]:
         limit = DETAIL_LIMIT if collect['type'] == 'detail' else LIST_LIMIT
@@ -83,7 +83,7 @@ def StockProfile1_buy(**collect):
             'priority': 2
         })
 
-def StockProfile1_sell(**collect):
+def StockProfileDown1(**collect):
     # StockProfile1-
     if collect['algorithm'] == ALG_CHOICES[3][1]:
         limit = DETAIL_LIMIT if collect['type'] == 'detail' else LIST_LIMIT
@@ -109,7 +109,7 @@ def StockProfile1_sell(**collect):
             'priority': 2
         })
 
-def TraderProfile0_buy(**collect):
+def TraderProfileUp0(**collect):
     # TraderProfile0+
     if collect['algorithm'] == ALG_CHOICES[4][1]:
         limit = DETAIL_LIMIT if collect['type'] == 'detail' else LIST_LIMIT
@@ -135,7 +135,7 @@ def TraderProfile0_buy(**collect):
             'priority': 2
         })
 
-def TraderProfile0_sell(**collect):
+def TraderProfileDown0(**collect):
     # TraderProfile0-
     if collect['algorithm'] == ALG_CHOICES[5][1]:
         limit = DETAIL_LIMIT if collect['type'] == 'detail' else LIST_LIMIT

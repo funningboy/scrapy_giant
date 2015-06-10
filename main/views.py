@@ -27,13 +27,13 @@ def router_search(request):
         router = [
             # query
             (is_hisstock_detail, hisstock_detail_html),
-            #(is_histrader_detail, histrader_detail_html),
-            #(is_dualema_detail, dualema_detail_html),
-            #(is_btrader_detail, btader_detail_html),
-            #(is_bbands_detail, bbands_detail_html),
-            ## alg
+            (is_histrader_detail, histrader_detail_html),
+            (is_dualema_detail, dualema_detail_html),
+            (is_btrader_detail, btader_detail_html),
+            (is_bbands_detail, bbands_detail_html),
+            # alg
             (is_hisstock_list, hisstock_list_html)
-            #(is_histrader_list, histrader_list_html),
+            (is_histrader_list, histrader_list_html),
         ]
         for r in router:
             if (r[0](**collect)):
@@ -57,6 +57,7 @@ def default_search(request):
     endtime = datetime.utcnow()
     stockids = []
     traderids = []
+    opt = None
     algorithm = None
 
     if 'starttime' in request.GET and request.GET['starttime']:
@@ -72,12 +73,6 @@ def default_search(request):
     if 'algorithm' in request.GET and request.GET['algorithm']:
         algorithm = request.GET['algorithm']
 
-    kwargs = {
-        'stock': {'debug': _debug},
-        'trader': {'debug': _debug}
-    }
-    stockids = stockids if stockids else [i for i in iddb_tasks[opt](**kwargs['stock']).stock.get_ids()]
-    traderids = traderids if traderids else [i for i in iddb_tasks[opt](**kwargs['trader']).trader.get_ids()]
     kwargs = {
         'starttime': starttime,
         'endtime': endtime,

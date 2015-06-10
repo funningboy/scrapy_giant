@@ -16,8 +16,6 @@ class JSONResponse(HttpResponse):
         super(JSONResponse, self).__init__(content, **kwargs)
 
 # @
-# @csrf_token
-@api_view(['GET'])
 def hisstock_list_json(request):
     if request.method == 'GET':
         collect = default_search(request)
@@ -25,8 +23,7 @@ def hisstock_list_json(request):
             data, _ = collect_hisitem(**collect)
             return JSONResponse(data)
 
-# @
-@api_view(['GET'])
+#@
 def hisstock_detail_json(request):
     if request.method == 'GET':
         collect = default_search(request)
@@ -34,7 +31,6 @@ def hisstock_detail_json(request):
             data, _ = collect_hisitem(**collect)
             return JSONResponse(data)
 
-@api_view(['GET'])
 def histrader_list_json(request):
     if request.method == 'GET':
         collect = default_search(request)
@@ -42,7 +38,6 @@ def histrader_list_json(request):
             data, _ = collect_hisitem(**collect)
             return JSONResponse(data)
 
-@api_view(['GET'])
 def histrader_detail_json(request):
     if request.method == 'GET':
         collect = default_search(request)

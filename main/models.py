@@ -4,13 +4,13 @@ from mongoengine import *
 
 ALG_CHOICES = (
     # map as hisstock_detail/list
-    (0, 'StockProfile0+'),
-    (1, 'StockProfile0-'),
-    (2, 'StockProfile1+'),
-    (3, 'StockProfile1-'),
+    (0, 'StockProfileUp0'),
+    (1, 'StockProfileDown0'),
+    (2, 'StockProfileUp1'),
+    (3, 'StockProfileDown1'),
     # map as histrader_detail/list,
-    (4, 'TraderProfile0+'),
-    (5, 'TraderProfile0-')
+    (4, 'TraderProfileUp0'),
+    (5, 'TraderProfileDown0')
     # map as alg
 )
 

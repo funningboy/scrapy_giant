@@ -1,11 +1,16 @@
 
-function loadChartData() {
-    var URL = "http://127.0.0.1:8000/handler/api/hisstock_detail/?opt=twse&starttime=2015%2F05%2F01&endtime=2015%2F06%2F05&stockids=2330&traderids=&algorithm=StockProfile0%2B"
-    //kwargs.starttime
-    //var URL = encodeURI(uri)
+function loadChartData(settings) {
+    // host:port ...
+    var URL = "http://127.0.0.1:8000/handler/api/hisstock_detail/?";
+    $.each(settings, function(k, v) {
+        if (k == "stockids" || k == "traderids") {
+            v = v.join();
+        }
+        URL = URL + k + "=" + v +"&"
+    });
     // csrf_token
     $.ajax({
-        url: URL,
+        url: encodeURI(URL),
         data: {},
         type: "GET",
         dataType: "json",

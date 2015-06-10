@@ -220,17 +220,32 @@
 window.onload=function(){
     var stockids = [];
     var traderids = [];
+    var starttime = new Date("{{ starttime|date:"c" }}");
+    var endtime = new Date("{{ endtime|date:"c" }}");
+    var opt = "{{ opt }}";
+    var algorithm = "{{ algorithm }}";
+    var debug = "{{ debug }}";
+    var csrf_token = "{{ csrf_token }}";
+    {% for i in stockids %}
+        stockids.push("{{ i }}");
+    {% endfor %}
+    {% for i in traderids %}
+        traderids.push("{{ i }}");
+    {% endfor %}
+
     var settings = {
-        "starttime": "{{ starttime }}",
-        "endtime": "{{ endtime }}",
-        "stockids": {% for i in %},
-        "traderids": {% for i in %},
-        "opt":
-        "algorithm":
-        "debug":
+        "starttime": yyyymmdd(starttime),
+        "endtime": yyyymmdd(endtime),
+        "stockids": stockids,
+        "traderids": traderids,
+        "opt": opt,
+        "algorithm": algorithm,
+        "debug": debug,
+        "csrfmiddlewaretoken": csrf_token
     }
+    //console.log(settings);
     AmCharts.ready(function () {});
-    loadChartData();
+    loadChartData(settings);
 }
 // ]]>
 </script>
