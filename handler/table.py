@@ -34,7 +34,6 @@ def histrader_detail_tags(**kwargs):
     return default_tags(**kwargs)
 
 def default_hiscollect(**kwargs):
-    """ hiscollect table to post process """
     starttime = kwargs.pop('starttime', None)
     endtime = kwargs.pop('endtime', None)
     stockids =  kwargs.pop('stockids', [])

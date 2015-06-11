@@ -2,12 +2,14 @@
 
 import pandas as pd
 import pytz
+import copy
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
 from mongoengine import *
 from bin.start import switch
 from bin.mongodb_driver import MongoDBDriver
+from handler.table import default_hiscollect
 from handler.tasks import *
 from algorithm.models import *
 from algorithm.report import Report
@@ -41,193 +43,118 @@ algdbmap = {
 class TwseAlgDBHandler(object):
     """
     """
+
     def __init__(self, **kwargs):
-        self._debug = kwargs.pop('debug', False)
-        self._cfg = kwargs.pop('cfg', {'debug': self._debug, 'buf_win': 30})
+        self._debug = kwargs.get('debug', False)
+        assert(self._alg)
+        self._cfg = {}
         db = "twse%s" %(algdbmap[self._alg])
         db = db if not self._debug else 'test' + db
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect(db, host=host, port=port, alias=db)
         self._sumycoll = switch(AlgSummaryColl, db)
-        self._report = Report(sort=[('buy_count', False), ('sell_count', False), ('portfolio_value', False)], limit=100)
         self._collect = default_hiscollect(**kwargs)
-
-    def run(self):
-        pass
-
-    def delete_summary(self, item):
-        pass
+        self._report = Report(sort=[('buys', False), ('sells', False), ('portfolio_value', False)], limit=100)
 
     @property
     def sumycoll(self):
         return self._sumycoll
 
+    def iter_hisframe(self):
+        for stockid in self._collect['stockids']:
+            for k in ['hisstock', 'hiscredit', 'histrader']:
+                self._collect['frame'][k].update({
+                    'on': True,
+                    'stockids': [stockid]
+                    })
+            data, handler = collect_hisframe(**copy.deepcopy(self._collect))
+            yield stockid, data, handler
+
+    def run(self, callback=None):            
+        for stockid, data, dbhandler in self.iter_hisframe():
+            if not data.empty and dbhandler:
+                alg = self._alg(dbhandler, **self._cfg)
+                results = alg.run(data).fillna(0)
+                self._report.collect("%s" %(stockid), results)
+
+        if callback == self.to_summary:
+            return callback(self._report.summary())
+        if callback == self.to_detail:
+            return callback(self._report.iter_report(stockid))
+        return self._report.summary()
+
+    def delete_summary(self, item):
+        pass
+
     def to_summary(self, df):
         keys = [k for k,v in AlgSummaryColl._fields.iteritems()]
+        names = df.columns.values.tolist()
         for ix, cols in df.iterrows():
             stockid = ix
-            cursor = self._sumycoll.objects(Q(end_time=cols['end_time']) & Q(stockid=stockid))
+            cursor = self._sumycoll.objects(Q(endtime=cols['endtime']) & Q(stockid=stockid))
             coll = self._sumycoll() if len(cursor) == 0 else cursor[0]
-            coll.start_time = cols['start_time']
-            coll.end_time = cols['end_time']
+            [setattr(coll, k, cols[k]) for k in names if k in keys]
             coll.stockid = stockid
-            coll.portfolio_value = cols['portfolio_value']
-            coll.ending_value = cols['ending_value']
-            coll.ending_cash = cols['ending_cash']
-            coll.capital_used = cols['capital_used']
-            coll.buy_count = cols['buy_count']
-            coll.sell_count = cols['sell_count']
             coll.save()
 
     def to_detail(self, df):
         retval = []
+        keys = [k for k,v in AlgDetailColl._fields.iteritems()]
+        names = df.columns.values.tolist()
         for ix, cols in df.iterrows():
-            coll = {
-                'time': ix,
-                'open': cols['open'],
-                'high': cols['high'],
-                'low': cols['low'],
-                'close': cols['close'],
-                'volume': cols['volume'],
-                'portfolio_value': cols['portfolio_value'],
-                'ending_value': cols['ending_value'],
-                'ending_cash': cols['ending_cash'],
-                'capital_used': cols['capital_used'],
-                'buy': cols['buy'],
-                'sell': cols['sell']
-            }
+            coll = {k:cols[k] for k in names if k in keys}
             retval.append(coll)
         return retval
 
-    def query_summary(self, time=None, stockids=[], traderids=[], **kwargs):
-        keys = [k for k,v in AlgSummaryColl._fields.iteritems()]
+    def query_summary(self, order=['-buys', 'sells', '-portfolio_value'], limit=10):
+        """ return orm
+        <algorithm>                               
+        <endtime> |<bufwin> | <stockid> | <traderid> | buys | sells ...
+        20140928  |  5      |  2330     |   null     | 100  | 100  
+        20140929  | 10      |  2317     |  1440      | 99   | 99   
+        """
+        map_f = """
+            function () {
+                try {
+                    var key =  { stockid : this.stockid };
+
+                    };
+                    emit(key, value);
+                }
+                catch(e){
+                }
+                finally{
+                }
+            }
+        """
+        reduce_f = """
+        """
+        finalize_f = """
+        """
+        #assert(set([o[1:] for o in order]) <= set(['']))
         cursor = self._sumycoll.objects.all()
-        if time:
-            cursor = cursor(Q(end_time=time))
-        if stockids:
-            cursor = cursor(Q(stockid__in=stockids))
-        if traderids:
-            cursor = cursor(Q(traderid__in=traderids))
-        for k in keys:
-            v = kwargs.pop(k, None)
-            if v:
-                c = {"%s__gt" %(k): v}
-                # __lt
-                cursor = cursor(Q(**c))
         return list(cursor)
 
 
-    def query_detail(self):
-        pass
-
-
 class TwseDualemaAlg(TwseAlgDBHandler):
-    """
-    >>>
-    >>> alg = TwseDualemaAlg(debug=True)
-    >>> item = alg.run(starttime, endtime, ['2317'], alg.to_detail)
-    >>> print item
-    """
 
     def __init__(self, **kwargs):
         self._alg = DualEMAAlgorithm
         super(TwseDualemaAlg, self).__init__(**kwargs)
 
-    def run(self, starttime, endtime, stockids=[], callback=None):
-        for stockid in stockids:
-            self._collect['frame']['hisstock'].update({
-                'starttime': starttime,
-                'endtime': endtime,
-                'stockids': [stockid],
-            })
-            data, db = collect_hisframe(**self._collect)
-            if not data.empty and db:
-                if len(data[stockid].index) < self._cfg['buf_win']:
-                    continue
-                alg = self._alg(dbhandler=db, **self._cfg)
-                results = alg.run(data).fillna(0)
-                self._report.collect("%s" %(stockid), results)
-
-        if callback == self.to_summary:
-            return callback(self._report.summary())
-        if callback == self.to_detail:
-            return callback(self._report.iter_report(stockid))
-        return self._report.summary()
-
 
 class TwseBestTraderAlg(TwseAlgDBHandler):
-    """
-    # find trader
-    >>> starttime = datetime.utcnow() - timedelta(days=10)
-    >>> endtime = datetime.utcnow()
-    >>> kwargs = {'debug': True, 'opt': otc}
-    >>> dbhandler = TwseHisDBHandler(**kwargs)
-    >>> args = (starttime, endtime, ['2317'], [], 'stock', ['-totalvolume'], 10)
-    >>> dbhandler.trader.query_raw(*args)
-    >>> tops = list(dbhandler.trader.get_alias(['2317'], 'trader', ["top%d" %i for i in range(10)]))
-    >>> print "%s" %(tops)
-    # run alg
-    >>> alg = TwseBestTraderAlg(debug=True)
-    >>> item = alg.run(starttime, endtime, ['2317'], tops, alg.to_detail)
-    >>> print item
-    """
 
     def __init__(self, **kwargs):
         self._alg = BestTraderAlgorithm
         super(TwseBestTraderAlg, self).__init__(**kwargs)
 
-    def run(self, starttime, endtime, stockids=[], traderids=[], callback=None):
-        for stockid in stockids:
-            for traderid in traderids:
-                self._collect['frame']['histrader'].updte({
-                    'starttime': starttime,
-                    'endtime': endtime,
-                    'stockids': [stockid],
-                    'traderids': [traderid]
-                })
-                data, db = collect_hisframe(**self._collect)
-                if not data.empty or db:
-                    if len(data[stockid].index) < self._cfg['buf_win']:
-                        continue
-                    alg = self._alg(dbhandler=db, **self._cfg)
-                    results = alg.run(data).fillna(0)
-                    self._report.collect("%s-%s" %(traderid, stockid), results)
-
-        if callback == self.to_summary:
-            return callback(self._report.summary())
-        if callback == self.to_detail:
-            return callback(self._report.iter_report("%s-%s" %(traderid, stockid)))
-        return self._report.summary()
-
 
 class TwseBBandsAlg(TwseAlgDBHandler):
-    """
-    """
 
     def __init__(self, **kwargs):
         self._alg = BBandsAlgorithm
         super(TwseBBandsAlg, self).__init__(**kwargs)
-
-    def run(self, starttime, endtime, stockids=[], callback=None):
-        for stockid in stockids:
-            self._collect['frame']['hisstock'].update({
-                'starttime': starttime,
-                'endtime': endtime,
-                'stockids': [stockid],
-            })
-            data, db = collect_hisframe(**self._collect)
-            if not data.empty and db:
-                if len(data[stockid].index) < self._cfg['buf_win']:
-                    continue
-                alg = self._alg(dbhandler=db, **self._cfg)
-                results = alg.run(data).fillna(0)
-                self._report.collect("%s" %(stockid), results)
-
-        if callback == self.to_summary:
-            return callback(self._report.summary())
-        if callback == self.to_detail:
-            return callback(self._report.iter_report(stockid))
-        return self._report.summary()
 
 
 class OtcDualemaAlg(TwseDualemaAlg):
@@ -250,6 +177,7 @@ class OtcBestTraderAlg(TwseBestTraderAlg):
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect(db, host=host, port=port, alias=db)
         self._sumycoll = switch(AlgSummaryColl, db)
+
 
 class OtcBBandsAlg(TwseBBandsAlg):
 

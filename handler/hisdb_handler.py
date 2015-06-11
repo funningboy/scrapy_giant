@@ -380,10 +380,9 @@ class TwseTraderHisDBHandler(object):
                             totaltradevolume: tradevolume,
                             data: [{
                                 date: this.date,
-                            traderid: this.toplist[i].traderid,
-                            tradernm: this.toplist[i].tradernm,
-
-                                ratio: ratio,
+                                traderid: this.toplist[i].traderid,
+                                tradernm: this.toplist[i].tradernm,
+                                ratio: ratio.toFixed(2),
                                 avgbuyprice: avgbuyprice,
                                 avgsellprice: avgsellprice,
                                 buyvolume: buyvolume,
@@ -604,7 +603,7 @@ class TwseCreditHisDBHandler(object):
                         bearishused = this.bearish.curremain / this.bearish.limit * 100;
                     }
                     var value = {
-                        financetrend: financetrend,
+                        financetrend: financetrend.toFixed(2),
                         financeused: financeused,
                         bearishtrend: bearishtrend,
                         bearishused: bearishused,
@@ -612,10 +611,10 @@ class TwseCreditHisDBHandler(object):
                             date: this.date,
                             financebuyvolume: this.finance.buyvolume,
                             financesellvolume: this.finance.sellvolume,
-                            financeused: financeused,
+                            financeused: financeused.toFixed(2),
                             bearishbuyvolume: this.bearish.buyvolume,
                             bearishsellvolume: this.bearish.sellvolume,
-                            bearishused: bearishused
+                            bearishused: bearishused.toFixed(2)
                         }]
                     };
                     emit(key, value);

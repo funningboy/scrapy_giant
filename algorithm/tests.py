@@ -4,55 +4,47 @@
 # main.INSTALLED_APPS has included handler task
 
 import timeit
+import unittest
+import json
+from bson import json_util
 from datetime import datetime, timedelta
 from main.tests import NoSQLTestCase
-from algorithm.tasks import *
+from handler.tasks import *
+from handler.table import default_hiscollect
 from django.template import Context, Template
+from algorithm.algdb_handler import TwseDualemaAlg
 
-class TestTwseDualemaAlg():
+skip_tests = {
+    'TestTwseDualemaAlg': False,
+}
 
-    def test_on_run(self, opt='twse', alg='dualema'):
-        super(TestTwseDualemaAlg, self).test_on_run()
-        starttime = datetime.utcnow() - timedelta(days=150)
-        endtime = datetime.utcnow()
-        args = (opt, alg, starttime, endtime, 10, True)
-        # as background algorithm service
-        run_algorithm_service.delay(*args).get()
-        # query summary
-        alghandler = algdb_tasks[opt][alg]()
-        algitem = alghandler.query_summary()
-        self.assertTrue(len(algitem)>0)
-        self.assertTrue(algitem[-1].portfolio_value>0)
-        # as run/query detail
-        alghandler = algdb_tasks[opt][alg]()
-        args = (starttime, endtime, ['2317'], [], 'totalvolume', 10, alghandler.to_detail)
-        alghandler.run(*args)
-        algitem = alghandler.query_detail()
-        self.assertTrue(len(algitem)>0)
-        self.assertTrue(algitem[-1].open>0)
+class TestTwseDualemaAlg(NoSQLTestCase):
 
-class TestTwseBestTraderAlg():
+    def setUp(self):
+        self._kwargs = {
+            'starttime': datetime.utcnow() - timedelta(days=10),
+            'endtime': datetime.utcnow(),
+            'stockids': ['2317', '2330', '1314'],
+            'traderids': [],
+            'opt': 'twse',
+            'algorithm': None,
+            'debug': True
+        }   
 
-    def test_on_run(self, opt='twse', alg='btrader'):
-        super(TestTwseBestTraderAlg, self).test_on_run()
-        starttime = datetime.utcnow() - timedelta(days=10)
-        endtime = datetime.utcnow()
-        args = (opt, alg, starttime, endtime, 10, True)
-        # as background algorithm service
-        run_algorithm_service.delay(*args).get()
-        # as run/query summary
-        alghandler = algdb_tasks[opt][alg]()
-        algitem = alghandler.query_summary()
-        self.assertTrue(len(algitem)>0)
-        self.assertTrue(algitem[-1].portfolio_value>0)
-        # as run/query detail
-        # find traders as tops
-        args = ('twse', starttime, endtime, ['2317'], [], 'stock', 'totalvolume', 10)
-        panel, dbhandler = trans_histoptrader(*args)
-        tops = dbhandler.trader.map_alias(['2317'], 'stock', ["top%d" %i for i in range(10)])
-        alghandler = algdb_tasks[opt][alg]()
-        args = (starttime, endtime, ['2317'], [tops[0]], 'totalvolume', 10, alghandler.to_detail)
-        alghandler.run(*args)
-        algitem = alghandler.query_detail()
-        self.assertTrue(len(algitem)>0)
-        self.assertTrue(algitem[-1].open>0)
+    def test_on_run(self):
+        alg = TwseDualemaAlg(**self._kwargs)
+        panel = alg.run()
+        self.assertTrue(panel is not None)
+        self.assertFalse(panel.empty)
+
+    def test_on_detail(self):
+        alg = TwseDualemaAlg(**self._kwargs)
+        item = alg.run(alg.to_detail)
+        self.assertTrue(item)
+     
+    def test_on_summary(self):
+        alg = TwseDualemaAlg(**self._kwargs)
+        alg.run(alg.to_summary)
+        print alg.query_summary()
+
+

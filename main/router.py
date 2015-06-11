@@ -6,7 +6,6 @@ DETAIL_LIMIT = 10
 LIST_LIMIT = 50
 
 def StockProfileUp0(**collect):
-    # StockProfile0+
     if collect['algorithm'] == ALG_CHOICES[0][1]:
         limit = DETAIL_LIMIT if collect['type'] == 'detail' else LIST_LIMIT
         collect['frame']['hisstock'].update({
@@ -32,7 +31,6 @@ def StockProfileUp0(**collect):
         })
 
 def StockProfileDown0(**collect):
-    # StockProfile0-
     if collect['algorithm'] == ALG_CHOICES[1][1]:
         limit = DETAIL_LIMIT if collect['type'] == 'detail' else LIST_LIMIT
         collect['frame']['hisstock'].update({
@@ -58,7 +56,6 @@ def StockProfileDown0(**collect):
         })
 
 def StockProfileUp1(**collect):
-    # StockProfile1+
     if collect['algorithm'] == ALG_CHOICES[2][1]:
         limit = DETAIL_LIMIT if collect['type'] == 'detail' else LIST_LIMIT
         collect['frame']['hisstock'].update({
@@ -84,7 +81,6 @@ def StockProfileUp1(**collect):
         })
 
 def StockProfileDown1(**collect):
-    # StockProfile1-
     if collect['algorithm'] == ALG_CHOICES[3][1]:
         limit = DETAIL_LIMIT if collect['type'] == 'detail' else LIST_LIMIT
         collect['frame']['hisstock'].update({
@@ -110,7 +106,6 @@ def StockProfileDown1(**collect):
         })
 
 def TraderProfileUp0(**collect):
-    # TraderProfile0+
     if collect['algorithm'] == ALG_CHOICES[4][1]:
         limit = DETAIL_LIMIT if collect['type'] == 'detail' else LIST_LIMIT
         collect['frame']['histrader'].update({
@@ -136,7 +131,6 @@ def TraderProfileUp0(**collect):
         })
 
 def TraderProfileDown0(**collect):
-    # TraderProfile0-
     if collect['algorithm'] == ALG_CHOICES[5][1]:
         limit = DETAIL_LIMIT if collect['type'] == 'detail' else LIST_LIMIT
         collect['frame']['histrader'].update({
@@ -161,6 +155,9 @@ def TraderProfileDown0(**collect):
             'priority': 2
         })
 
-def DualemaProfile(**collect):
+def DualemaProfileUp0(**collect):
+    pass
+
+def DualemaProfileDown0(**collect):
     pass
 

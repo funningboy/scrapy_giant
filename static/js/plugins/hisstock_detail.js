@@ -8,6 +8,7 @@ function loadChartData(settings) {
         }
         URL = URL + k + "=" + v +"&"
     });
+    console.log(encodeURI(URL));
     // csrf_token
     $.ajax({
         url: encodeURI(URL),

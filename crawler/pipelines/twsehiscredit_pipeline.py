@@ -52,7 +52,7 @@ class TwseHisCreditPipeline(BasePipeline):
         frame['sellvolume'] = frame['sellvolume'].astype(int) // 1000
         frame['daytrade'] = frame['daytrade'].astype(int) // 1000
         frame['curremain'] = frame['curremain'].astype(int) // 1000
-        frame['limit'] = frame['limit'].astype(int) // 1000
+        frame['limit'] = frame['limit'].astype(long) // 1000
         item = frame.T.to_dict().values()
         log.msg("item: %s" % (item), level=log.DEBUG)
         return item

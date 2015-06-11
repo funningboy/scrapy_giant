@@ -126,7 +126,7 @@ def run(opt='twse', debug=False, limit=0):
             }
             dbhandler = TwseHisDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcHisDBHandler(**kwargs)
             dbhandler.stock.ids = [stockid]
-            args = (starttime, endtime, [stockid], ['-totalvolume'], 10)
+            args = (starttime, endtime, [stockid], 'stock', ['-totalvolume'], 10)
             cursor = dbhandler.stock.query_raw(*args)
             data = dbhandler.stock.to_pandas(cursor)
             if len(data[stockid].index) < maxlen:

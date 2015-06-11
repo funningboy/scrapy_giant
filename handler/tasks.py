@@ -82,7 +82,7 @@ def collect_hisitem(**collect):
                 if dt:
                     item.update({'futureitem': dt})
                     stockids = [i['stockid'] for i in dt]
-
+    # align item?
     return item, dbhandler
 
 
@@ -148,6 +148,8 @@ def collect_hisframe(**collect):
         return panel, dbhandler
     return pd.Panel(), dbhandler
 
+def collect_relitem(**collect):
+    pass
 
 def collect_relframe(**collect):
     pass

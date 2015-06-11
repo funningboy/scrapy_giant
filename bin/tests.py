@@ -52,11 +52,11 @@ scrapy_kwargs = {
     },
 }
 
-@unittest.skipIf(True, 'skip TestAdd')
-class TestAdd(NoSQLTestCase):
-
-    def test_on_run(self):
-        self.assertEqual(3, add.delay(1,2).get())
+#@unittest.skipIf(True, 'skip TestAdd')
+#class TestAdd(NoSQLTestCase):
+#
+#    def test_on_run(self):
+#        self.assertEqual(3, add.delay(1,2).get())
 
 
 class TestRunScrapyService(NoSQLTestCase):
@@ -146,6 +146,6 @@ class TestOtcId():
 class TestTwseHisStock():
     pass
 
-class TwstTwseHisTrader():
+class TestTwseHisTrader():
     pass
 

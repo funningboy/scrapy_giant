@@ -29,11 +29,11 @@ scrapy_tasks = [
     'otchisnocredit'
 ]
 
-@shared_task
-def add(x, y):
-    r = x + y
-    print "test celey add %d" %(r)
-    return r
+#@shared_task
+#def add(x, y):
+#    r = x + y
+#    print "test celey add %d" %(r)
+#    return r
 
 # as background service
 @shared_task

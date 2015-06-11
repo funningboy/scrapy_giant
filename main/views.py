@@ -27,13 +27,13 @@ def router_search(request):
         router = [
             # query
             (is_hisstock_detail, hisstock_detail_html),
-            (is_histrader_detail, histrader_detail_html),
-            (is_dualema_detail, dualema_detail_html),
-            (is_btrader_detail, btader_detail_html),
-            (is_bbands_detail, bbands_detail_html),
+            #(is_histrader_detail, histrader_detail_html),
+            #(is_dualema_detail, dualema_detail_html),
+            #(is_btrader_detail, btader_detail_html),
+            #(is_bbands_detail, bbands_detail_html),
             # alg
             (is_hisstock_list, hisstock_list_html)
-            (is_histrader_list, histrader_list_html),
+            #(is_histrader_list, histrader_list_html),
         ]
         for r in router:
             if (r[0](**collect)):

@@ -28,15 +28,15 @@ class Report(object):
         # https://github.com/quantopian/zipline/blob/7892a6943f7b027be1e3c5a75eac61e7c4c0a027/zipline/finance/performance/period.py
         # collect and sort results as df
         item = OrderedDict({
-            'buy_count': results['buy'].sum() if 'buy' in results.columns else 0,
-            'sell_count': results['sell'].sum() if 'sell' in results.columns else 0,
+            'bufwin': (results.index[-1] - results.index[0]).days,
+            'endtime': results.index[-1] if len(results.index) > 0 else datetime.utcnow(),
+            'buys': results['buy'].sum() if 'buy' in results.columns else 0,
+            'sells': results['sell'].sum() if 'sell' in results.columns else 0,
             # zipline key
             'portfolio_value': results['portfolio_value'][-1] if 'portfolio_value' in results.columns else 0,
             'ending_value': results['ending_value'][-1] if 'ending_value' in results.columns else 0,
             'ending_cash': results['ending_cash'][-1] if 'ending_cash' in results.columns else 0,
-            'capital_used': results['capital_used'][-1] if 'capital_used' in results.columns else 0,
-            'start_time': results.index[0] if len(results.index) > 0 else datetime.utcnow(),
-            'end_time': results.index[-1] if len(results.index) > 0 else datetime.utcnow()
+            'capital_used': results['capital_used'][-1] if 'capital_used' in results.columns else 0
         })
         frame = pd.DataFrame.from_dict({symbol: item}).fillna(0)
         self._report = pd.concat([self._report, frame.T], axis=0).fillna(0).sort(columns=list(self._sort), ascending=list(self._direct))[0:self._limit]
