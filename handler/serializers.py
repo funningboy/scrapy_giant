@@ -4,7 +4,6 @@ import json
 from bson import json_util
 from django.http import HttpResponse
 from rest_framework.renderers import JSONRenderer
-from rest_framework.decorators import api_view
 from main.views import default_search
 from main.tasks import *
 from handler.tasks import collect_hisitem

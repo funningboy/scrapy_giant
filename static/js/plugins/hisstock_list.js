@@ -1,6 +1,6 @@
 
 //csrf_token
-function loadChartData() {
+function loadChartData(settings) {
      // host:port ...
     var URL = "http://127.0.0.1:8000/handler/api/hisstock_detail/?";
     $.each(settings, function(k, v) {
@@ -9,6 +9,7 @@ function loadChartData() {
         }
         URL = URL + k + "=" + v +"&"
     });
+    console.log(encodeURI(URL));
     // csrf_token
     $.ajax({
         url: encodeURI(URL),

@@ -346,6 +346,7 @@ class TwseTraderHisDBHandler(object):
         """
         map_f = """
             function () {
+                try {
                     for (var i=0; i < this.toplist.length; i++) {
                         var key =  { traderid: this.toplist[i].traderid, stockid: this.stockid };
                         var totalvolume = this.toplist[i].data.totalvolume;
@@ -364,6 +365,7 @@ class TwseTraderHisDBHandler(object):
                         if (this.data.volume >0) {
                             if (maxvolume >0) {
                                 ratio = maxvolume / this.data.volume * 100;
+                                ratio = parseFloat(ratio.toFixed(2));
                                 hit = 1;
                             }
                         }
@@ -382,7 +384,7 @@ class TwseTraderHisDBHandler(object):
                                 date: this.date,
                                 traderid: this.toplist[i].traderid,
                                 tradernm: this.toplist[i].tradernm,
-                                ratio: ratio.toFixed(2),
+                                ratio: ratio,
                                 avgbuyprice: avgbuyprice,
                                 avgsellprice: avgsellprice,
                                 buyvolume: buyvolume,
@@ -391,6 +393,11 @@ class TwseTraderHisDBHandler(object):
                         };
                         emit(key, value);
                     }
+                }
+                catch(e){
+                }
+                finally{
+                }
            }
         """
         reduce_f = """
@@ -592,18 +599,22 @@ class TwseCreditHisDBHandler(object):
                     var bearishused = 0;
                     if (this.finance.preremain > 0) {
                         financetrend = (this.finance.curremain - this.finance.preremain) / this.finance.preremain;
+                        financetrend = parseFloat(financetrend.toFixed(2));
                     }
                     if (this.finance.limit > 0) {
                         financeused = this.finance.curremain / this.finance.limit * 100;
+                        financeused = parseFloat(financeused.toFixed(2));
                     }
                     if (this.bearish.preremain > 0) {
                         bearishtrend = (this.bearish.curremain - this.bearish.preremain) / this.bearish.preremain;
+                        bearishtrend = parseFloat(bearishtrend.toFixed(2));
                     }
                     if (this.bearish.limit > 0) {
                         bearishused = this.bearish.curremain / this.bearish.limit * 100;
+                        bearishused = parseFloat(bearishused.toFixed(2));
                     }
                     var value = {
-                        financetrend: financetrend.toFixed(2),
+                        financetrend: financetrend,
                         financeused: financeused,
                         bearishtrend: bearishtrend,
                         bearishused: bearishused,
@@ -611,10 +622,10 @@ class TwseCreditHisDBHandler(object):
                             date: this.date,
                             financebuyvolume: this.finance.buyvolume,
                             financesellvolume: this.finance.sellvolume,
-                            financeused: financeused.toFixed(2),
+                            financeused: financeused,
                             bearishbuyvolume: this.bearish.buyvolume,
                             bearishsellvolume: this.bearish.sellvolume,
-                            bearishused: bearishused.toFixed(2)
+                            bearishused: bearishused
                         }]
                     };
                     emit(key, value);

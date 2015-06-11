@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load compress %}
+{% load staticfiles %}
 
 {% block page %}
 <!-- stock table  -->
@@ -58,19 +59,44 @@
 
 {% block script %}
 <link rel="stylesheet" href="http://amcharts.com/lib/3/plugins/export/export.css">
-<link rel="stylesheet" href="http://127.0.0.1:8000/static/css/jquery.dynatable.css">
+<link rel="stylesheet" href="{% static 'css/jquery.dynatable.css' %}">
 <script type="text/javascript" src="http://www.amcharts.com/lib/3/amcharts.js"></script>
 <script type="text/javascript" src="http://www.amcharts.com/lib/3/pie.js"></script>
 <script type="text/javascript" src="http://www.amcharts.com/lib/3/serial.js"></script>
 <script type="text/javascript" src="http://www.amcharts.com/lib/3/themes/none.js"></script>
 <script type="text/javascript" src="http://www.amcharts.com/lib/3/plugins/export/export.js""></script>
-<script type="text/javascript" src="http://127.0.0.1:8000/static/js/jquery.dynatable.js"></script>
-<script type="text/javascript" src="http://127.0.0.1:8000/static/js/plugins/util.js"></script>
-<script type="text/javascript" src="http://127.0.0.1:8000/static/js/plugins/hisstock_list.js"></script>
+<script type="text/javascript" src="{% static 'js/jquery.dynatable.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/plugins/util.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/plugins/hisstock_list.js' %}"></script>
 <script type="text/javascript">
 // <![CDATA[
 // load topbuy_piechart, topsell_piechart, topmap_columnchart,
 window.onload=function(){
+    var stockids = [];
+    var traderids = [];
+    var starttime = new Date("{{ starttime|date:"c" }}");
+    var endtime = new Date("{{ endtime|date:"c" }}");
+    var opt = "{{ opt }}";
+    var algorithm = "{{ algorithm }}";
+    var debug = "{{ debug }}";
+    var csrf_token = "{{ csrf_token }}";
+    {% for i in stockids %}
+        stockids.push("{{ i }}");
+    {% endfor %}
+    {% for i in traderids %}
+        traderids.push("{{ i }}");
+    {% endfor %}
+    var settings = {
+        "starttime": yyyymmdd(starttime),
+        "endtime": yyyymmdd(endtime),
+        "stockids": stockids,
+        "traderids": traderids,
+        "opt": opt,
+        "algorithm": algorithm,
+        "debug": debug,
+        "csrfmiddlewaretoken": csrf_token
+    }
+    //console.log(settings);
     AmCharts.ready(function () {});
     loadChartData();
 

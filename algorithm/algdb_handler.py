@@ -70,7 +70,7 @@ class TwseAlgDBHandler(object):
             data, handler = collect_hisframe(**copy.deepcopy(self._collect))
             yield stockid, data, handler
 
-    def run(self, callback=None):            
+    def run(self, callback=None):
         for stockid, data, dbhandler in self.iter_hisframe():
             if not data.empty and dbhandler:
                 alg = self._alg(dbhandler, **self._cfg)
@@ -106,12 +106,12 @@ class TwseAlgDBHandler(object):
             retval.append(coll)
         return retval
 
-    def query_summary(self, order=['-buys', 'sells', '-portfolio_value'], limit=10):
+    def query_summary(self, endtime, bufwin, order=['-buys', '-sells', '-portfolio_value'], limit=10):
         """ return orm
-        <algorithm>                               
+        <algorithm>
         <endtime> |<bufwin> | <stockid> | <traderid> | buys | sells ...
-        20140928  |  5      |  2330     |   null     | 100  | 100  
-        20140929  | 10      |  2317     |  1440      | 99   | 99   
+        20140928  |  5      |  2330     |   null     | 100  | 100
+        20140929  | 10      |  2317     |  1440      | 99   | 99
         """
         map_f = """
             function () {
