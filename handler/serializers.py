@@ -8,12 +8,6 @@ from main.views import default_search
 from main.tasks import *
 from handler.tasks import collect_hisitem
 
-class JSONResponse(HttpResponse):
-    def __init__(self, data, **kwargs):
-        content = JSONRenderer().render(data)
-        kwargs['content_type'] = 'application/json'
-        super(JSONResponse, self).__init__(content, **kwargs)
-
 # @
 def hisstock_list_json(request):
     if request.method == 'GET':

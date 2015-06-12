@@ -11,7 +11,7 @@ from bson import json_util
 from datetime import datetime, timedelta
 from main.tests import NoSQLTestCase
 from handler.tasks import *
-from handler.table import default_hiscollect
+from handler.collects import create_hiscollect
 from django.template import Context, Template
 
 skip_tests = {
@@ -32,7 +32,7 @@ class TestTwseHisItemQuery(NoSQLTestCase):
             'algorithm': None,
             'debug': True
         }
-        collect = default_hiscollect(**kwargs)
+        collect = create_hiscollect(**kwargs)
         for k in ['hisstock', 'hiscredit', 'histrader']:
             collect['frame'][k].update({'on': True })
 
@@ -46,7 +46,6 @@ class TestTwseHisItemQuery(NoSQLTestCase):
 
 @unittest.skipIf(skip_tests['TestTwseHisFrameQuery'], "skip")
 class TestTwseHisFrameQuery(NoSQLTestCase):
-    """ makre sure db contains the data """
 
     def test_on_run(self):
         kwargs = {
@@ -58,7 +57,7 @@ class TestTwseHisFrameQuery(NoSQLTestCase):
             'algorithm': None,
             'debug': True
         }
-        collect = default_hiscollect(**kwargs)
+        collect = create_hiscollect(**kwargs)
         for k in ['hisstock', 'hiscredit', 'histrader']:
             collect['frame'][k].update({'on': True })
 

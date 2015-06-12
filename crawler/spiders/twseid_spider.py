@@ -25,8 +25,7 @@ class TwseIdSpider(CrawlSpider):
 
     def __init__(self, crawler):
         super(TwseIdSpider, self).__init__()
-        URL = 'http://isin.twse.com.tw/isin/C_public.jsp?strMode=2'
-        self.start_urls = [URL]
+        self.start_urls = ['http://isin.twse.com.tw/isin/C_public.jsp?strMode=2']
 
     def parse(self, response):
         log.msg("URL: %s" % (response.url), level=log.DEBUG)

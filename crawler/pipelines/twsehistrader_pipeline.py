@@ -92,8 +92,8 @@ class TwseHisTraderPipeline(BasePipeline):
                     'totalvolume': it['totalvolume']
                 }
             })
-        yy, mm, dd = item['date'].split('-')
-        item['date'] = datetime(int(yy), int(mm), int(dd), 0, 0, 0, 0, pytz.utc)
+        yy, mm, dd = map(int, item['date'].split('-'))
+        item['date'] = datetime(yy, mm, dd, 0, 0, 0, 0, pytz.utc)
         log.msg("item: %s" % (item), level=log.DEBUG)
         return item
 

@@ -24,8 +24,7 @@ class OtcIdSpider(CrawlSpider):
 
     def __init__(self, crawler):
         super(OtcIdSpider, self).__init__()
-        URL = 'http://isin.twse.com.tw/isin/C_public.jsp?strMode=4'
-        self.start_urls = [URL]
+        self.start_urls = ['http://isin.twse.com.tw/isin/C_public.jsp?strMode=4']
 
     def parse(self, response):
         log.msg("URL: %s" % (response.url), level=log.DEBUG)

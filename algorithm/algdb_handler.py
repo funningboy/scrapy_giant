@@ -9,8 +9,8 @@ from datetime import datetime, timedelta
 from mongoengine import *
 from bin.start import switch
 from bin.mongodb_driver import MongoDBDriver
-from handler.table import default_hiscollect
-from handler.tasks import *
+from handler.collects import create_hiscollect
+from handler.tasks import collect_hisframe
 from algorithm.models import *
 from algorithm.report import Report
 from algorithm.dualema import DualEMAAlgorithm
@@ -41,8 +41,6 @@ algdbmap = {
 }
 
 class TwseAlgDBHandler(object):
-    """
-    """
 
     def __init__(self, **kwargs):
         self._debug = kwargs.get('debug', False)
@@ -53,7 +51,7 @@ class TwseAlgDBHandler(object):
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect(db, host=host, port=port, alias=db)
         self._sumycoll = switch(AlgSummaryColl, db)
-        self._collect = default_hiscollect(**kwargs)
+        self._collect = create_hiscollect(**kwargs)
         self._report = Report(sort=[('buys', False), ('sells', False), ('portfolio_value', False)], limit=100)
 
     @property
@@ -91,7 +89,7 @@ class TwseAlgDBHandler(object):
         names = df.columns.values.tolist()
         for ix, cols in df.iterrows():
             stockid = ix
-            cursor = self._sumycoll.objects(Q(endtime=cols['endtime']) & Q(stockid=stockid))
+            cursor = self._sumycoll.objects(Q(watchtime=cols['watchtime']) &Q(bufwin=cols['bufwin']) & Q(stockid=stockid))
             coll = self._sumycoll() if len(cursor) == 0 else cursor[0]
             [setattr(coll, k, cols[k]) for k in names if k in keys]
             coll.stockid = stockid
@@ -106,18 +104,25 @@ class TwseAlgDBHandler(object):
             retval.append(coll)
         return retval
 
-    def query_summary(self, endtime, bufwin, order=['-buys', '-sells', '-portfolio_value'], limit=10):
+    def query_summary(self, watchtime, bufwin=None, order=['-totalportfolio'], limit=10, callback=None):
         """ return orm
         <algorithm>
-        <endtime> |<bufwin> | <stockid> | <traderid> | buys | sells ...
-        20140928  |  5      |  2330     |   null     | 100  | 100
-        20140929  | 10      |  2317     |  1440      | 99   | 99
+        <watchtime> |<bufwin> | <stockid> | <traderid> | buys | sells ...
+        20140928    |  5      |  2330     |   null     | 100  | 100
+        20140929    | 10      |  2317     |  1440      | 99   | 99
         """
         map_f = """
             function () {
                 try {
                     var key =  { stockid : this.stockid };
-
+                    var value = {
+                        totalportfolio: this.portfolio_value,
+                        totalbuys: this.buys,
+                        totalsells: this.sells,
+                        tottalused: this.capital_used,
+                        data: [{
+                            bufwin: this.bufwin
+                        }]
                     };
                     emit(key, value);
                 }
@@ -128,12 +133,52 @@ class TwseAlgDBHandler(object):
             }
         """
         reduce_f = """
+            function (key, values) {
+                var redval = {
+                    totalportfolio: 0,
+                    totalbuys: 0,
+                    totalsells: 0,
+                    tottalused: 0,
+                    data: []
+                };
+                if (values.length == 0) {
+                    return redval;
+                }
+                for (var i=0; i < values.length; i++) {
+                    redval.totalportfolio += values[i].totalportfolio;
+                    redval.totalbuys += values[i].totalbuys;
+                    redval.totalsells += values[i].totalsells;
+                    redval.tottalused += values[i].tottalused;
+                    redval.data = values[i].data.concat(redval.data);
+                }
+                return redval;
+            }
         """
         finalize_f = """
         """
-        #assert(set([o[1:] for o in order]) <= set(['']))
-        cursor = self._sumycoll.objects.all()
-        return list(cursor)
+        assert(set([o[1:] for o in order]) <= set(['totalbuys', 'totalsells', 'totalportfolio', 'totalused']))
+        cursor = self._sumycoll.objects(Q(watchtime=watchtime) & Q(bufwin=bufwin))
+        results = cursor.map_reduce(map_f, reduce_f, 'algmap')
+        results = list(results)
+        reorder = lambda k: map(lambda x: k.value[x[1:]] if x.startswith('+') else -k.value[x[1:]], order)
+        pool = sorted(results, key=reorder)[:limit]
+        retval = []
+        for it in pool:
+            coll = {
+                # key
+                'watchtime': watchtime,
+                'bufwin': bufwin,
+                'stockid': it.key['stockid'],
+                'order': order,
+                'stocknm': self._id.stock.get_name(it.key['stockid']),
+                # value
+                'totalportfolio': it.value['totalportfolio'],
+                'totalbuys': it.value['totalbuys'],
+                'totalsells': it.values['totalsells'],
+                'tottalused': it.values['totalused']
+            }
+            retval.append(coll)
+        return callback(retval) if callback else retval
 
 
 class TwseDualemaAlg(TwseAlgDBHandler):

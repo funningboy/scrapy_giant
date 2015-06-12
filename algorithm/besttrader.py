@@ -91,14 +91,12 @@ class BestTraderAlgorithm(TradingAlgorithm):
 
 def run(opt='twse', debug=False, limit=0):
     """ as doctest run """
-    # set time window
     maxlen = 5
     starttime = datetime.utcnow() - timedelta(days=15)
     endtime = datetime.utcnow()
-    # sort factor
     report = Report(
-        sort=[('buy_count', False), ('sell_count', False), ('portfolio_value', False)], limit=20)
-    # set debug or normal mode
+        sort=[('buys', False), ('sells', False), ('portfolio_value', False)], limit=20)
+    
     kwargs = {
         'debug': debug,
         'limit': limit,

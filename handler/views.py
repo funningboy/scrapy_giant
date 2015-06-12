@@ -3,7 +3,7 @@
 from django.http import HttpResponse
 from django.shortcuts import render_to_response, render
 from django.views.decorators.csrf import csrf_protect
-from handler.table import *
+
 
 @csrf_protect
 def hisstock_list_html(request, **collect):

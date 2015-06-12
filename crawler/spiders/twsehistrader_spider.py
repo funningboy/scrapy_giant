@@ -50,8 +50,8 @@ class TwseHisTraderSpider(CrawlSpider):
     def start_requests(self):
         URL = 'http://bsr.twse.com.tw/bshtm/bsMenu.aspx'
         for i,stockid in enumerate(self._id.stock.get_ids()):
-#            if not idhandler.stock.is_warrant(stockid):
-#                continue
+            if self._id.stock.is_warrant(stockid):
+                continue
             item = TwseHisTraderItem()
             item.update({
                 'stockid': stockid,
@@ -152,7 +152,7 @@ class TwseHisTraderSpider(CrawlSpider):
         item = response.meta['item']
         sel = Selector(response)
         date = sel.xpath('.//*[@id="receive_date"]/text()').extract()[0]
-        yy, mm, dd = date.split('/')
+        yy, mm, dd = map(int, date.split('/'))
         item['date'] = u"%s-%s-%s" % (yy, mm, dd)
         stockdd = sel.xpath('.//*[@id="stock_id"]/text()').extract()[0]
         item['stockid'], item['stocknm'] = stockdd.split()

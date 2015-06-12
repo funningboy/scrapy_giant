@@ -43,8 +43,8 @@ class TwseHisStockPipeline(BasePipeline):
         if frame.empty:
             return
         def _encode_datetime(it):
-            yy, mm, dd = it.split('-')
-            return datetime(int(yy), int(mm), int(dd), 0, 0, 0, 0, pytz.utc)
+            yy, mm, dd = map(int, it.split('-'))
+            return datetime(yy, mm, dd, 0, 0, 0, 0, pytz.utc)
         frame['date'] = [_encode_datetime(it) for it in frame['date']]
         frame['volume'] = frame['volume'].astype(int) // 1000
         frame['open'] = frame['open'].astype(float)

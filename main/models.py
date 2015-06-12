@@ -25,7 +25,7 @@ WIN_CHOICES = (
 
 
 PFL_CHOICES = (
-    (0, 'Dulema+'),
+    (0, 'Dualema'),
 )
 
 class SearchItem(Document):

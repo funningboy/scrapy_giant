@@ -37,6 +37,8 @@ class StockHisColl(Document):
     data = EmbeddedDocumentField(StockData)
     finance = EmbeddedDocumentField(CreditData)
     bearish = EmbeddedDocumentField(CreditData)
+    #future
+    #event
     meta = {
         'db_alias': 'stockhisdb',
         'allow_inheritance': True,
@@ -58,7 +60,8 @@ class StockIdColl(Document):
     meta = {
         'db_alias': 'stockiddb',
         'allow_inheritance': True,
-        'indexes': [('stockid', 'stocknm')]
+        'indexes': [('stockid', 'stocknm')],
+        'ordering': [('+stockid')]
     }
 
 class TwseIdColl(StockIdColl):
@@ -75,52 +78,6 @@ class TraderIdColl(Document):
     meta = {
         'db_alias': 'traderiddb',
         'allow_inheritance': True,
-        'indexes': [('traderid', 'tradernm')]
+        'indexes': [('traderid', 'tradernm')],
+        'ordering': [('+traderid')]
     }
-
-# collect stock feature
-class StockMapColl(Document):
-    # key
-    date = DateTimeField(default=datetime.utcnow())
-    bufwin = IntField(min_value=0, max_value=999)
-    stockid = StringField()
-    order = StringField()
-    # value
-    totaldiff = FloatField(min_value=0.0, max_value=99999.0)
-    totalvolume = IntField(min_value=0, max_value=9999999)
-    meta = {
-        'db_alias': 'stockmapdb',
-        'allow_inheritance': True,
-        'indexes': [('date', 'bufwin', 'stockid', 'order')],
-        'ordering': [('-date')]
-    }
-
-
-# collect trader feature
-class TraderMapColl(Document):
-    # key
-    date = DateTimeField(default=datetime.utcnow())
-    bufwin = IntField(min_value=0, max_value=999)
-    traderid = StringField()
-    stockid = StringField()
-    order = StringField()
-    # value
-    totalvolume = IntField(min_value=0, max_value=9999999)
-    totalbuyvolume = IntField(min_value=0, max_value=9999999)
-    totalsellvolume = IntField(min_value=0, max_value=9999999)
-    totalhit = IntField(min_value=0, max_value=9999999)
-    totaltradeprice = FloatField(min_value=0.0, max_value=9999.0)
-    totaltradevolume = IntField(min_value=0, max_value=9999999)
-    meta = {
-        'db_alias': 'tradermapdb',
-        'allow_inheritance': True,
-        'indexes': [('date', 'bufwin', 'traderid', 'stockid')],
-        'ordering':[('-date', '-totalvolume')]
-    }
-
-# collect credit feature
-class CreditMapColl(Document):
-    # key
-    # value
-    pass
-

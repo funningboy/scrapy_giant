@@ -29,7 +29,7 @@ class Report(object):
         # collect and sort results as df
         item = OrderedDict({
             'bufwin': (results.index[-1] - results.index[0]).days,
-            'endtime': results.index[-1] if len(results.index) > 0 else datetime.utcnow(),
+            'watchtime': results.index[-1] if len(results.index) > 0 else datetime.utcnow(),
             'buys': results['buy'].sum() if 'buy' in results.columns else 0,
             'sells': results['sell'].sum() if 'sell' in results.columns else 0,
             # zipline key

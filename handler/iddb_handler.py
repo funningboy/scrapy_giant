@@ -4,6 +4,7 @@
 import pandas as pd
 import numpy as np
 import os
+import copy
 
 from mongoengine import *
 from bin.start import switch
@@ -51,9 +52,8 @@ class TwseIdDBHandler(object):
 class OtcIdDBHandler(TwseIdDBHandler):
 
     def __init__(self, **kwargs):
-        ckwargs = kwargs.copy()
-        super(OtcIdDBHandler, self).__init__(**kwargs)
-        self._debug = ckwargs.pop('debug', False)
+        super(OtcIdDBHandler, self).__init__(**copy.deepcopy(kwargs))
+        self._debug = kwargs.pop('debug', False)
         host, port = MongoDBDriver._host, MongoDBDriver._port
         db = 'traderiddb' if not self._debug else 'testtraderiddb'
         connect(db, host=host, port=port, alias=db)
@@ -149,14 +149,12 @@ class StockIdDBHandler(object):
         pass
 
     def insert_raw(self, item):
+        keys = [k for k,v in StockIdColl._fields.iteritems()]
         for it in item:
             cursor = self._coll.objects(Q(stockid=it['stockid']))
             cursor = list(cursor)
             coll = self._coll() if len(cursor) == 0 else cursor[0]
-            coll.stockid = it['stockid']
-            coll.stocknm = it['stocknm']
-            coll.onmarket = it['onmarket']
-            coll.industry = it['industry']
+            [setattr(coll, k, it[k]) for k in keys]
             coll.save()
 
 class TraderIdDBHandler(object):
@@ -222,11 +220,10 @@ class TraderIdDBHandler(object):
         pass
 
     def insert_raw(self, item):
+        keys = [k for k,v in TraderIdColl._fields.iteritems()]
         for it in item:
             cursor = self._coll.objects(Q(traderid=it['traderid']))
             cursor = list(cursor)
             coll = self._coll() if len(cursor) == 0 else cursor[0]
-            coll.traderid = it['traderid']
-            coll.tradernm = it['tradernm']
+            [setattr(coll, k, it[k]) for k in keys]
             coll.save()
-

@@ -11,6 +11,7 @@ __all__ ['TwseRelDBHandler', 'OtcRelDBHandler']
 class TwseRelDBHandler(object):
 
     def __init__(self):
+    	pass
 
-
-class OtcRelDBHandler(TwseRelDBHandler)
+class OtcRelDBHandler(TwseRelDBHandler):
+	pass

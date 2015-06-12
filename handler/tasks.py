@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-
 import pandas as pd
 import json
 from bson import json_util
-from celery import shared_task
-from datetime import datetime, timedelta
 from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
 from handler.hisdb_handler import TwseHisDBHandler, OtcHisDBHandler
 
@@ -35,7 +31,7 @@ def collect_hisitem(**collect):
     assert(opt in ['twse', 'otc'])
     frame = collect['frame']
     cols = frame.keys()
-    assert(cols <= ['hisstock', 'histrader', 'hiscredit'])
+    assert(cols <= ['hisstock', 'histrader', 'hiscredit', 'hisfuture'])
     assert(len(set([frame[col]['base'] for col in cols if frame[col]['on']]))==1)
 
     stockids = []
@@ -102,7 +98,7 @@ def collect_hisframe(**collect):
     assert(opt in ['twse', 'otc'])
     frame = collect['frame']
     cols = frame.keys()
-    assert(cols <= ['hisstock', 'histrader', 'hiscredit'])
+    assert(cols <= ['hisstock', 'histrader', 'hiscredit', 'hisfuture'])
     assert(len(set([frame[col]['base'] for col in cols if frame[col]['on']]))==1)
 
     dbhandler = hisdb_tasks[opt](**collect)

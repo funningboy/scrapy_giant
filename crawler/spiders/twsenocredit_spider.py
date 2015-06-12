@@ -27,8 +27,7 @@ class TwseNoCreditSpider(CrawlSpider):
 
     def __init__(self, crawler):
         super(TwseHisStockSpider, self).__init__()
-        URL = 'http://www.twse.com.tw/ch/trading/exchange/BFI84U/BFI84U.php'
-        self.start_urls = [URL]
+        self.start_urls = ['http://www.twse.com.tw/ch/trading/exchange/BFI84U/BFI84U.php']
 
     def parse(self, response):
         log.msg("URL: %s" % (response.url), level=log.DEBUG)
