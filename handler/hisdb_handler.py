@@ -23,7 +23,7 @@ class TwseHisDBHandler(object):
     >>> endtime = datetime.utcnow()
     >>> dbhandler = TwseHisDBHandler(debug=True, opt='twse')
     >>> dbhandler.stock.ids = ['2317']
-    >>> args = (starttime, endtime, [stockid], ['-totalvolume'], 10)
+    >>> args = (starttime, endtime, [stockid], 'stock', ['-totalvolume'], 10)
     >>> cursor = dbhandler.stock.query_raw(*args)
     >>> data = dbhandler.stock.to_pandas(cursor)
     >>> print data
@@ -32,7 +32,7 @@ class TwseHisDBHandler(object):
     >>> cursor = dbhandler.trader.query_raw(*args)
     >>> data = dbhandler.trader.to_pandas(cursor)
     >>> print data
-    >>> args = (starttime, endtime, [stockid], ['-financeused'], 10)
+    >>> args = (starttime, endtime, [stockid], 'stock', ['-financeused'], 10)
     >>> cursor = dbhandler.credit.query_raw(*args)
     >>> data = dbhandler.credit.to_pandas(cursor)
     >>> print data
@@ -149,8 +149,8 @@ class TwseStockHisDBHandler(object):
         pass
 
     def insert_raw(self, item):
-        """ update stock part """
-        keys = [k for k,v in StockData._fields.iteritems()]
+        """ bluk update stock part """
+        keys = [k for k,v in StockData._fields.iteritems() if k not in ['id']]
         for it in item:
             data = {k:v for k, v in it.items() if k in keys}
             data = StockData(**data)
@@ -291,8 +291,8 @@ class TwseTraderHisDBHandler(object):
         pass
 
     def insert_raw(self, item):
-        """ update trader part """
-        keys = [k for k,v in TraderData._fields.iteritems()]
+        """ bluk update trader part """
+        keys = [k for k,v in TraderData._fields.iteritems() if k not in ['id']]
         toplist = []
         for it in item['toplist']:
             data = {k:v for k, v in it['data'].items() if k in keys}
@@ -525,8 +525,8 @@ class TwseCreditHisDBHandler(object):
         pass
 
     def insert_raw(self, item):
-        """ update credit part """
-        keys = [k for k,v in CreditData._fields.iteritems()]
+        """ bluk update credit part """
+        keys = [k for k,v in CreditData._fields.iteritems() if k not in ['id']]
         for it in item:
             data = {k:v for k, v in it.items() if k in keys}
             data = CreditData(**data)
@@ -658,7 +658,7 @@ class TwseCreditHisDBHandler(object):
 
 
 class TwseFutureHisDBHandler(object):
-    
+
     def __init__(self, **kwargs):
         self._coll = kwargs.pop('coll', None)
         self._debug = kwargs.pop('debug', False)
@@ -689,7 +689,7 @@ class OtcStockHisDBHandler(TwseStockHisDBHandler):
                 'debug': kwargs['debug'],
                 'opt': 'otc'
             }
-        }    
+        }
         self._id = OtcIdDBHandler(**kwargs['id'])
 
 class OtcTraderHisDBHandler(TwseTraderHisDBHandler):

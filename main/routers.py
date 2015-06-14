@@ -2,7 +2,7 @@
 
 from main.rules import *
 
-def is_hisstock_detail(**collect):
+def is_hisstock_detail(collect):
     router = [
         StockProfileUp0,
         StockProfileDown0,
@@ -13,11 +13,11 @@ def is_hisstock_detail(**collect):
         return False
     if collect['starttime'] >= collect['endtime'] or len(collect['stockids']) != 1:
         return False
-    collect.update({'type': 'detail'})
-    [r(**collect) for r in router]
+    collect.update({'method': 'detail'})
+    [r(collect) for r in router]
     return True
 
-def is_hisstock_list(**collect):
+def is_hisstock_list(collect):
     router = [
         StockProfileUp0,
         StockProfileDown0,
@@ -28,11 +28,11 @@ def is_hisstock_list(**collect):
         return False
     if collect['starttime'] >= collect['endtime']:
         return False
-    collect.update({'type': 'list'})
-    [r(**collect) for r in router]
+    collect.update({'method': 'list'})
+    [r(collect) for r in router]
     return True
 
-def is_histrader_detail(**collect):
+def is_histrader_detail(collect):
     router = [
         TraderProfileUp0,
         TraderProfileDown0
@@ -41,11 +41,11 @@ def is_histrader_detail(**collect):
         return False
     if collect['starttime'] >= collect['endtime'] and len(collect['traderids']) != 1:
         return False
-    collect.update({'type': 'detail'})
-    [r(**collect) for r in router]
+    collect.update({'method': 'detail'})
+    [r(collect) for r in router]
     return True
 
-def is_histrader_list(**collect):
+def is_histrader_list(collect):
     router = [
         TraderProfileUp0,
         TraderProfileDown0
@@ -54,7 +54,7 @@ def is_histrader_list(**collect):
         return False
     if collect['starttime'] >= collect['endtime']:
        return False
-    collect.update({'type': 'list'})
-    [r(**collect) for r in router]
+    collect.update({'method': 'list'})
+    [r(collect) for r in router]
     return True
 

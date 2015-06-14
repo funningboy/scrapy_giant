@@ -1,0 +1,86 @@
+{% block search_form %}
+<li class="sidebar-search">
+<a href="javascript:;" data-toggle="collapse" data-target="#search"><i class="fa fa-fw fa-arrows-v"></i> Search <i class="fa fa-fw fa-caret-down"></i></a>
+<ul id="search" class="collapse">
+    <form class="form-horizontal" id="{{ searchform.auto_id }}" action="{% url 'router_search' %}" method="get">
+        {% csrf_token %}
+        <!-- opt -->
+        <div class="input-group input-group-sm{% if searchform.opt.errors %} has-error{% endif %}">
+            <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
+            <select class="form-control" id="{{ searchform.opt.auto_id }}" name="{{ searchform.opt.name }}">
+                {% for error in searchform.opt.errors %}
+                <p class="help-block">{{ error }}</p>
+                {% endfor %}
+                {% for k, v in searchform.opt.field.choices %}
+                <option>{{ v|stringformat:"s" }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <!-- starttime -->
+        <div class="input-group input-group-sm{% if searchform.starttime.errors %} has-error{% endif %}">
+            <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
+            <input type="text" class="form-control" id="{{ searchform.starttime.auto_id }}" name="{{ searchform.starttime.name }}" placeholder="{{ searchform.starttime.help_text }}" autocomplete="off">
+            {% for error in searchform.starttime.errors %}
+            <p class="help-block">{{ error }}</p>
+            {% endfor %}
+        </div>
+        <!-- endtime -->
+        <div class="input-group input-group-sm{% if searchform.endtime.errors %} has-error{% endif %}">
+            <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
+            <input type="text" class="form-control" id="{{ searchform.endtime.auto_id }}" name="{{ searchform.endtime.name }}" placeholder="{{ searchform.endtime.help_text }}" autocomplete="off">
+            {% for error in searchform.endtime.errors %}
+            <p class="help-block">{{ error }}</p>
+            {% endfor %}
+        </div>
+        <!-- stockids -->
+        <div class="input-group input-group-sm{% if searchform.stockids.errors %} has-error{% endif %}">
+            <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
+            <input type="text" class="form-control" id="{{ searchform.stockids.auto_id }}" name="{{ searchform.stockids.name }}" placeholder="{{ searchform.stockids.help_text }}" autocomplete="off">
+            {% for error in searchform.stockids.errors %}
+            <p class="help-block">{{ error }}</p>
+            {% endfor %}
+        </div>
+        <!-- traderids -->
+        <div class="input-group input-group-sm{% if searchform.traderids.errors %} has-error{% endif %}">
+            <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
+            <input type="text" class="form-control" id="{{ searchform.traderids.auto_id }}" name="{{ searchform.traderids.name }}" placeholder="{{ searchform.traderids.help_text }}" autocomplete="off">
+            {% for error in searchform.traderids.errors %}
+            <p class="help-block">{{ error }}</p>
+            {% endfor %}
+        </div>
+        <!-- algorithm choice -->
+        <div class="input-group input-group-sm{% if searchform.algorithm.errors %} has-error{% endif %}">
+            <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
+            <select class="form-control" id="{{ searchform.algorithm.auto_id }}" name="{{ searchform.algorithm.name }}">
+                {% for error in searchform.algorithm.errors %}
+                <p class="help-block">{{ error }}</p>
+                {% endfor %}
+                {% for k, v in searchform.algorithm.field.choices %}
+                <option>{{ v|stringformat:"s" }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <!-- search -->
+        <div class="input-group input-group-sm">
+            <span class="input-group-addon"><i class="fa fa-coffee fa-fw"></i></span>
+            <button class="btn btn-default" type="submit"><i class="fa fa-search fa-fw"></i></button>
+        </div>
+    </form>
+</ul>
+</li>
+{% endblock %}
+
+{% block script %}
+{{ script.super }}
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#{{ searchform.starttime.auto_id }}").datetimepicker({
+            format: 'YYYY/MM/DD'
+        });
+
+        $("#{{ searchform.endtime.auto_id }}").datetimepicker({
+            format: 'YYYY/MM/DD'
+        });
+    });
+</script>
+{% endblock %}

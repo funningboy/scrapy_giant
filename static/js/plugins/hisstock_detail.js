@@ -18,9 +18,6 @@ function loadChartData(settings) {
         cache: false,
 
         beforeSend: function() {
-            $("#topbuy_piechart").hide();
-            $("#topsell_piechart").hide();
-            $("#topmap_columnchart").hide();
         },
 
         complete: function() {
@@ -146,7 +143,7 @@ function generateCollectiveData(pdata){
 function createTopBuyPieChart(pdata) {
     var chart = AmCharts.makeChart("topbuy_piechart", {
         "type": "pie",
-        "theme": "light",
+        "theme": "dark",
         "path": "http://www.amcharts.com/lib/3/",
         "out": false,
         "dataProvider": pdata,
@@ -164,7 +161,7 @@ function createTopBuyPieChart(pdata) {
 function createTopSellPieChart(pdata) {
     var chart = AmCharts.makeChart("topsell_piechart", {
         "type": "pie",
-        "theme": "light",
+        "theme": "dark",
         "path": "http://www.amcharts.com/lib/3/",
         "out": false,
         "dataProvider": pdata,
@@ -183,7 +180,7 @@ function createTopMapColumnChart(cdata) {
     // create column chart
     var chart = AmCharts.makeChart("topmap_columnchart", {
         "type": "serial",
-        "theme": "light",
+        "theme": "dark",
         "path": "http://www.amcharts.com/lib/3/",
         "pathToImages": "http://www.amcharts.com/lib/3/images/",    
         "dataProvider": cdata,  
@@ -334,6 +331,7 @@ function createTopMapColumnChart(cdata) {
 return chart;
 }
 
+// bug index not align when buy/sell traders not tuple match
 function createCallBackListener(bchart, schart, mchart, cdata){
     bchart.addListener("pullOutSlice", function (event) {
         if (bchart.out == true) { 
@@ -409,8 +407,10 @@ function generateTableData(result){
             "high": d_it.high.toFixed(2),
             "low": d_it.low.toFixed(2),
             "volume": d_it.volume.toFixed(),
-            "financeused" : 0.00,
-            "bearishused": 0.00,
+            "finaused" : 0.00,
+            "bearused": 0.00,
+            "future": 0.00,
+            "event": ""
         });
     });
 
@@ -420,10 +420,12 @@ function generateTableData(result){
         var date = new Date(d_it.date);
         var rst = $.grep(ndata, function(e){ return e.date == yyyymmdd(date); });
         if (rst.length != 0) {
-            rst[0].financeused = d_it.financeused.toFixed(2);
-            rst[0].bearishused = d_it.bearishused.toFixed(2);
+            rst[0].finaused = d_it.financeused.toFixed(2);
+            rst[0].bearused = d_it.bearishused.toFixed(2);
         }
     });
+
+    // populate futureitem
 
     $('#stockdetail_table').dynatable({
         dataset: {

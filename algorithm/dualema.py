@@ -86,9 +86,9 @@ def run(opt='twse', debug=False, limit=0):
     endtime = datetime.utcnow()
     report = Report(
         sort=[('buys', False), ('sells', False), ('portfolio_value', False)], limit=20)
-    
+
     kwargs = {
-        'debug': True,
+        'debug': debug,
         'limit': limit,
         'opt': opt
     }
@@ -97,7 +97,7 @@ def run(opt='twse', debug=False, limit=0):
     for stockid in idhandler.stock.get_ids():
         try:
             kwargs = {
-                'debug': True,
+                'debug': debug,
                 'opt': opt
             }
             dbhandler = TwseHisDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcHisDBHandler(**kwargs)
@@ -107,7 +107,7 @@ def run(opt='twse', debug=False, limit=0):
             data = dbhandler.stock.to_pandas(cursor)
             if len(data[stockid].index) < maxlen:
                 continue
-            dualema = DualEMAAlgorithm(dbhandler=dbhandler, debug=True)
+            dualema = DualEMAAlgorithm(dbhandler=dbhandler, debug=debug)
             results = dualema.run(data).fillna(0)
             report.collect(stockid, results)
             print "%s pass" %(stockid)

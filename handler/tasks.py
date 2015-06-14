@@ -19,7 +19,7 @@ iddb_tasks = {
     'otc': OtcIdDBHandler
 }
 
-def collect_hisitem(**collect):
+def collect_hisitem(collect):
     """ as middleware cascade collect raw hisstock/histoptrader/hiscredit to item
     filer priority 0>1>2
     """
@@ -34,11 +34,12 @@ def collect_hisitem(**collect):
     assert(cols <= ['hisstock', 'histrader', 'hiscredit', 'hisfuture'])
     assert(len(set([frame[col]['base'] for col in cols if frame[col]['on']]))==1)
 
-    stockids = []
+    idhandler = iddb_tasks[opt](debug=collect['debug'])
+    stockids = [i for i in idhandler.stock.get_ids()] if collect['method'] == 'list' else []
     [stockids.extend(frame[col]['stockids']) for col in cols if frame[col]['on']]
     stockids = list(set(stockids))
 
-    traderids = []
+    traderids =[i for i in idhandler.trader.get_ids()] if collect['method'] == 'list' else []
     [traderids.extend(frame[col]['traderids']) for col in ['histrader'] if frame[col]['on'] and frame[col]['traderids']]
     traderids = list(set(traderids))
 
@@ -82,7 +83,7 @@ def collect_hisitem(**collect):
     return item, dbhandler
 
 
-def collect_hisframe(**collect):
+def collect_hisframe(collect):
     """  as middleware collect raw hisstock/histoptrader/hiscredit to df
     <stockid>                                | <stockid> ...
                 open| high| financeused| top0|           open | ...
@@ -144,8 +145,8 @@ def collect_hisframe(**collect):
         return panel, dbhandler
     return pd.Panel(), dbhandler
 
-def collect_relitem(**collect):
+def collect_relitem(collect):
     pass
 
-def collect_relframe(**collect):
+def collect_relframe(collect):
     pass

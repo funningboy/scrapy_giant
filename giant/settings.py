@@ -6,27 +6,28 @@ import sys
 from datetime import datetime, timedelta
 from os.path import join, abspath, dirname
 
-here = lambda *x: join(abspath(dirname(__file__)), *x)
-PROJECT_ROOT = here("..")
-root = lambda *x: join(abspath(PROJECT_ROOT), *x)
-
 import mongoengine
 #from mongoengine.django.sessions import MongoSession
 from celery.schedules import crontab
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.getcwd())
 
 _rootpath = os.environ.get('ROOTPATH', './tmp')
 _dbpath = os.environ.get('DBPATH', _rootpath)
 _logpath = os.environ.get('LOGPATH', _rootpath)
 _host = os.environ.get('HOSTNAME', 'localhost')
+_port = os.environ.get('HOSTPORT', '8000')
 _dbport = int(os.environ.get('DBPORT', '27017'))
 _amqport = int(os.environ.get('AMQPORT', '5672'))
 _mongod = os.environ.get('MONGOD', 'mongod')
 _debug = os.environ.get('DEBUG', False)
 _siteid = os.environ.get('SITE_ID', 1)
 
+CELERY_IGNORE_RESULT = True
 CELERY_DISABLE_RATE_LIMITS = True
+CELERY_DISABLE_RATE_LIMITS = True
+CELERY_TIMEZONE = 'UTC'
 CELERY_RESULT_BACKEND = 'mongodb'
 CELERY_MONGODB_BACKEND_SETTINGS = {
     'host': _host,
@@ -35,12 +36,12 @@ CELERY_MONGODB_BACKEND_SETTINGS = {
     'taskmeta_collection': 'taskcoll',
 }
 
-CELERY_TIMEZONE = 'UTC'
-
 BROKER_URL = "amqp://guest:guest@%s:%d" % (_host, _amqport)
 BACKEND_URL = "mongodb://%s:%d" % (_host, _dbport)
 
-ELERY_ACCEPT_CONTENT = ['json']
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -100,6 +101,7 @@ LANGUAGE_CODE = 'en-us'
 #python ./manage.py tellsiteid
 SITE_ID=_siteid
 #SITE_ID=1
+SITE_DOMAIN = '/'.join([_host,_port])
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
@@ -125,7 +127,6 @@ MEDIA_URL = ''
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
-STATIC_ROOT = root('collected_static')
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
@@ -156,11 +157,24 @@ COMPRESS_JS_FILTERS = [
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'x2$s&amp;0z2xehpnt_99i4q3)4)t*5q@+n(+6jrqz4@rt%a4fdf+!'
 
-# List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'templates'), ],
+        'APP_DIRS': True,
+        'OPTIONS': {}
+    },
+]
+
+TEMPLATE_CONTEXT_PROCESSORS = (
+     'django.contrib.auth.context_processors.auth',
+     'django.contrib.messages.context_processors.messages',
+     'main.context_processor.current_url',
+     'main.context_processor.searchform',
+     'main.context_processor.portfolioform'
 )
+
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
@@ -179,13 +193,8 @@ ROOT_URLCONF = 'main.urls'
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'giant.wsgi.application'
 
-TEMPLATE_DIRS = (
-    root('templates')
-    # Put strings here, like "/home/html/django_templates"
-    # or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-)
+
+
 
 COMPRESS_ENABLED = True
 

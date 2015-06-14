@@ -2,7 +2,7 @@
 //csrf_token
 function loadChartData(settings) {
      // host:port ...
-    var URL = "http://127.0.0.1:8000/handler/api/hisstock_detail/?";
+    var URL = "http://127.0.0.1:8000/handler/api/hisstock_list/?";
     $.each(settings, function(k, v) {
         if (k == "stockids" || k == "traderids") {
             v = v.join();
@@ -60,8 +60,10 @@ function generateTableData(result){
             "low": parseFloat(d_it.low.toFixed(2)),
             "close": parseFloat(d_it.close.toFixed(2)),
             "volume": parseInt(d_it.volume.toFixed()),
-            "financeused" : 0.00,
-            "bearishused": 0.00,
+            "finaused" : 0.00,
+            "bearused": 0.00,
+            "future": 0.00,
+            "event": ""
         });
     });
 
@@ -74,12 +76,12 @@ function generateTableData(result){
         var stockidnm = c_it.stockid + '-' + c_it.stocknm;
         var rst = $.grep(ndata, function(e){ return e.date == yyyymmdd(date) && e.stockidnm == stockidnm; });
         if (rst.length != 0) {
-            rst[0].financeused = parseFloat(d_it.financeused.toFixed(2));
-            rst[0].bearishused = parseFloat(d_it.bearishused.toFixed(2));
+            rst[0].finaused = parseFloat(d_it.financeused.toFixed(2));
+            rst[0].bearused = parseFloat(d_it.bearishused.toFixed(2));
         }
     });
 
-    $('#stockdetail_table').dynatable({
+    $('#stocklist_table').dynatable({
         dataset: {
             records: ndata
         }

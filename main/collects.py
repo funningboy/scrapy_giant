@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from datetime import datetime, timedelta
+from handler.collects import create_hiscollect
+from django.conf import settings
+
 def create_search(request):
     starttime = datetime.utcnow() - timedelta(days=150)
     endtime = datetime.utcnow()
@@ -7,7 +11,9 @@ def create_search(request):
     traderids = []
     opt = None
     algorithm = None
+    method = None
 
+    # form.is_valid
     if 'starttime' in request.GET and request.GET['starttime']:
         starttime = datetime(*map(int, request.GET['starttime'].split('/')))
     if 'endtime' in request.GET and request.GET['endtime']:
@@ -20,6 +26,8 @@ def create_search(request):
         opt = request.GET['opt']
     if 'algorithm' in request.GET and request.GET['algorithm']:
         algorithm = request.GET['algorithm']
+    if 'method' in request.GET and request.GET['method']:
+        method = request.GET['method']
 
     kwargs = {
         'starttime': starttime,
@@ -28,8 +36,10 @@ def create_search(request):
         'traderids': traderids,
         'opt': opt,
         'algorithm': algorithm,
-        'debug': _debug
+        'method': method,
+        'debug': settings.DEBUG
     }
+    
     return create_hiscollect(**kwargs)
 
 def create_portfolio(request):

@@ -1,7 +1,8 @@
 
 
 https://www.quantopian.com/help#api-doco
-
+http://docs.mongodb.org/manual/tutorial/write-a-tumblelog-application-with-django-mongodb-engine/
+ii
 Mac OS setup flow
 0.1 #install anaconda python
 https://store.continuum.io/cshop/anaconda/

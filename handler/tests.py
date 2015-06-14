@@ -37,7 +37,7 @@ class TestTwseHisItemQuery(NoSQLTestCase):
             collect['frame'][k].update({'on': True })
 
         t = timeit.Timer()
-        item, db = collect_hisitem(**collect)
+        item, db = collect_hisitem(collect)
         self.assertTrue(item)
         for k in ['stockitem', 'traderitem', 'credititem']:
             self.assertTrue(item[k])
@@ -62,7 +62,7 @@ class TestTwseHisFrameQuery(NoSQLTestCase):
             collect['frame'][k].update({'on': True })
 
         t = timeit.Timer()
-        panel, db = collect_hisframe(**collect)
+        panel, db = collect_hisframe(collect)
         self.assertTrue(panel is not None)
         self.assertFalse(panel.empty)
         self.assertFalse(panel['2317'].empty)

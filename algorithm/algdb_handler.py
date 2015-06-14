@@ -85,7 +85,7 @@ class TwseAlgDBHandler(object):
         pass
 
     def to_summary(self, df):
-        keys = [k for k,v in AlgSummaryColl._fields.iteritems()]
+        keys = [k for k,v in AlgSummaryColl._fields.iteritems() if k not in ['id']]
         names = df.columns.values.tolist()
         for ix, cols in df.iterrows():
             stockid = ix

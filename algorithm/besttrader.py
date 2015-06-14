@@ -33,7 +33,7 @@ class BestTraderAlgorithm(TradingAlgorithm):
     def __init__(self, dbhandler, **kwargs):
         self._debug = kwargs.pop('debug', False)
         self._buf_win = kwargs.pop('buf_win', 10)
-        super(BestTraderAlgorithm, self).__init__(*args, **kwargs)
+        super(BestTraderAlgorithm, self).__init__(**kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
         self.tids = self.dbhandler.trader.ids
@@ -96,7 +96,7 @@ def run(opt='twse', debug=False, limit=0):
     endtime = datetime.utcnow()
     report = Report(
         sort=[('buys', False), ('sells', False), ('portfolio_value', False)], limit=20)
-    
+
     kwargs = {
         'debug': debug,
         'limit': limit,
@@ -107,31 +107,34 @@ def run(opt='twse', debug=False, limit=0):
     idhandler = TwseIdDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcIdDBHandler(**kwargs)
     for stockid in idhandler.stock.get_ids():
         try:
+            # pre find traderid as top0
             kwargs = {
-                'debug': True,
+                'debug': debug,
                 'opt': opt
             }
-            # pre find traderid as top0
             dbhandler = TwseHisDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcHisDBHandler(**kwargs)
             args = (starttime, endtime, [stockid], [], 'stock', ['-totalvolume'], 10)
             dbhandler.trader.query_raw(*args)
             tops = list(dbhandler.trader.get_alias([stockid], 'trader', ["top%d" %i for i in range(10)]))
             print "prefound:%s" %(tops)
             traderid = tops[0] if traderid not in tops else traderid
-
-            # main
-            dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
+            # run
+            kwargs = {
+                'debug': debug,
+                'opt': opt
+            }
+            dbhandler = TwseHisDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcHisDBHandler(**kwargs)
             dbhandler.stock.ids = [stockid]
-            dbhandler.trader.ids = [stockid]
+            dbhandler.trader.ids = [traderid]
             # group sub df to main df
             args = (starttime, endtime, [stockid], [traderid], 'stock', ['-totalvolume'], 10, dbhandler.trader.to_pandas)
             traderdt = dbhandler.trader.query_raw(*args)
-            args = (starttime, endtime, [stockid] , ['-totalvolume'], 10, dbhandler.stock.to_pandas)
+            args = (starttime, endtime, [stockid], 'stock', ['-totalvolume'], 10, dbhandler.stock.to_pandas)
             stockdt = dbhandler.stock.query_raw(*args)
             data = pd.concat([stockdt, traderdt], axis=2).fillna(0)
             if len(data[stockid].index) < maxlen:
                 continue
-            besttrader = BestTraderAlgorithm(dbhandler=dbhandler, debug=True)
+            besttrader = BestTraderAlgorithm(dbhandler=dbhandler, debug=debug)
             results = besttrader.run(data).fillna(0)
             report.collect(stockid, results)
             print "%s pass" %(stockid)
@@ -144,11 +147,11 @@ def run(opt='twse', debug=False, limit=0):
 
     # report summary
     stream = report.summary(dtype='html')
-    report.write(stream, 'besttrader_%s.html' % (traderid))
+    report.write(stream, 'besttrader.html')
 
     for stockid in report.iter_symbol():
         stream = report.iter_report(stockid, dtype='html')
-        report.write(stream, "besttrader_%s_%s.html" % (traderid, stockid))
+        report.write(stream, "besttrader_%s.html" % (stockid))
 
     # plot
     for stockid in report.iter_symbol():
@@ -175,7 +178,7 @@ def run(opt='twse', debug=False, limit=0):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='test besttrader algorithm')
     parser.add_argument('--debug', dest='debug', action='store_true', default=False, help='debug mode')
-    parser.add_argument('--opt', dest='opt', action='store', type=str, help='twse/otc')
+    parser.add_argument('--opt', dest='opt', action='store', type=str, default='twse', help='twse/otc')
     parser.add_argument('--limit', dest='limit', action='store', type=int, default=0, help='limit')
     args = parser.parse_args()
     #proc = start_main_service(args.debug)

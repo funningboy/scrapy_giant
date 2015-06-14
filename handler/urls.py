@@ -13,11 +13,11 @@ urlpatterns = patterns('',
         view=serializers.hisstock_list_json,
         name='hisstock_list_json'
     ),
-    url('r^api/histrader_detail/',
+    url(r'^api/histrader_detail/',
         view=serializers.histrader_detail_json,
         name='histrader_detail_json'
     ),
-    url('r^api/histrader_list/',
+    url(r'^api/histrader_list/',
         view=serializers.histrader_list_json,
         name='histrader_list_json'
     )

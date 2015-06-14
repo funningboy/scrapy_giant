@@ -9,7 +9,7 @@ import copy
 from mongoengine import *
 from bin.start import switch
 from bin.mongodb_driver import MongoDBDriver
-from handler.models import TwseIdColl, OtcIdColl, TraderIdColl
+from handler.models import TwseIdColl, OtcIdColl, TraderIdColl, StockIdColl
 
 __all__ = ['TwseIdDBHandler', 'OtcIdDBHandler', 'TraderIdDBHandler']
 
@@ -149,7 +149,7 @@ class StockIdDBHandler(object):
         pass
 
     def insert_raw(self, item):
-        keys = [k for k,v in StockIdColl._fields.iteritems()]
+        keys = [k for k,v in StockIdColl._fields.iteritems() if k not in ['id']]
         for it in item:
             cursor = self._coll.objects(Q(stockid=it['stockid']))
             cursor = list(cursor)
@@ -220,7 +220,7 @@ class TraderIdDBHandler(object):
         pass
 
     def insert_raw(self, item):
-        keys = [k for k,v in TraderIdColl._fields.iteritems()]
+        keys = [k for k,v in TraderIdColl._fields.iteritems() if k not in ['id']]
         for it in item:
             cursor = self._coll.objects(Q(traderid=it['traderid']))
             cursor = list(cursor)
