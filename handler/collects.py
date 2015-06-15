@@ -20,6 +20,7 @@ def create_hiscollect(**kwargs):
         'opt': opt,
         'method': method,
         'debug': debug,
+        'status': 'start', 
         'frame': {
             'hisstock': {
                 'on': False,

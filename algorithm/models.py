@@ -14,7 +14,7 @@ class AlgSummaryColl(Document):
     capital_used = FloatField(min_value=-999999999.0, max_value=999999999.0)
     buys = IntField(min_value=0, max_value=999)
     sells = IntField(min_value=0, max_value=999)
-    cfg = StringL
+    #cfg = StringL
     meta = {
         'allow_inheritance': True,
         'indexes': [(

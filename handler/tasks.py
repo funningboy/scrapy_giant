@@ -23,8 +23,6 @@ def collect_hisitem(collect):
     """ as middleware cascade collect raw hisstock/histoptrader/hiscredit to item
     filer priority 0>1>2
     """
-    if 'debug' in collect and collect['debug']:
-        print json.dumps(dict(collect), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
 
     item = {}
     opt = collect['opt']
@@ -35,6 +33,8 @@ def collect_hisitem(collect):
     assert(len(set([frame[col]['base'] for col in cols if frame[col]['on']]))==1)
 
     idhandler = iddb_tasks[opt](debug=collect['debug'])
+    dbhandler = hisdb_tasks[opt](**collect)
+
     stockids = [i for i in idhandler.stock.get_ids()] if collect['method'] == 'list' else []
     [stockids.extend(frame[col]['stockids']) for col in cols if frame[col]['on']]
     stockids = list(set(stockids))
@@ -43,44 +43,95 @@ def collect_hisitem(collect):
     [traderids.extend(frame[col]['traderids']) for col in ['histrader'] if frame[col]['on'] and frame[col]['traderids']]
     traderids = list(set(traderids))
 
-    dbhandler = hisdb_tasks[opt](**collect)
+    pstockids = []
+
+    for p in set([v['priority'] for v in frame.values()]):
+        pool = filter(lambda x: x[1]['priority'] == p, frame.items())
+        for i, it in enumerate(pool):
+            print frame[it[0]]
+            if i == len(pool)-1:
+                frame[it[0]].update({'do':'join'})
+            else:
+                frame[it[0]].update({'do':'parallel'})
+             
     for it, p in sorted(frame.items(), key=lambda x: x[1]['priority']):
+        do = frame[it]['do']
+
         if it == 'hisstock':
             if frame[it]['on']:
-                [frame[it].pop(k) for k in ['on', 'priority']]
+                [frame[it].pop(k) for k in ['on', 'priority', 'do']]
                 frame[it]['stockids'] = stockids
                 dt = dbhandler.stock.query_raw(**frame[it])
                 if dt:
                     item.update({'stockitem': dt})
-                    stockids = [i['stockid'] for i in dt]
+                    pstockids.extend([i['stockid'] for i in dt])
+                    if do == 'join':
+                        stockids = pstockids
+                        pstockids = []
+                frame[it].update({
+                    'on': True,
+                    'priority': 0
+                    })
+
         if it == 'hiscredit':
             if frame[it]['on']:
-                [frame[it].pop(k) for k in ['on', 'priority']]
+                [frame[it].pop(k) for k in ['on', 'priority', 'do']]
                 frame[it]['stockids'] = stockids
                 dt = dbhandler.credit.query_raw(**frame[it])
                 if dt:
                     item.update({'credititem': dt})
-                    stockids = [i['stockid'] for i in dt]
+                    pstockids.extend([i['stockid'] for i in dt])
+                    if do == 'join':
+                        stockids = pstockids
+                        pstockids = []
+                frame[it].update({
+                    'on': True,
+                    'priority': 0
+                    })
+
         if it == 'histrader':
             if frame[it]['on']:
-                [frame[it].pop(k) for k in ['on', 'priority']]
+                [frame[it].pop(k) for k in ['on', 'priority', 'do']]
                 frame[it]['stockids'] = stockids
                 frame[it]['traderids'] = traderids
                 dt = dbhandler.trader.query_raw(**frame[it])
                 if dt:
                     item.update({'traderitem': dt})
-                    stockids = [i['stockid'] for i in dt]
+                    pstockids.extend([i['stockid'] for i in dt])
+                    if do == 'join':
+                        stockids = pstockids
+                        pstockids = []
                     traderids = [i['traderid'] for i in dt]
+                frame[it].update({
+                    'on': True,
+                    'priority': 0
+                    })
+
         if it == 'hisfuture':
             if frame[it]['on']:
-                [frame[it].pop(k) for k in ['on', 'priority']]
+                [frame[it].pop(k) for k in ['on', 'priority', 'do']]
                 frame[it]['stockids'] = stockids
                 dt = dbhandler.future.query_raw(**frame[it])
                 if dt:
                     item.update({'futureitem': dt})
-                    stockids = [i['stockid'] for i in dt]
-    # align item?
-    return item, dbhandler
+                    pstockids.extend([i['stockid'] for i in dt])
+                    if do == 'join':
+                        stockids = pstockids
+                        pstockids = []
+                frame[it].update({
+                    'on': True,
+                    'priority': 0
+                    })  
+
+    collect['status'] = 'run' if collect['status'] == 'start' else 'finish'
+
+    if 'debug' in collect and collect['debug']:
+        print json.dumps(dict(collect), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+    
+    if collect['status'] == 'finish':
+        return item, dbhandler
+    else:
+        return collect_hisitem(collect)  
 
 
 def collect_hisframe(collect):

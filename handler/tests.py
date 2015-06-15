@@ -16,7 +16,10 @@ from django.template import Context, Template
 
 skip_tests = {
     'TestTwseHisItemQuery': False,
-    'TestTwseHisFrameQuery': False
+    'TestTwseHisFrameQuery': False,
+    'TestTwseHisItemJoin': False,
+    'TestTwseHisItemParallel': False,
+    'TestTwseHisItemRouter': False
 }
 
 @unittest.skipIf(skip_tests['TestTwseHisItemQuery'], "skip")
@@ -43,6 +46,15 @@ class TestTwseHisItemQuery(NoSQLTestCase):
             self.assertTrue(item[k])
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
 
+@
+class TestTwseHisItemJoin(NoSQLTestCase)
+
+@
+class TestTwseHisItemParallel
+
+@
+class TestTwseHisItemRouter
+    
 
 @unittest.skipIf(skip_tests['TestTwseHisFrameQuery'], "skip")
 class TestTwseHisFrameQuery(NoSQLTestCase):
