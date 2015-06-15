@@ -24,7 +24,7 @@ class TestTwseHisItemQuery(NoSQLTestCase):
 
     def test_on_run(self):
         kwargs = {
-            'starttime': datetime.utcnow() - timedelta(days=3),
+            'starttime': datetime.utcnow() - timedelta(days=5),
             'endtime': datetime.utcnow(),
             'stockids': ['2317'],
             'traderids': [],
@@ -49,7 +49,7 @@ class TestTwseHisFrameQuery(NoSQLTestCase):
 
     def test_on_run(self):
         kwargs = {
-            'starttime': datetime.utcnow() - timedelta(days=3),
+            'starttime': datetime.utcnow() - timedelta(days=5),
             'endtime': datetime.utcnow(),
             'stockids': ['2317'],
             'traderids': [],
@@ -68,4 +68,5 @@ class TestTwseHisFrameQuery(NoSQLTestCase):
         self.assertFalse(panel['2317'].empty)
         for k in ['open', 'high', 'low', 'close', 'volume', 'financeused', 'bearishused']:
             self.assertFalse(panel['2317'][k].empty)
+            self.assertTrue(panel['2317'][k].sum >= 0)
         print panel['2317']

@@ -29,7 +29,7 @@ class Report(object):
         # collect and sort results as df
         item = OrderedDict({
             'bufwin': (results.index[-1] - results.index[0]).days,
-            'watchtime': results.index[-1] if len(results.index) > 0 else datetime.utcnow(),
+            'date': results.index[-1] if len(results.index) > 0 else datetime.utcnow(),
             'buys': results['buy'].sum() if 'buy' in results.columns else 0,
             'sells': results['sell'].sum() if 'sell' in results.columns else 0,
             # zipline key
@@ -67,9 +67,9 @@ class Report(object):
         dtype == 'json|html|pd.frame|dict' ...
         <algorithm name>
         <datetime>
-               portfolio_value | buy_count| sell_count|
-        2330    11             |      10   |   0      |
-        2317    10             |       1   |   1      |
+               portfolio_value | buy | sell|
+        2330    11             | 10  |   0 |
+        2317    10             |  1  |   1 |
         """
         columns = self._report.columns
         if dtype == 'json':
@@ -80,9 +80,4 @@ class Report(object):
             return self._report.to_dict()
         else:
             return self._report
-
-    def write(self, stream, filenm):
-        f = open(filenm, 'w')
-        f.write(stream)
-        f.close()
 

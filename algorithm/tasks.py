@@ -36,7 +36,7 @@ def run_algorithm_service(opt, alg, starttime, endtime, debug=False):
         args.pop(3)
     alg.run(*args)
 
-def collect_algframe(**kwargs):
+def collect_algframe(collect):
     collect = {
         'dualema': {
         },

@@ -4,8 +4,8 @@ from datetime import datetime
 from mongoengine import *
 
 class AlgSummaryColl(Document):
-    bufwin = IntField(min_value=5, max_value=150)
-    watchtime = DateTimeField(default=datetime.utcnow())
+    bufwin = IntField(min_value=2, max_value=150)
+    date = DateTimeField(default=datetime.utcnow())
     stockid = StringField()
     traderid = StringField()
     portfolio_value = FloatField(min_value=-999999999.0, max_value=999999999.0)
@@ -14,11 +14,11 @@ class AlgSummaryColl(Document):
     capital_used = FloatField(min_value=-999999999.0, max_value=999999999.0)
     buys = IntField(min_value=0, max_value=999)
     sells = IntField(min_value=0, max_value=999)
-    #event
+    cfg = StringL
     meta = {
         'allow_inheritance': True,
         'indexes': [(
-            'watchtime', 'portfolio_value',
+            'date', 'portfolio_value',
             'ending_value',  'buys', 'sells'
         )],
         'ordering': [('-portfolio_value')]

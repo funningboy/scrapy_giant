@@ -10,7 +10,7 @@ from mongoengine import *
 from bin.start import switch
 from bin.mongodb_driver import MongoDBDriver
 from handler.collects import create_hiscollect
-from handler.tasks import collect_hisframe
+from handler.tasks import collect_hisframe, iddb_tasks
 from algorithm.models import *
 from algorithm.report import Report
 from algorithm.dualema import DualEMAAlgorithm
@@ -44,8 +44,8 @@ class TwseAlgDBHandler(object):
 
     def __init__(self, **kwargs):
         self._debug = kwargs.get('debug', False)
+        self._cfg = kwargs.pop('cfg', {})
         assert(self._alg)
-        self._cfg = {}
         db = "twse%s" %(algdbmap[self._alg])
         db = db if not self._debug else 'test' + db
         host, port = MongoDBDriver._host, MongoDBDriver._port
@@ -53,6 +53,7 @@ class TwseAlgDBHandler(object):
         self._sumycoll = switch(AlgSummaryColl, db)
         self._collect = create_hiscollect(**kwargs)
         self._report = Report(sort=[('buys', False), ('sells', False), ('portfolio_value', False)], limit=100)
+        self._id = iddb_tasks['twse'](debug=self._debug)
 
     @property
     def sumycoll(self):
@@ -65,7 +66,7 @@ class TwseAlgDBHandler(object):
                     'on': True,
                     'stockids': [stockid]
                     })
-            data, handler = collect_hisframe(**copy.deepcopy(self._collect))
+            data, handler = collect_hisframe(copy.deepcopy(self._collect))
             yield stockid, data, handler
 
     def run(self, callback=None):
@@ -88,11 +89,10 @@ class TwseAlgDBHandler(object):
         keys = [k for k,v in AlgSummaryColl._fields.iteritems() if k not in ['id']]
         names = df.columns.values.tolist()
         for ix, cols in df.iterrows():
-            stockid = ix
-            cursor = self._sumycoll.objects(Q(watchtime=cols['watchtime']) &Q(bufwin=cols['bufwin']) & Q(stockid=stockid))
+            cursor = self._sumycoll.objects(Q(date=cols['date']) &Q(bufwin=cols['bufwin']) & Q(stockid=ix))
             coll = self._sumycoll() if len(cursor) == 0 else cursor[0]
             [setattr(coll, k, cols[k]) for k in names if k in keys]
-            coll.stockid = stockid
+            coll.stockid = ix
             coll.save()
 
     def to_detail(self, df):
@@ -101,10 +101,11 @@ class TwseAlgDBHandler(object):
         names = df.columns.values.tolist()
         for ix, cols in df.iterrows():
             coll = {k:cols[k] for k in names if k in keys}
+            coll.update({'date': ix})
             retval.append(coll)
         return retval
 
-    def query_summary(self, watchtime, bufwin=None, order=['-totalportfolio'], limit=10, callback=None):
+    def query_summary(self, watchtime=datetime.utcnow(), stockids=[], order=['-totalportfolio'], limit=10, callback=None):
         """ return orm
         <algorithm>
         <watchtime> |<bufwin> | <stockid> | <traderid> | buys | sells ...
@@ -119,7 +120,7 @@ class TwseAlgDBHandler(object):
                         totalportfolio: this.portfolio_value,
                         totalbuys: this.buys,
                         totalsells: this.sells,
-                        tottalused: this.capital_used,
+                        totalused: this.capital_used,
                         data: [{
                             bufwin: this.bufwin
                         }]
@@ -138,7 +139,7 @@ class TwseAlgDBHandler(object):
                     totalportfolio: 0,
                     totalbuys: 0,
                     totalsells: 0,
-                    tottalused: 0,
+                    totalused: 0,
                     data: []
                 };
                 if (values.length == 0) {
@@ -148,7 +149,7 @@ class TwseAlgDBHandler(object):
                     redval.totalportfolio += values[i].totalportfolio;
                     redval.totalbuys += values[i].totalbuys;
                     redval.totalsells += values[i].totalsells;
-                    redval.tottalused += values[i].tottalused;
+                    redval.totalused += values[i].tottalused;
                     redval.data = values[i].data.concat(redval.data);
                 }
                 return redval;
@@ -157,7 +158,11 @@ class TwseAlgDBHandler(object):
         finalize_f = """
         """
         assert(set([o[1:] for o in order]) <= set(['totalbuys', 'totalsells', 'totalportfolio', 'totalused']))
-        cursor = self._sumycoll.objects(Q(watchtime=watchtime) & Q(bufwin=bufwin))
+        starttime, endtime = watchtime - timedelta(3), watchtime
+        if stockids:
+            cursor = self._sumycoll.objects(Q(date__gte=starttime) & Q(date__lte=endtime)) & (Q(stockid__in=stockids))
+        else:
+            cursor = self._sumycoll.objects(Q(date__gte=starttime) & Q(date__lte=endtime))
         results = cursor.map_reduce(map_f, reduce_f, 'algmap')
         results = list(results)
         reorder = lambda k: map(lambda x: k.value[x[1:]] if x.startswith('+') else -k.value[x[1:]], order)
@@ -167,15 +172,14 @@ class TwseAlgDBHandler(object):
             coll = {
                 # key
                 'watchtime': watchtime,
-                'bufwin': bufwin,
                 'stockid': it.key['stockid'],
                 'order': order,
                 'stocknm': self._id.stock.get_name(it.key['stockid']),
                 # value
                 'totalportfolio': it.value['totalportfolio'],
                 'totalbuys': it.value['totalbuys'],
-                'totalsells': it.values['totalsells'],
-                'tottalused': it.values['totalused']
+                'totalsells': it.value['totalsells'],
+                'tottalused': it.value['totalused']
             }
             retval.append(coll)
         return callback(retval) if callback else retval
@@ -205,32 +209,32 @@ class TwseBBandsAlg(TwseAlgDBHandler):
 class OtcDualemaAlg(TwseDualemaAlg):
 
     def __init__(self, **kwargs):
-        super(OtcDualemaAlg, self).__init__(**kwargs)
+        super(OtcDualemaAlg, self).__init__(**copy.deep(kwargs))
         db = "otc%s" %(algdbmap[self._alg])
         db = db if not self._debug else 'test' + db
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect(db, host=host, port=port, alias=db)
         self._sumycoll = switch(AlgSummaryColl, db)
-
+        self._id = iddb_tasks['otc'](debug=self._debug)
 
 class OtcBestTraderAlg(TwseBestTraderAlg):
 
     def __init__(self, **kwargs):
-        super(OtcBestTraderAlg, self).__init__(**kwargs)
+        super(OtcBestTraderAlg, self).__init__(**copy.deep(kwargs))
         db = "otc%s" %(algdbmap[self._alg])
         db = db if not self._debug else 'test' + db
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect(db, host=host, port=port, alias=db)
         self._sumycoll = switch(AlgSummaryColl, db)
-
+        self._id = iddb_tasks['otc'](debug=self._debug)
 
 class OtcBBandsAlg(TwseBBandsAlg):
 
     def __init__(self, **kwargs):
-        super(OtcBBandsAlg, self).__init__(**kwargs)
+        super(OtcBBandsAlg, self).__init__(**copy.deep(kwargs))
         db = "otc%s" %(algdbmap[self._alg])
         db = db if not self._debug else 'test' + db
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect(db, host=host, port=port, alias=db)
         self._sumycoll = switch(AlgSummaryColl, db)
-
+        self._id = iddb_tasks['otc'](debug=self._debug)
