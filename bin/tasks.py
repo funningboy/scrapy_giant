@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 import subprocess
 from bin.start import wap_scrapy_cmd
-#from main.celery import app
+from giant.celery import app
 from celery import shared_task
 
 from celery.utils.log import get_task_logger
@@ -29,11 +29,23 @@ scrapy_tasks = [
     'otchisnocredit'
 ]
 
-#@shared_task
-#def add(x, y):
-#    r = x + y
-#    print "test celey add %d" %(r)
-#    return r
+@app.task
+def add(x, y):
+    import time
+    import random
+    time.sleep(random.randint(1, 3))
+    r = x + y
+    print "test celey add %d" %(r)
+    return r
+
+@shared_task
+def mux(x, y):
+    import time
+    import random
+    time.sleep(random.randint(5, 10))
+    r = x * y
+    print "test celey mux %d" %(r)
+    return r
 
 # as background service
 @shared_task

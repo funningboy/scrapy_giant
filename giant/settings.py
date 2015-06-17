@@ -24,8 +24,7 @@ _mongod = os.environ.get('MONGOD', 'mongod')
 _debug = os.environ.get('DEBUG', False)
 _siteid = os.environ.get('SITE_ID', 1)
 
-CELERY_IGNORE_RESULT = True
-CELERY_DISABLE_RATE_LIMITS = True
+#CELERY_IGNORE_RESULT = True
 CELERY_DISABLE_RATE_LIMITS = True
 CELERY_TIMEZONE = 'UTC'
 CELERY_RESULT_BACKEND = 'mongodb'
@@ -39,9 +38,9 @@ CELERY_MONGODB_BACKEND_SETTINGS = {
 BROKER_URL = "amqp://guest:guest@%s:%d" % (_host, _amqport)
 BACKEND_URL = "mongodb://%s:%d" % (_host, _dbport)
 
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
+#CELERY_ACCEPT_CONTENT = ['json']
+#CELERY_TASK_SERIALIZER = 'json'
+#CELERY_RESULT_SERIALIZER = 'json'
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
