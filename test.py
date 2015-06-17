@@ -15,10 +15,11 @@ class Node(object):
             self.asyncresult = add.delay(2, 3)
 
     def is_ready(self):
-        if not self.asyncresult:
+        if self.asyncresult:
             return self.asyncresult.ready()
  
     def finish(self):
+        self.retval = self.asyncresult.get()
         self.asyncresult = None
 
 class Worker(nx.DiGraph):
@@ -84,34 +85,55 @@ class Worker(nx.DiGraph):
 
     def _join_to_run(self, node):
         self.node[node]['ptr'].status = 'idle'
+        self.node[node]['ptr'].finish()
+        retval = self.node[node]['ptr'].retval
+        self._record.append(retval)
 
     def _add_run_queue(self, node):
-        self._run_queue.append(node)
+        if node not in self._run_queue:
+            self._run_queue.append(node)
 
     def _del_run_queue(self, node):
         if node in self._run_queue:
             self._run_queue.remove(node)
 
     def _add_wait_queue(self, node):
-        self._wait_queue.append(node)
+        if node not in self._wait_queue:
+            self._wait_queue.append(node)
 
     def _del_wait_queue(self, node):
         if node in self._wait_queue:
             self._wait_queue.remove(node)
 
-    def _iter_run(self):
-        pass
+    def _is_ready_to_finish(self, node):
+        if self.node[node]['ptr'].status == 'idle':
+            for pre, cur in self.in_edges(node):
+                if self.edge[pre][cur]['weight'] > 0:
+                    return (node, False)
+        return (node, True)
+
+    def _find_ready_to_finish(self):
+        results = zip(*map(lambda x: self._is_ready_to_finish(x), self._wait_queue))
+        return set(list(results[1])) == set([True])
 
 # test self loop
+import time
 G=Worker()
 n = Node()
 G.add_node(0, {'ptr': n})
-G.add_edge(0, 0, weight=1)
+G.add_edge(0, 0, weight=2)
 G._add_wait_queue(0)
 n.status = 'run'
+G.node[0]['ptr'].run()
+while not G.node[0]['ptr'].is_ready():
+    time.sleep(1)
+G.node[0]['ptr'].finish()
+print G.node[0]['ptr'].retval
+
+# test
 
 # test 
-while len(G._wait_queue) > 0:
+while G._find_ready_to_finish():
     for node in G._find_ready_to_join():
         G._dec_weight(node)
         G._join_to_run(node)
@@ -123,5 +145,4 @@ while len(G._wait_queue) > 0:
     for node in G._find_ready_to_wait():
         G._add_wait_queue(node)
 
-    print "dd", G._wait_queue
-    print "cc", G._run_queue
+print G._record
