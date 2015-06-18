@@ -33,7 +33,7 @@ scrapy_tasks = [
 def add(x, y):
     import time
     import random
-    time.sleep(random.randint(1, 3))
+    time.sleep(random.randint(0, 1))
     r = x + y
     print "test celey add %d" %(r)
     return r

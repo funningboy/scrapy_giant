@@ -7,28 +7,11 @@ LIST_LIMIT = 50
 
 def StockProfileUp0(collect):
     if collect['algorithm'] == ALG_CHOICES[0][1]:
-        limit = DETAIL_LIMIT if collect['method'] == 'detail' else LIST_LIMIT
-        collect['frame']['hisstock'].update({
-            'on': True,
-            'base': 'stock',
-            'order': ['+totaldiff', '-totalvolume'],
-            'limit': limit,
-            'priority': 0
-        })
-        collect['frame']['hiscredit'].update({
-            'on': True,
-            'base': 'stock',
-            'order': ['+financeused', '+bearishused'],
-            'limit': limit,
-            'priority': 1
-        })
-        collect['frame']['histrader'].update({
-            'on': True,
-            'base': 'stock',
-            'order': ['-totalvolume'],
-            'limit': limit,
-            'priority': 2
-        })
+        G = nx.DiGraph()
+        G.add_node(0, {'p': hisstock})
+        G.add_node(1, {'p': hiscredit})
+        G.add_edge(0, 1, weight=1)
+        return G
 
 def StockProfileDown0(collect):
     if collect['algorithm'] == ALG_CHOICES[1][1]:

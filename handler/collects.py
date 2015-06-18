@@ -19,30 +19,40 @@ def create_hiscollect(**kwargs):
         'algorithm': algorithm,
         'opt': opt,
         'method': method,
-        'debug': debug,
-        'status': 'start', 
+        'debug': debug, 
         'frame': {
+            #hisstocknode
             'hisstock': {
                 'on': False,
-                'starttime': starttime,
-                'endtime': endtime,
-                'stockids': stockids,
-                'base': 'stock',
-                'order': ['-totalvolume', '-totaldiff'],
-                'callback': None,
-                'limit': 10,
-                'priority': 0
+                'status': None,
+                'retval': None,
+                'func': None, #dbhandler.stock.query_raw,
+                'kwargs': {
+                    'starttime': starttime,
+                    'endtime': endtime,
+                    'stockids': stockids,
+                    'base': 'stock',
+                    'order': ['-totalvolume', '-totaldiff'],
+                    'callback': None,
+                    'limit': 10
+                }
             },
             'hiscredit': {
                 'on': False,
-                'starttime': starttime,
-                'endtime': endtime,
-                'stockids': stockids,
-                'base': 'stock',
-                'order': ['-financeused', '-bearishused'],
-                'callback': None,
-                'limit': 10,
-                'priority': 1
+                'status': None,
+                'node': 1,
+                'retval': None,
+                'edges': [(1,2,1)],
+                'func': None, #hisdb_tasks[opt].credit,
+                'kwargs': {
+                    'starttime': starttime,
+                    'endtime': endtime,
+                    'stockids': stockids,
+                    'base': 'stock',
+                    'order': ['-financeused', '-bearishused'],
+                    'callback': None,
+                    'limit': 10,
+                }
             },
             'hisfuture': {
                 'on': False,

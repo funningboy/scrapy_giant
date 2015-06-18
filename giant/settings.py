@@ -215,7 +215,9 @@ INSTALLED_APPS = (
     'main',
     'bin',
     'handler',
-    'algorithm'
+    'algorithm',
+    'workers',
+    'routers'
     # Uncomment the next line to enable the admin:
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:

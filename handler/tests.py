@@ -35,16 +35,7 @@ class TestTwseHisItemQuery(NoSQLTestCase):
             'algorithm': None,
             'debug': True
         }
-        collect = create_hiscollect(**kwargs)
-        for k in ['hisstock', 'hiscredit', 'histrader']:
-            collect['frame'][k].update({'on': True })
 
-        t = timeit.Timer()
-        item, db = collect_hisitem(collect)
-        self.assertTrue(item)
-        for k in ['stockitem', 'traderitem', 'credititem']:
-            self.assertTrue(item[k])
-        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
 
 
 @unittest.skipIf(skip_tests['TestTwseHisFrameQuery'], "skip")
