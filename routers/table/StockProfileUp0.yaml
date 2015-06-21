@@ -1,0 +1,63 @@
+
+HisStockNode:
+    uon: True
+    nodeid: 0
+    edges: [[0,1,1]]
+    kwargs:
+        starttime: None
+        endtime: None
+        stockids: []
+        traderids: []
+        base: stock
+        order: [-totalvolume, -totaldiff]
+        callback: None
+        limit: 1000
+
+HisCreditNode:
+    uon: True
+    nodeid: 1
+    edges: [[1,2,1]]
+    kwargs:
+        starttime: None
+        endtime: None
+        stockids: []
+        traderids: []
+        base: stock
+        order: [+bearishused, +financeused]
+        callback: None
+        limit: 800
+
+HisFutureNode:
+    uon: True
+    nodeid: 2
+    edges: [[2,3,1], [2,4,1]]
+    kwargs:
+        starttime: None
+        endtime: None
+        stockids: []
+        traderids: []
+        base: stock
+        order: []
+        callback: None
+        limit: 500
+
+AlgDualemaNode:
+    uon: True
+    nodeid: 3
+    edges: [[3,5]]
+    limit: 10
+    kwargs:
+        
+
+AlgBBandNode:
+    uon: True
+    nodeid: 4
+    edges: [[4,5]]
+    limit: 10
+    kwargs:
+
+
+NotifyLineNode:
+    
+NotifyGmailNode:
+

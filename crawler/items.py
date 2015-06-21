@@ -66,8 +66,11 @@ class TwseHisStockItem(scrapy.Item):
 #   ]
 
 class TwseHisCreditItem(scrapy.Item):
+    url = scrapy.Field()
     data = scrapy.Field()
 # data:[{
+#    date = scrapy.Field()
+#    type = scrapy.Field()
 #    stockid = scrapy.Field()
 #    stocknm = scrapy.Field()
 #    preremain = scrapy.Field()
@@ -106,6 +109,23 @@ class TwseNoCreditItem(scrapy.Item):
 #    nocredit_endtime = scrapy.Field()
 #  }...]
 
+class TwseHisFutureItem(scrapy.Item):
+    data = scrapy.Field()
+# data:[{
+#    date = scrapy.Field()
+#    stockid = scrapy.Field()
+#    stocknm = scrapy.Field()
+#    contractmonth = scrapy.Field() 
+#    open = scrapy.Field()
+#    high = scrapy.Field()
+#    low = scrapy.Field()
+#    close = scrapy.Field()
+#    volume = scrapy.Field()
+#    settlementprice = scrapy.Field()  
+#    untradecount = scrapy.Field()
+#    bestbuy = scrapy.Field()
+#    bestsell = scrapy.Field()
+#}]
 
 class OtcHisTraderItem(TwseHisTraderItem):
     pass
@@ -123,4 +143,7 @@ class OtcNoCreditItem(TwseNoCreditItem):
     pass
 
 class OtcHisCreditItem(TwseHisCreditItem):
+    pass
+
+class OtcHisFutureItem(TwseHisFutureItem):
     pass

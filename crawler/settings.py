@@ -58,12 +58,14 @@ ITEM_PIPELINES = {
     'crawler.pipelines.twsehistrader_pipeline2.TwseHisTraderPipeline2': 800,
     'crawler.pipelines.twsehisstock_pipeline.TwseHisStockPipeline': 800,
     'crawler.pipelines.twsehiscredit_pipeline.TwseHisCreditPipeline': 800,
+    'crawler.pipelines.twsehisfuture_pipeline.TwseHisFuturePipeline': 800,
     # otchis trader/stock
     'crawler.pipelines.otcid_pipeline.OtcIdPipeline': 800,
     'crawler.pipelines.otchistrader_pipeline.OtcHisTraderPipeline': 800,
     'crawler.pipelines.otchisstock_pipeline.OtcHisStockPipeline': 800,
     'crawler.pipelines.otchistrader_pipeline2.OtcHisTraderPipeline2': 800,
     'crawler.pipelines.otchiscredit_pipeline.OtcHisCreditPipeline': 800,
+    #'crawlwe.pipelines.otchisfuture_pipeline.OtcHisFuturePipeline': 800,
     # trader
     'crawler.pipelines.traderid_pipeline.TraderIdPipeline': 800
 }

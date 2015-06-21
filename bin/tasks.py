@@ -30,21 +30,21 @@ scrapy_tasks = [
 ]
 
 @app.task
-def add(x, y):
+def nsum(*args, **kwargs):
     import time
     import random
     time.sleep(random.randint(0, 1))
-    r = x + y
-    print "test celey add %d" %(r)
+    r = sum(args)
+    print "test celey nsum %d" %(r)
     return r
 
 @shared_task
-def mux(x, y):
+def navg(*args, **kwargs):
     import time
     import random
     time.sleep(random.randint(5, 10))
-    r = x * y
-    print "test celey mux %d" %(r)
+    r = sum(args)/len(args) if len(args) != 0 else 0
+    print "test celey navg %d" %(r)
     return r
 
 # as background service

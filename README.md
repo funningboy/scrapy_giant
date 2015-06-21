@@ -1,5 +1,4 @@
-
-
+https://github.com/terryh/autotrader
 https://www.quantopian.com/help#api-doco
 http://docs.mongodb.org/manual/tutorial/write-a-tumblelog-application-with-django-mongodb-engine/
 ii

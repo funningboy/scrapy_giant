@@ -24,7 +24,7 @@ class TwseHisCreditSpider(CrawlSpider):
         (u'前日餘額',  u'preremain'),
         (u'賣出', u'sellvolume'),
         (u'買進', u'buyvolume'),
-#        (u'現券'|u'現償', u'daytrade'),
+        (u'現券|現償', u'daytrade'),
         (u'今日餘額', u'curremain'),
         (u'限額', u'limit')
     ]

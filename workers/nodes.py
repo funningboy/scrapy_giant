@@ -4,10 +4,12 @@ import celery as celery
 
 class Node(object):
 
-    def __init__(self, func=None, args=(), kwargs={}):
+    def __init__(self, on=False, func=None, args=(), kwargs={}):
         self._func = func
         self._args = args
         self._kwargs = kwargs
+        self._on = on
+        # internal used
         self._visited = 0
         self._rumtime = 0
         self._status = 'idle'
@@ -16,6 +18,10 @@ class Node(object):
         if not isinstance(self._func, celery.local.Proxy):
             print "func ptr should been registered at celery tasks list"
 
+    def update_kargs(args=(), kwargs={}):
+        self._args = args
+        self._kwargs = kwargs
+
     def run(self):
         if not self._asyncresult:
             self._asyncresult = self._func.delay(*self._args, **self._kwargs)
@@ -23,6 +29,15 @@ class Node(object):
     def is_ready(self):
         if self._asyncresult:
             return self._asyncresult.ready()
+
+    def is_success(self):
+        if self._asyncresult:
+            return self._asyncresult.successful()
+
+    @property
+    def task_id(self):
+        if self._asyncresult:
+            return self._asyncresult.task_id
  
     def finish(self):
         self._retval = self._asyncresult.get()

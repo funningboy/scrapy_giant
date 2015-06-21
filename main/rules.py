@@ -8,8 +8,9 @@ LIST_LIMIT = 50
 def StockProfileUp0(collect):
     if collect['algorithm'] == ALG_CHOICES[0][1]:
         G = nx.DiGraph()
-        G.add_node(0, {'p': hisstock})
-        G.add_node(1, {'p': hiscredit})
+        G.add_node(0, {'ptr': hisstockn})
+        G.add_node(1, {'ptr': hiscreditn})
+        G.add_edge
         G.add_edge(0, 1, weight=1)
         return G
 
