@@ -59,6 +59,7 @@ class OtcHisCreditSpider(CrawlSpider):
         log.msg("URL: %s" % (response.url), level=log.DEBUG)
         item = response.meta['item']
         index = response.meta['index']
+        item['url'] = response.url
         stream = json.loads(response.body, encoding='cp950')
         yy, mm, dd = map(int, stream['reportDate'].split('/'))
         for it in stream['aaData']:

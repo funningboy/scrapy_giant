@@ -5,6 +5,7 @@
 import re
 import pandas as pd
 import numpy as np
+from StringIO import StringIO
 from datetime import datetime, timedelta
 import calendar
 
@@ -98,6 +99,8 @@ class TwseHisFutureSpider(CrawlSpider):
         URL = 'http://www.taifex.com.tw/chinese/3/3_1_2dl.asp'
         sdate = datetime.utcnow() - timedelta(days=3)
         edate = datetime.utcnow()
+        datestart = "%d/%02d/%02d" %(sdate.year, sdate.month, sdate.day)
+        dateend = "%d/%02d/%02d" %(edate.year, edate.month, edate.day)
         content = {
             'goday': '',
             'DATA_DATE': '',
@@ -114,27 +117,43 @@ class TwseHisFutureSpider(CrawlSpider):
             'syear1': '',
             'smonth1': '',
             'sday1': '',
-            'datestart': '/'.join(map(str, [sdate.year, sdate.month, sdate.day])),
-            'dateend': '/'.join(map(str, [edate.year, edate.month, edate.day])),
+            'datestart': datestart,
+            'dateend': dateend,
             'COMMODITY_ID': 'specialid',
             'commodity_id2t': 'all',
-            'his_year': edate.year
+            'his_year': "%d" %(edate.year)
         }
         request = FormRequest(
             URL,
-            formdata=content,
             meta={
                 'item': response.meta['item'],
                 'content': content,
                 'cookiejar': response.meta['cookiejar']
             },
+            formdata=content,
             callback=self.parse_after_contract_find,
             dont_filter=True)
         yield request
 
     def parse_after_contract_find(self, response):
         log.msg("URL: %s" % (response.url), level=log.DEBUG)
-        print response.body
+        item = response.meta['item']
+        item['url'] = response.url
+        item['data'] = []
+        try:
+            frame = pd.read_csv(
+                StringIO(response.body), delimiter=',',
+                na_values=['--'], header=None, skiprows=[0], dtype=np.object).dropna()
+            if frame.empty:
+                log.msg("fetch %s empty" %('all'), log.INFO)
+                return
+        except:
+            log.msg("fetch %s fail" %('all'), log.INFO)
+            return
+        for k, v in self._table.items():
+            print frame[frame[1] == v].T.to_dict()
+
+
 
   
   

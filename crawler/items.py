@@ -101,6 +101,7 @@ class TwseRelStockItem(scrapy.Item):
 #   ]
 
 class TwseNoCreditItem(scrapy.Item):
+    url = scrapy.Field()
     data = scrapy.Field()
 # data:[{
 #    stockid = scrapy.Field()
@@ -110,6 +111,7 @@ class TwseNoCreditItem(scrapy.Item):
 #  }...]
 
 class TwseHisFutureItem(scrapy.Item):
+    url = scrapy.Field()
     data = scrapy.Field()
 # data:[{
 #    date = scrapy.Field()

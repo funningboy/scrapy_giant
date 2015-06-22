@@ -16,7 +16,7 @@ from django.template import Context, Template
 
 skip_tests = {
     'TestTwseHisItemQuery': False,
-    'TestTwseHisFrameQuery': True
+    'TestTwseHisFrameQuery': False
 }
 
 @unittest.skipIf(skip_tests['TestTwseHisItemQuery'], "skip")
@@ -29,7 +29,7 @@ class TestTwseHisItemQuery(NoSQLTestCase):
             'starttime': datetime.utcnow() - timedelta(days=5),
             'endtime': datetime.utcnow(),
             'stockids': ['2317', '2330'],
-            'base': 'stcok',
+            'base': 'stock',
             'order': ['-totalvolume', '-totaldiff'],
             'callback': None,
             'limit': 1,
@@ -40,6 +40,30 @@ class TestTwseHisItemQuery(NoSQLTestCase):
         self.assertTrue(item['stockitem'])
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
 
+    def test_on_trader(self):
+        kwargs = {
+            'opt': 'twse',
+            'target': 'trader',
+            'starttime': datetime.utcnow() - timedelta(days=5),
+            'endtime': datetime.utcnow(),
+            'stockids': ['2317', '2330'],
+            'base': 'stock',
+            'order': ['-totalvolume'],
+            'callback': None,
+            'limit': 1,
+            'debug': True
+        }
+        item, _ = collect_hisitem.delay(**kwargs).get()
+        self.assertTrue(item)
+        self.assertTrue(item['traderitem'])
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+
+    def test_on_credit(self):
+        pass
+
+    def test_on_future(self):
+        pass
+
     def test_on_all(self):
         kwargs = {
             'opt': 'twse',
@@ -48,7 +72,7 @@ class TestTwseHisItemQuery(NoSQLTestCase):
             'endtime': datetime.utcnow(),
             'stockids': ['2317', '2330'],
             'traderids': [],
-            'base': 'stcok',
+            'base': 'stock',
             'order': [],
             'callback': None,
             'limit': 2,
@@ -63,22 +87,21 @@ class TestTwseHisItemQuery(NoSQLTestCase):
 @unittest.skipIf(skip_tests['TestTwseHisFrameQuery'], "skip")
 class TestTwseHisFrameQuery(NoSQLTestCase):
 
-    def test_on_run(self):
+    def test_on_all(self):
         kwargs = {
+            'opt': 'twse',
+            'target': 'all',
             'starttime': datetime.utcnow() - timedelta(days=5),
             'endtime': datetime.utcnow(),
             'stockids': ['2317'],
             'traderids': [],
-            'opt': 'twse',
-            'algorithm': None,
+            'base': 'stock',
+            'order': [],
+            'callback': None,
+            'limit': 1,
             'debug': True
         }
-        collect = create_hiscollect(**kwargs)
-        for k in ['hisstock', 'hiscredit', 'histrader']:
-            collect['frame'][k].update({'on': True })
-
-        t = timeit.Timer()
-        panel, db = collect_hisframe(collect)
+        panel, _ = collect_hisframe.delay(**kwargs).get()
         self.assertTrue(panel is not None)
         self.assertFalse(panel.empty)
         self.assertFalse(panel['2317'].empty)
