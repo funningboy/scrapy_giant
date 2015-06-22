@@ -14,11 +14,32 @@ skip_tests = {
     'TestDAGGraphNoCycle': False
 }
 
+class TestDAGWorker(DAGWorker):
+
+    def __init__(self, **kwargs):
+        super(TestDAGWorker, self).__init__(**kwargs)
+
+    def _collect_incoming_kwargs(self, node):
+        args = list(self.node[node]['ptr']._args)
+        for pre, cur in self.in_edges(node):
+            if self.node[pre]['ptr'].status == 'finish':
+                retval = self.node[pre]['ptr'].retval
+                try:
+                    if isinstance(retval, object):
+                        retval = [retval]
+                    args.extend(retval)
+                except:
+                    print 'incoming args is only for list,object'
+                    raise
+        args = [i for i in args if i]
+        self.node[node]['ptr']._args = args
+   
+
 @unittest.skipIf(skip_tests['TestTaskPtr'], "skip")
 class TestTaskPtr(NoSQLTestCase):
 
     def setUp(self):
-        self.G = DAGWorker(deubg=True)
+        self.G = TestDAGWorker(deubg=True)
         n = Node(func=nsum, args=(1,2))
         self.G.add_node(0, {'ptr': n})
 
@@ -37,7 +58,7 @@ class TestChain(NoSQLTestCase):
     """
 
     def setUp(self):
-        self.G = DAGWorker(debug=True)
+        self.G = TestDAGWorker(debug=True)
         for i in range(1,3):
             self.G.add_edge(i-1, i, weight=1)
         for i in range(0,3):
@@ -68,7 +89,7 @@ class TestDAGGraphNoCycle(NoSQLTestCase):
     """
     
     def setUp(self):
-        self.G = DAGWorker(debug=True)
+        self.G = TestDAGWorker(debug=True)
         self.G.add_edge(0,1, weight=2)
         self.G.add_edge(1,2, weight=2)
         self.G.add_edge(0,2, weight=2)

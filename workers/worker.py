@@ -83,19 +83,8 @@ class DAGWorker(nx.DiGraph):
             yield it[0]
 
     def _collect_incoming_kwargs(self, node):
-        args = list(self.node[node]['ptr']._args)
-        for pre, cur in self.in_edges(node):
-            if self.node[pre]['ptr'].status == 'finish':
-                retval = self.node[pre]['ptr'].retval
-                try:
-                    if isinstance(retval, object):
-                        retval = [retval]
-                    args.extend(retval)
-                except:
-                    print 'incoming args is only for list,object'
-                    raise
-        args = [i for i in args if i]
-        self.node[node]['ptr']._args = args
+        raise NotImplementedError("subclass should implement this")
+   
    
     def _start_to_run(self, node):
         if self.node[node]['ptr'].status != 'run':
@@ -217,7 +206,6 @@ class DAGWorker(nx.DiGraph):
                 self._del_finish_queue(node)
             for node in self._find_ready_to_join():
                 self._join_to_run(node)
-                self._dec_weight(node)
                 self._add_finish_queue(node)
                 self._del_run_queue(node)
             for node in self._find_ready_to_wait():

@@ -16,26 +16,48 @@ from django.template import Context, Template
 
 skip_tests = {
     'TestTwseHisItemQuery': False,
-    'TestTwseHisFrameQuery': False,
-    'TestTwseHisItemJoin': False,
-    'TestTwseHisItemParallel': False,
-    'TestTwseHisItemRouter': False
+    'TestTwseHisFrameQuery': True
 }
 
 @unittest.skipIf(skip_tests['TestTwseHisItemQuery'], "skip")
 class TestTwseHisItemQuery(NoSQLTestCase):
 
-    def test_on_run(self):
+    def test_on_stock(self):
         kwargs = {
+            'opt': 'twse',
+            'target': 'stock',
             'starttime': datetime.utcnow() - timedelta(days=5),
             'endtime': datetime.utcnow(),
-            'stockids': ['2317'],
-            'traderids': [],
-            'opt': 'twse',
-            'algorithm': None,
+            'stockids': ['2317', '2330'],
+            'base': 'stcok',
+            'order': ['-totalvolume', '-totaldiff'],
+            'callback': None,
+            'limit': 1,
             'debug': True
         }
+        item, _ = collect_hisitem.delay(**kwargs).get()
+        self.assertTrue(item)
+        self.assertTrue(item['stockitem'])
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
 
+    def test_on_all(self):
+        kwargs = {
+            'opt': 'twse',
+            'target': 'all',
+            'starttime': datetime.utcnow() - timedelta(days=5),
+            'endtime': datetime.utcnow(),
+            'stockids': ['2317', '2330'],
+            'traderids': [],
+            'base': 'stcok',
+            'order': [],
+            'callback': None,
+            'limit': 2,
+            'debug': True
+        }
+        item, _ = collect_hisitem.delay(**kwargs).get()
+        self.assertTrue(item)
+        [self.assertTrue(item[i]) for i in ['stockitem', 'traderitem', 'credititem']] 
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
 
 
 @unittest.skipIf(skip_tests['TestTwseHisFrameQuery'], "skip")

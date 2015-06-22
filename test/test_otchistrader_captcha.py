@@ -104,6 +104,7 @@ class TestOtcHisTraderCaptcha(object):
                         StringIO(response.read()), delimiter=',',
                         na_values=['--'], header=None, skiprows=[0, 1, 2], encoding=None, dtype=np.object)
                     print frame
+                    frame.to_csv("%s.csv" %(stockid))
                     return True
                 except:
                     pass
