@@ -29,7 +29,7 @@ def histrader_list_json(request):
             data, _ = collect_hisitem(collect)
             return JSONResponse(data)
 
-#@json_export
+@json_export
 def histrader_detail_json(request):
     if request.method == 'GET':
         collect = create_search(request)

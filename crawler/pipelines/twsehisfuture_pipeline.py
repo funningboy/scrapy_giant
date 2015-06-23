@@ -36,3 +36,27 @@ class TwseHisFuturePipeline(BasePipeline):
     def _clear_item(self, item):
         jstream = self._encode_item(item)
         return self._decode_item(jstream)
+
+    def _update_item(self, item):
+        frame = pd.DataFrame.from_dict(item['data']).dropna()
+        if frame.empty:
+            return
+        def _encode_datetime(it):
+            yy, mm, dd = map(int, it.split('-'))
+            return datetime(yy, mm, dd, 0, 0, 0, 0, pytz.utc)
+        frame['date'] = [_encode_datetime(it) for it in frame['date']]
+        frame['volume'] = frame['volume'].astype(int)
+        frame['open'] = frame['open'].astype(float)
+        frame['high'] = frame['high'].astype(float)
+        frame['low'] = frame['low'].astype(float)
+        frame['close'] = frame['close'].astype(float)
+        frame['settlementprice'] = frame['settlementprice'].astype(float)
+        frame['bestbuy'] = frame['bestbuy'].astype(float)
+        frame['bestsell'] = frame['bestsell'].astype(float)
+        item = frame.T.to_dict().values()
+        log.msg("item: %s" % (item), level=log.DEBUG)
+        return item
+
+    def _write_item(self, item):
+        pass
+ 

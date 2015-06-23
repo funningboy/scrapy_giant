@@ -8,6 +8,8 @@ import numpy as np
 from StringIO import StringIO
 from datetime import datetime, timedelta
 import calendar
+import json
+from bson import json_util
 
 from scrapy.selector import Selector
 from scrapy.contrib.spiders import CrawlSpider, Rule
@@ -53,7 +55,7 @@ class TwseHisFutureSpider(CrawlSpider):
         self._table = {}
 
     def start_requests(self):
-        """ get contact """
+        """ get contract """
         timestamp = datetime.utcnow()
         [fyear, syear] = [timestamp.year] * 2
         [fmon, smon] = [timestamp.month] * 2 
@@ -90,14 +92,16 @@ class TwseHisFutureSpider(CrawlSpider):
             identify = elem.xpath('./@value').extract()[0]
             m = re.search(r'([0-9a-zA-Z]{4,6})(\W+)\((\w+)\)', contract)
             if m:
+                # skip DU1, DHS first contract token
                 self._table.update({
-                    m.group(1): identify
+                    m.group(1): identify.split(',')[-1]
                 })
-        log.msg("table: %s" % str(self._table.items()[0]), level=log.INFO)
+        table = json.dumps(dict(self._table), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        log.msg("table: %s" % table, level=log.DEBUG)
         
         # request after contract find
         URL = 'http://www.taifex.com.tw/chinese/3/3_1_2dl.asp'
-        sdate = datetime.utcnow() - timedelta(days=3)
+        sdate = datetime.utcnow() - timedelta(days=0)
         edate = datetime.utcnow()
         datestart = "%d/%02d/%02d" %(sdate.year, sdate.month, sdate.day)
         dateend = "%d/%02d/%02d" %(edate.year, edate.month, edate.day)
@@ -136,14 +140,35 @@ class TwseHisFutureSpider(CrawlSpider):
         yield request
 
     def parse_after_contract_find(self, response):
+        """ 
+        data struct
+        [
+            {
+                'date':
+                'stockid':
+                'open':
+                'high':
+                'low':
+                'close':
+                'volume':
+            }, ...
+        ]
+        """
         log.msg("URL: %s" % (response.url), level=log.DEBUG)
         item = response.meta['item']
         item['url'] = response.url
         item['data'] = []
+        edate = datetime.utcnow()
+        # 期貨結算日 ?
+        c = calendar.monthcalendar(edate.year, edate.month)
+        edate0 = "%d%02d" %(edate.year, edate.month)
+        eyear = edate.year + 1 if edate.year == 12 else edate.year
+        emonth = edate.month % 12 + 1
+        edate1 = "%d%02d" %(eyear, emonth)
         try:
             frame = pd.read_csv(
                 StringIO(response.body), delimiter=',',
-                na_values=['--'], header=None, skiprows=[0], dtype=np.object).dropna()
+                na_values=['-'], header=None, skiprows=[0], dtype=np.object).dropna()
             if frame.empty:
                 log.msg("fetch %s empty" %('all'), log.INFO)
                 return
@@ -151,7 +176,28 @@ class TwseHisFutureSpider(CrawlSpider):
             log.msg("fetch %s fail" %('all'), log.INFO)
             return
         for k, v in self._table.items():
-            print frame[frame[1] == v].T.to_dict()
+            # 1:契約,2:到期月份(週別)
+            pool = frame[frame[1] == v]
+            if not pool.empty:
+                for ix, cols in pool.iterrows():
+                    sub = {
+                        'date': cols[0].replace('/', '-'),
+                        'stockid': k,
+                        'open': cols[3],
+                        'high': cols[4], 
+                        'low': cols[5],
+                        'close': cols[6],
+                        'volume': cols[9],
+                        'settlementprice': cols[10],
+                        'untradecount': cols[11],
+                        'bestbuy': cols[12],
+                        'bestsell': cols[13]
+                    }
+                    item['data'].append(sub)
+                    break
+        log.msg("item[0] %s ..." % (item['data'][0]), level=log.DEBUG)
+        yield item
+
 
 
 
