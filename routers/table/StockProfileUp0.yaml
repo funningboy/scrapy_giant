@@ -9,73 +9,19 @@ Edges:
 
 Nodes:
     [
-        {
-            task: collect_hisitem,
-            uid: 0,
-            uon: True,
-            kwargs: {
-                opt: None,
-                target: stock,
-                starttime: None,
-                endtime: None,
-                stockids: [],
-                base: stock,
-                order: [-totalvolume, -totaldiff],
-                callback: None,
-                limit: 200
-            }
-        },
-        {
-            task: collect_hisitem,
-            uid: 1,
-            uon: True,
-            kwargs: {
-                opt: None,
-                target: credit,
-                starttime: None,
-                endtime: None,
-                stockids: [],
-                base: stock,
-                order: [+bearishused, +financeused],
-                callback: None,
-                limit: 150
-            }
-        },
-        {
-            task: collect_hisitem,
-            uid: 2,
-            uon: True,
-            kwargs: {
-                opt: None,
-                target: trader,
-                starttime: None,
-                endtime: None,
-                stockids: [],
-                traderids: [],
-                base: stock,
-                order: [],
-                callback: None,
-                limit: 50
-            }
-        },
-        {
-            node: collect_hisitem,
-            uid: 3,
-            uon: True,
-            kwargs: {
-                opt: None,
-                target: all,
-                method: None,
-                starttime: None,
-                endtime: None,
-                stockids: [],
-                traderids: [],
-                base: stock,
-                order: [],
-                callback: None,
-                limit: 50
-            }
-        }
+        # 0
+        'parse_task(
+            "./routers/tasks/HisStock.yaml", 
+            kwargs = {
+                "opt": "twse",
+                "stockids": ["2317"],
+            })',
+        # 1
+        'parse_task(
+            "./routers/tasks/HisCredit.yaml",
+            kwargs = {
+                "opt": "twse",
+            })',
     ]
 
 
