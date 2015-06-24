@@ -1,0 +1,16 @@
+{
+    node: collect_hisitem,
+    kwargs: {
+        opt: null,
+        target: 'all',
+        starttime: null,
+        endtime: null,
+        stockids: [],
+        traderids: [],
+        base: 'stock',
+        order: [],
+        callback: null,
+        limit: 50
+    },
+    description: 'collect all hisitem based on each leaf items'
+}

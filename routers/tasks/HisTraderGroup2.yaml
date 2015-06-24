@@ -1,0 +1,17 @@
+{
+    # handler/tasks.py
+    task: collect_hisitem,
+    kwargs: {
+        opt: null,
+        target: 'trader',
+        starttime: datetime.utcnow() - timedelta(days=5),
+        endtime: datetime.utcnow(),
+        stockids: [],
+        traderids: ['9216', '779u', '526B', '9676'],
+        base: 'trader',
+        order: ['-totalvolume'],
+        callback: null,
+        limit: 100
+    },
+    description: '塑化大家族主力券商: (9216)凱基-台北, (779u)國票-長程, (525B)大慶-復興. (9676)富邦-仁愛'
+}

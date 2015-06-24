@@ -1,0 +1,16 @@
+{
+    # handler/tasks.py
+    task: collect_hisitem,
+    kwargs: {
+        opt: null,
+        target: 'stock',
+        starttime: datetime.utcnow() - timedelta(days=15),
+        endtime: datetime.utcnow(),
+        stockids: [],
+        base: 'stock',
+        order: ['-totalvolume', '-totaldiff'],
+        callback: null,
+        limit: 100
+    },
+    description: 'find best buy stockids based on stock collected constraint during this time period set'
+}

@@ -1,0 +1,17 @@
+{
+    # handler/tasks.py
+    task: collect_hisitem,
+    kwargs: {
+        opt: null,
+        target: 'trader',
+        starttime: datetime.utcnow() - timedelta(days=5),
+        endtime: datetime.utcnow(),
+        stockids: [],
+        traderids: ['9658', '9216', '9255', '1260', '585b'],
+        base: 'trader',
+        order: ['-totalvolume'],
+        callback: null,
+        limit: 100
+    },
+    description: '林滄海,海哥的主力券商: (9658)富邦-建國, (9216)凱基-信義, (9255)凱基-和平, (1260)宏遠, (585b)統一-內湖'
+}

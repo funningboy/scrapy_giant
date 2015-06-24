@@ -1,0 +1,16 @@
+{
+    # handler/taks.py
+    task: collect_hisitem,
+    kwargs: {
+        opt: null,
+        target: 'credit',
+        starttime: datetime.utcnow() - timedelta(days=10),
+        endtime: datetime.utcnow(),
+        stockids: [],
+        base: 'stock',
+        order: ['+bearishused', '+financeused'],
+        callback: null,
+        limit: 100
+    },
+    description: 'find best buy stockids based on credit collected constraint during this time period set'
+}
