@@ -27,13 +27,15 @@ scrapy_tests = {
     'twsehiscredit': ('twsehiscredit', 'INFO', './log/twsehiscredit.log', True, True),
     'twsehisnocredit': ('twsehisnocredit', 'INFO', './log/twsehisnocredit.log', True, True),
     'twsehisnews': ('twsehisnews', 'INFO', './log/twsehisnews.log', True, True),
+    'twsehisfuture': ('twsehisfuture', 'INFO', './log/twsehisfuture.log', True, True),
     # otchisdb table [8:13]
     'otchistrader': ('otchistrader', 'INFO', './log/otchistrader.log', True, True),
     'otchistrader2': ('otchistrader2', 'INFO', './log/otchistrader2.log', True, True),
     'otchisstock': ('otchisstock', 'INFO', './log/otchisstock.log', True, True),
     'otchiscredit': ('otchiscredit', 'INFO', './log/otchiscredit.log', True, True),
     'otchisnocredit': ('otchisnocredit', 'INFO', './log/otchisnocredit.log', True, True),
-    'otchisnews': ('otchisnews', 'INFO', './log/otchisnews.log', True, True)
+    'otchisnews': ('otchisnews', 'INFO', './log/otchisnews.log', True, True),
+    'otchisfuture': ('otchisfuture', 'INFO', './log/otchisfuture', True, True)
 }
 
 # scrapy kwargs
@@ -92,7 +94,7 @@ class TestThreadService(TestRunScrapyService):
         [self.assertTrue(self.has_pass(scrapy_tests[k][2])) for k in jobs]
 
         # twse
-        jobs = ['twsehisstock', 'twsehistrader', 'twsehistrader2', 'twsehiscredit']
+        jobs = ['twsehisstock', 'twsehistrader', 'twsehistrader2', 'twsehiscredit', 'twsehisfuture']
         tasks = group([
             run_scrapy_service.subtask(scrapy_tests[k]) for k in jobs
         ])
@@ -105,7 +107,7 @@ class TestThreadService(TestRunScrapyService):
         print "scrapy twsehisdb bin.tasks used %.4f(s)" % (t.timeit())
 
         # otc
-        jobs = ['otchisstock', 'otchistrader', 'otchistrader2', 'otchiscredit']
+        jobs = ['otchisstock', 'otchistrader', 'otchistrader2', 'otchiscredit'] #'otchisfuture']
         tasks = group([
             run_scrapy_service.subtask(scrapy_tests[k]) for k in jobs
         ])

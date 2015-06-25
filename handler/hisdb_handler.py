@@ -149,7 +149,7 @@ class TwseStockHisDBHandler(object):
         pass
 
     def insert_raw(self, item):
-        """ bluk update stock part """
+        """ bulk update stock part """
         keys = [k for k,v in StockData._fields.iteritems() if k not in ['id']]
         for it in item:
             data = {k:v for k, v in it.items() if k in keys}
@@ -291,7 +291,7 @@ class TwseTraderHisDBHandler(object):
         pass
 
     def insert_raw(self, item):
-        """ bluk update trader part """
+        """ bulk update trader part """
         keys = [k for k,v in TraderData._fields.iteritems() if k not in ['id']]
         toplist = []
         for it in item['toplist']:
@@ -525,7 +525,7 @@ class TwseCreditHisDBHandler(object):
         pass
 
     def insert_raw(self, item):
-        """ bluk update credit part """
+        """ bulk update credit part """
         keys = [k for k,v in CreditData._fields.iteritems() if k not in ['id']]
         for it in item:
             data = {k:v for k, v in it.items() if k in keys}
@@ -678,6 +678,124 @@ class TwseFutureHisDBHandler(object):
     @ids.setter
     def ids(self, ids):
         self._ids = ids
+
+    @property
+    def coll(self):
+        return self._coll
+
+    def update_raw(self, item):
+        pass
+
+    def delete_raw(self, item):
+        pass
+
+    def insert_raw(self, item):
+        """ bulk update credit part """
+        keys = [k for k,v in FutureData._fields.iteritems() if k not in ['id']]
+        for it in item:
+            data = {k:v for k, v in it.items() if k in keys}
+            data = FutureData(**data)
+            cursor = self._coll.objects(Q(date=it['date']) & Q(stockid=it['stockid']))
+            cursor = list(cursor)
+            coll = self._coll() if len(cursor) == 0 else cursor[0]
+            coll.stockid = it['stockid']
+            coll.date = it['date']
+            coll.future = data
+            coll.save()
+
+    def query_raw(self, starttime, endtime, stockids=[], base='stock', order=['-totalvolume'], limit=10, callback=None):
+        """ return orm
+        <stockid>                               | <stockid> ...
+                    open| high| low|close|volume|          | open | ...
+        20140928    100 | 101 | 99 | 100 | 100  | 20140928 | 11   | ...
+        20140929    100 | 102 | 98 | 99  | 99   | 20140929 | 11   | ...
+        """
+        map_f = """
+            function () {
+                try {
+                    var key =  { stockid : this.stockid };
+                    var diff = this.future.high - this.future.low;
+                    var value = {
+                        totalvolume: this.future.volume,
+                        totaldiff: diff,
+                        data: [{
+                            date: this.date,
+                            open: this.future.open,
+                            high: this.future.high,
+                            low: this.future.low,
+                            close: this.future.close,
+                            price: this.future.close,
+                            volume: this.future.volume
+                         }]
+                    };
+                    emit(key, value);
+                }
+                catch(e){
+                }
+                finally{
+                }
+            }
+        """
+        reduce_f = """
+          function (key, values) {
+                var redval = {
+                    totalvolume: 0,
+                    totaldiff: 0,
+                    data: []
+                };
+                if (values.length == 0) {
+                    return redval;
+                }
+                for (var i=0; i < values.length; i++) {
+                    redval.totalvolume += values[i].totalvolume;
+                    redval.totaldiff += values[i].totaldiff;
+                    redval.data = values[i].data.concat(redval.data);
+                }
+                return redval;
+            }
+        """
+        finalize_f = """
+        """
+        assert(set([o[1:] for o in order]) <= set(['totalvolume', 'totaldiff']))
+        bufwin = (endtime - starttime).days
+        cursor = self._coll.objects(Q(date__gte=starttime) & Q(date__lte=endtime) & Q(stockid__in=stockids))
+        results = cursor.map_reduce(map_f, reduce_f, 'futuremap')
+        results = list(results)
+        reorder = lambda k: map(lambda x: k.value[x[1:]] if x.startswith('+') else -k.value[x[1:]], order)
+        pool = sorted(results, key=reorder)[:limit]
+        retval = []
+        for it in pool:
+            coll = { 'datalist': [] }
+            for data in sorted(it.value['data'], key=lambda x: x['date']):
+                coll['datalist'].append(data)
+            coll.update({
+                # key
+                'date': endtime,
+                'bufwin': bufwin,
+                'stockid': it.key['stockid'],
+                'order': order,
+                'stocknm': self._id.stock.get_name(it.key['stockid']),
+                # value
+                'totalvolume': it.value['totalvolume'],
+                'totaldiff': it.value['totaldiff']
+            })
+            retval.append(coll)
+        return callback(retval) if callback else retval
+
+    def to_pandas(self, cursor):
+        """ callback as pandas df """
+        item = OrderedDict()
+        for it in cursor:
+            index, data = [], []
+            for i in it['datalist']:
+                date = i.pop('date', None)
+                if date:
+                    index.append(pytz.timezone('UTC').localize(date))
+                    data.append(i)
+            if index and data:
+                id = it['stockid']
+                item.update({id: pd.DataFrame(data, index=index).fillna(0)})
+        return pd.Panel(item)
 
 
 class OtcStockHisDBHandler(TwseStockHisDBHandler):

@@ -30,6 +30,18 @@ class CreditData(EmbeddedDocument):
     daytrade = IntField(min_value=0, max_value=9999999)
     limit = IntField(min_value=0, max_value=9999999)
 
+class FutureData(EmbeddedDocument):
+    open = FloatField(min_value=0.0, max_value=9999.0)
+    high = FloatField(min_value=0.0, max_value=9999.0)
+    low = FloatField(min_value=0.0, max_value=9999.0)
+    close = FloatField(min_value=0.0, max_value=9999.0)
+    volume = IntField(min_value=0, max_value=9999999)
+    price = FloatField(min_value=0.0, max_value=9999999.0)
+    setprice = FloatField(min_value=0.0, max_value=9999.0)
+    untrdcount = IntField(min_value=0, max_value=9999999)
+    bestbuy = FloatField(min_value=0, max_value=9999.0)
+    bestsell = FloatField(min_value=0, max_value=9999.0)
+
 class StockHisColl(Document):
     stockid = StringField()
     date = DateTimeField(default=datetime.utcnow())
@@ -37,7 +49,7 @@ class StockHisColl(Document):
     data = EmbeddedDocumentField(StockData)
     finance = EmbeddedDocumentField(CreditData)
     bearish = EmbeddedDocumentField(CreditData)
-    #future
+    future = EmbeddedDocumentField(FutureData)
     #event
     meta = {
         'db_alias': 'stockhisdb',

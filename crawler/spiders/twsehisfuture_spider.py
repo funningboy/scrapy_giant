@@ -34,8 +34,8 @@ class TwseHisFutureSpider(CrawlSpider):
         (u'最低價', u'low'),
         (u'收盤價', u'close'),
         (u'成交量', u'volume'),
-        (u'結算價', u'settlementprice'),
-        (u'未沖銷契約數', u'untradecount'), 
+        (u'結算價', u'setprice'),
+        (u'未沖銷契約數', u'untrdcount'), 
         (u'最後最佳買價', u'bestbuy'),
         (u'最後最佳賣價', u'bestsell')
     ]
@@ -92,10 +92,10 @@ class TwseHisFutureSpider(CrawlSpider):
             identify = elem.xpath('./@value').extract()[0]
             m = re.search(r'([0-9a-zA-Z]{4,6})(\W+)\((\w+)\)', contract)
             if m:
-                # skip DU1, DHS first contract token
-                self._table.update({
-                    m.group(1): identify.split(',')[-1]
-                })
+                if self._id.stock.hsa_id(m.group[1]):
+                    # skip DU1, DHS first contract token
+                    self._table.update({ m.group(1): identify.split(',')[-1]})
+                    
         table = json.dumps(dict(self._table), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
         log.msg("table: %s" % table, level=log.DEBUG)
         
@@ -188,8 +188,8 @@ class TwseHisFutureSpider(CrawlSpider):
                         'low': cols[5],
                         'close': cols[6],
                         'volume': cols[9],
-                        'settlementprice': cols[10],
-                        'untradecount': cols[11],
+                        'setprice': cols[10],
+                        'untrdcount': cols[11],
                         'bestbuy': cols[12],
                         'bestsell': cols[13]
                     }

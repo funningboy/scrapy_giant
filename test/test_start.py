@@ -22,11 +22,13 @@ skip_tests = {
     'TestTwseHisTrader2': False,
     'TestTwseHisStock': False,
     'TestTwseHisCredit': False,
+    'TestTwseHisFufure': False,
     'TestTwseHisAll': False,
     'TestOtcHisTrader': False,
     'TestOtcHisTrader2': False,
     'TestOtcHisStock': False,
     'TestOtcHisCredit': False,
+    'TestOtcHisFuture': False,
     'TestOtcHisAll': False
 }
 
@@ -186,6 +188,31 @@ class TestTwseHisCredit(TestBase):
     def tearDown(self):
         super(TestTwseHisCredit, self).tearDown()
 
+@unittest.skipIf(skip_tests['TestTwseHisFufure'], "skip")
+class TestTwseHisFufure(TestBase):
+
+    def setUp(self):
+        super(TestTwseHisFufure, self).setUp()
+        kwargs = {
+            'debug': True,
+            'opt': 'twse'
+        }
+        self._db = TwseHisDBHandler(**kwargs)
+        self._db.future.coll.drop_collection()
+        # call scrapy
+        cmd = 'scrapy crawl twsehisfuture -s LOG_FILE=twsehisfuture.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG'
+        subprocess.check_call(cmd, shell=True)
+
+    def test_on_run(self):
+        expect = ['2317', '1314', '2330']
+        cursor = self._db.credit.coll.objects(Q(stockid__in=expect)).order_by('-date')
+        item = list(cursor)[0]
+        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        print stream
+
+    def tearDown(self):
+        super(TestTwseHisFuture, self).tearDown()
+
 @unittest.skipIf(skip_tests['TestTwseHisAll'], "skip")
 class TestTwseHisAll(TestBase):
 
@@ -199,6 +226,7 @@ class TestTwseHisAll(TestBase):
         self._db.stock.coll.drop_collection()
         self._db.trader.coll.drop_collection()
         self._db.credit.coll.drop_collection()
+        self._db.future.coll.drop_collection()
         # call scrapy
         cmds = [
             'scrapy crawl twseid -s LOG_FILE=twseid.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG',
@@ -206,7 +234,8 @@ class TestTwseHisAll(TestBase):
             'scrapy crawl twsehistrader -s LOG_FILE=twsehistrader.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG',
             'scrapy crawl twsehistrader2 -s LOG_FILE=twsehistrader2.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG',
             'scrapy crawl twsehisstock -s LOG_FILE=twsehisstock.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG',
-            'scrapy crawl twsehiscredit -s LOG_FILE=twsehiscredit.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG'
+            'scrapy crawl twsehiscredit -s LOG_FILE=twsehiscredit.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG',
+            'scrapy crawl twsehisfuture -s LOG_FILE=twsehisfuture.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG' 
         ]
         for cmd in cmds:
             subprocess.check_call(cmd, shell=True)
@@ -346,6 +375,31 @@ class TestOtcHisCredit(TestBase):
     def tearDown(self):
         super(TestOtcHisCredit, self).tearDown()
 
+@unittest.skipIf(skip_tests['TestOtcHisFuture'], "skip")
+class TestOtcHisFuture(TestBase):
+
+    def setUp(self):
+        super(TestOtcHisFuture, self).setUp()
+        kwargs = {
+            'debug': True,
+            'opt': 'otc'
+        }
+        self._db = OtcHisDBHandler(**kwargs)
+        self._db.future.coll.drop_collection()
+        # call scrapy
+        cmd = 'scrapy crawl otchisfuture -s LOG_FILE=otchisfuture.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG'
+        subprocess.check_call(cmd, shell=True)
+
+    def test_on_run(self):
+        expect = ['5371', '1565', '3105']
+        cursor = self._db.future.coll.objects(Q(stockid__in=expect)).order_by('-date')
+        item = list(cursor)[0]
+        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        print stream
+
+    def tearDown(self):
+        super(TestOtcHisFuture, self).tearDown()
+
 @unittest.skipIf(skip_tests['TestOtcHisAll'], "skip")
 class TestOtcHisAll(TestBase):
 
@@ -359,6 +413,7 @@ class TestOtcHisAll(TestBase):
         self._db.stock.coll.drop_collection()
         self._db.trader.coll.drop_collection()
         self._db.credit.coll.drop_collection()
+        self._db.future.coll.drop_collection()
         # call scrapy
         cmds = [
             'scrapy crawl otcid -s LOG_FILE=otcid.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG',
@@ -367,6 +422,7 @@ class TestOtcHisAll(TestBase):
             'scrapy crawl otchistrader2 -s LOG_FILE=otchistrader2.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG',
             'scrapy crawl otchisstock -s LOG_FILE=otchisstock.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG',
             'scrapy crawl otchiscredit -s LOG_FILE=otchiscredit.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_FILE=DEBUG',
+            'scrapy crawl otchisfuture -s LOG_FILE=otchisfuture.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_FILE=DEBUG'
         ]
         for cmd in cmds:
             subprocess.check_call(cmd, shell=True)

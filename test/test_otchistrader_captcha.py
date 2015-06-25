@@ -20,6 +20,7 @@ from datetime import datetime
 from collections import defaultdict
 from crawler.spiders.otchistrader_captcha import *
 from crawler.spiders.pytesser import *
+import traceback
 
 import unittest
 
@@ -40,6 +41,7 @@ class TestOtcHisTraderCaptcha(object):
             response = opener.open(self._domain + URL)
             return self._domain + '/web/inc/authnum.php'
         except Exception:
+            print traceback.format_exc()
             print 'error find captch path'
             pass
 
@@ -109,6 +111,7 @@ class TestOtcHisTraderCaptcha(object):
                 except:
                     pass
         except Exception:
+            print traceback.format_exc()
             print 'error download csv'
             pass
         return False
