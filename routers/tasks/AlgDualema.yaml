@@ -1,0 +1,23 @@
+{
+    #algorithm/tasks.py
+    task: collect_algitem,
+    kwargs: {
+        opt: null,
+        target: 'dualema',
+        starttime: datetime.utcnow() - timedelta(days=60)
+        endtime: datetime.utcnow(),
+        stockids: [],
+        traderids: [],
+        order: ['-buy', '-sell', '-portfolio_value'],
+        callback: to_summary, #to_detail, null
+        limit: 100,
+        cfg: {
+            buf_win: 30,
+            short_ema_win: 20,
+            long_ema_win: 40,
+            buy_amount: 100,
+            sell_amount: 100
+        }
+    }
+
+}

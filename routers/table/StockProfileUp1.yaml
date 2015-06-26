@@ -1,10 +1,8 @@
-# static schedule table
-
 Edges:
     [
-        [0,1,1],
-        [1,2,1],
-        [2,3,1]
+        [1,0,1],
+        [2,0,1],
+        [0,3,1]
     ]
 
 Nodes:
@@ -20,9 +18,9 @@ Nodes:
                 endtime: None,
                 stockids: [],
                 base: stock,
-                order: [-totaldiff, -totalvolume],
+                order: [-totalvolume, -totaldiff],
                 callback: None,
-                limit: 200
+                limit: 50
             }
         },
         {
@@ -36,9 +34,9 @@ Nodes:
                 endtime: None,
                 stockids: [],
                 base: stock,
-                order: [-bearishused, -financeused],
+                order: [+bearishused, +financeused],
                 callback: None,
-                limit: 150
+                limit: 50
             }
         },
         {
@@ -77,3 +75,4 @@ Nodes:
             }
         }
     ]
+

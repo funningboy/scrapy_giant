@@ -1,0 +1,23 @@
+Edges:
+    []
+
+Nodes:
+    [
+        {
+            task: collect_hisitem,
+            uid: 0,
+            uon: True,
+            kwargs: {
+                opt: None,
+                target: trader,
+                starttime: None,
+                endtime: None,
+                stockids: [],
+                traderids: [],
+                base: trader,
+                order: ['-totalvolume', '-totalbuyvolume', '+totalsellvolume'],
+                callback: None,
+                limit: 50
+            }
+        }
+    ]
