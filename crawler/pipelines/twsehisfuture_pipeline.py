@@ -50,7 +50,7 @@ class TwseHisFuturePipeline(BasePipeline):
         frame['high'] = frame['high'].astype(float)
         frame['low'] = frame['low'].astype(float)
         frame['close'] = frame['close'].astype(float)
-        frame['settlementprice'] = frame['settlementprice'].astype(float)
+        frame['setprice'] = frame['setprice'].astype(float)
         frame['bestbuy'] = frame['bestbuy'].astype(float)
         frame['bestsell'] = frame['bestsell'].astype(float)
         item = frame.T.to_dict().values()

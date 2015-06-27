@@ -92,9 +92,10 @@ class TwseHisFutureSpider(CrawlSpider):
             identify = elem.xpath('./@value').extract()[0]
             m = re.search(r'([0-9a-zA-Z]{4,6})(\W+)\((\w+)\)', contract)
             if m:
-                if self._id.stock.hsa_id(m.group[1]):
+                stockid = m.groups()[0]
+                if self._id.stock.has_id(stockid):
                     # skip DU1, DHS first contract token
-                    self._table.update({ m.group(1): identify.split(',')[-1]})
+                    self._table.update({ stockid: identify.split(',')[-1]})
                     
         table = json.dumps(dict(self._table), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
         log.msg("table: %s" % table, level=log.DEBUG)

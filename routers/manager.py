@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import yaml
+import threading
+import json
+from bson import json_util
 from datetime import datetime, timedelta
 from workers.gworker import GiantWorker
 from workers.nodes import Node
 from handler.tasks import collect_hisitem
-import threading
+
 #from algorithm.tasks import collect_algitem
 
 class Manager(threading.Thread):
@@ -27,6 +30,7 @@ class Manager(threading.Thread):
                 print "loading %s fail" %(path)
                 raise
             
+            # collect_hisitem/target, collect_algitem/target
             parse_kwargs = [
                 cls._parse_opt,
                 cls._parse_target,
@@ -38,6 +42,7 @@ class Manager(threading.Thread):
                 cls._parse_order,
                 cls._parse_callback,
                 cls._parse_limit,
+                cls._parse_cfg,
                 cls._parse_debug
             ]        
             for it in parse_kwargs:
@@ -46,51 +51,135 @@ class Manager(threading.Thread):
 
     @classmethod
     def _parse_opt(cls, okwargs, nkwargs={}):
-        try:
-            assert('opt' in okwargs)
-            okwargs['opt'] = nkwargs['opt'] if 'opt' in nkwargs else okwargs['opt']
-            assert(okwargs['opt'] in ['twse', 'otc'])
-        except:
+        opt = None
+        if 'opt' in nkwargs:
+            try:
+                opt = eval(nkwargs['opt'])
+            except:
+                opt = str(nkwargs['opt'])
+                pass
+        elif 'opt' in okwargs:
+            try:
+                opt = eval(okwargs['opt'])
+            except:
+                opt = str(okwargs['opt'])
+                pass
+
+        if opt: 
+            okwargs['opt'] = opt
+        else:
             print "parse opt fail"
             raise
 
     @classmethod
     def _parse_target(cls, okwargs, nkwargs={}):
-        pass
+        target = None
+        if 'target' in nkwargs:
+            try:
+                target = eval(nkwargs['target'])
+            except:
+                target = str(nkwargs['target'])
+                pass
+        elif 'target' in okwargs:
+            try:
+                target = eval(okwargs['target'])
+            except:
+                target = str(okwargs['target'])
+                pass
 
-    @classmethod
-    def _parse_starttime(cls, okwargs, nkwargs={}):
-        try:
-            assert('starttime' in okwargs)
-            starttime = eval(nkwargs['starttime']) if 'starttime' in nkwargs else eval(okwargs['starttime'])
-            okwargs['starttime'] = starttime if isinstance(starttime, datetime) else datetime.utcnow() - timedelta(days=30)
-        except:
-            print "parse starttime fail"
+        if target:
+            okwargs['target'] = target
+        else:
+            print "parse target fail"
             raise
 
     @classmethod
+    def _parse_starttime(cls, okwargs, nkwargs={}):
+        starttime = datetime.utcnow() - timedelta(days=30)
+        if 'starttime' in nkwargs:
+            try:
+                starttime = eval(nkwargs['starttime'])
+            except:
+                starttime = nkwargs['starttime']
+                pass
+        elif 'starttime' in okwargs:
+            try:
+                starttime = eval(okwargs['endtime'])
+            except:
+                starttime = okwargs['endtime']
+                pass
+
+        if isinstance(starttime, datetime):
+            okwargs['starttime'] = starttime 
+        else:
+            print "parse starttime fail"
+            raise 
+
+    @classmethod
     def _parse_endtime(cls, okwargs, nkwargs={}):
-        try:
-            assert('endtime' in okwargs)
-            endtime = eval(nkwargs['endtime']) if 'endtime' in nkwargs else eval(okwargs['endtime'])
-            okwargs['endtime'] = endtime if isinstance(endtime, datetime) else datetime.utcnow()
-        except:
+        endtime = datetime.utcnow()
+        if 'endtime' in nkwargs:
+            try:
+                endtime = eval(nkwargs['endtime'])
+            except:
+                endtime = nkwargs['endtime']
+                pass
+        elif 'endtime' in okwargs:
+            try:
+                endtime = eval(okwargs['endtime'])
+            except:
+                endtime = okwargs['endtime']
+                pass
+
+        if isinstance(endtime, datetime):
+            okwargs['endtime'] = endtime
+        else:
             print "parse endtime fail"
             raise
 
     @classmethod
     def _parse_stockids(cls, okwargs, nkwargs={}):
-        try:
-            assert('stockids' in okwargs)
-            stockids = nkwargs['stockids'] if 'stockids' in nkwargs else okwargs['stockids']
-            okwargs['stockids'] = stockids  if isinstance(stockids, list) else []
-        except:
+        stockids = []
+        if 'stockids' in nkwargs:
+            try:
+                stockids = eval(nkwargs['stockids'])
+            except:
+                stockids = list(nkwargs['stockids']) 
+                pass
+        elif 'stockids' in okwargs:
+            try:
+                stockids = eval(okwargs['stockids'])
+            except:
+                stockids = list(nkwargs['stockids'])
+                pass
+
+        if isinstance(stockids, list):
+            okwargs['stockids'] = stockids
+        else:
             print "parse stockids fail"
             raise
 
     @classmethod
     def _parse_traderids(cls, okwargs, nkwargs={}):
-        pass
+        traderids = []
+        if 'traderids' in nkwargs:
+            try:
+                traderids = eval(nkwargs['traderids'])
+            except:
+                traderids = list(nkwargs['traderids'])
+                pass
+        elif 'traderids' in okwargs:
+            try:
+                traderids = eval(okwargs['traderids'])
+            except:
+                traderids = list(nkwargs['traderids'])
+                pass
+
+        if isinstance(traderids, list):
+            okwargs['traderids'] = traderids
+        else:
+            print "parse traderids fail"
+            raise
 
     @classmethod
     def _parse_base(cls, okwargs, nkwargs={}):
@@ -98,7 +187,25 @@ class Manager(threading.Thread):
 
     @classmethod
     def _parse_order(cls, okwargs, nkwargs={}):
-        pass
+        order = []
+        if 'order' in nkwargs:
+            try:
+                order = eval(nkwargs['order'])
+            except:
+                order = list(nkwargs['order'])
+                pass
+        elif 'order' in okwargs:
+            try:
+                order = eval(okwargs['order'])
+            except:
+                order = list(okwargs['order'])
+                pass
+
+        if isinstance(order, list):
+            okwargs['order'] = order
+        else:
+            print "parse order fail"
+            raise
 
     @classmethod
     def _parse_callback(cls, okwargs, nkwargs={}):
@@ -106,26 +213,50 @@ class Manager(threading.Thread):
 
     @classmethod
     def _parse_limit(cls, okwargs, nkwargs={}):
-        pass
+        limit = 20
+        if 'limit' in nkwargs:
+            try:
+                limit = eval(nkwargs['limit'])
+            except:
+                limit = int(nkwargs['limit'])
+                pass
+        elif 'limit' in okwargs:
+            try:
+                limit = eval(okwargs['lmit'])
+            except:
+                limit = int(okwargs['limit'])
+                pass
+
+        if isinstance(limit, int):
+            okwargs['limit'] = limit
+        else:
+            print "parse limit fail"
+            raise
 
     @classmethod
     def _parse_debug(cls, okwargs, nkwargs={}):
         try:
+            #django.setting
             okwargs['debug'] = True
         except:
             print "parse debug fail"
             raise
 
     @classmethod
-    def create_graphs(cls, path, priority=0):
+    def _parse_cfg(cls, okwargs, nkwargs={}):
+        pass
+
+    @classmethod
+    def create_graphs(cls, path, priority=1):
         with open(path, 'r') as stream:
             stream = yaml.load(stream)
             assert(set(stream.keys()) == set(['Nodes', 'Edges']))
+
             G = GiantWorker()
             create_methods = [
                 cls._create_edges,
                 cls._create_nodes,
-                #cls._valid_graph,
+                cls._valid_graph,
                 cls._start_to_run
             ]
             for it in create_methods:
@@ -135,10 +266,14 @@ class Manager(threading.Thread):
                 'priority': priority,
                 'graph': G,
             }
-            #cls._wait_queue.append(task)
+            cls._wait_queue.append(task)
 
     @classmethod
     def update_graphs(cls, stream, graph):
+        pass
+
+    @classmethod
+    def _del_nodes(cls, stream, graph):
         pass
 
     @classmethod
@@ -166,10 +301,19 @@ class Manager(threading.Thread):
                 raise
 
     @classmethod
+    def _del_edges(cls, stream, graph):
+        pass
+
+    @classmethod
+    def _valid_graph(cls, stream, graph):
+        pass
+
+    @classmethod
     def _start_to_run(cls, stream, graph):
         graph.set_start_to_run(0)
         graph.run()
-        print graph.record
+        for i in graph.record:
+            print json.dumps(dict(i['retval']), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
 
     @classmethod
     def _is_ready_to_run(cls):
@@ -180,13 +324,12 @@ class Manager(threading.Thread):
         pass
 
     @classmethod
-    def run(cls, path='./routers/table/StockProfileUp0.yaml'):
-        while True:
-            cls.create_graphs(path)
+    def run(cls, path='./routers/table/TestTraderProfile.yaml'):
+        #while True:
+        cls.create_graphs(path)
             
 
 # register at wsgi.py
 m = Manager()
 m.start()
-#m.run()
-m.join()
+#m.join()

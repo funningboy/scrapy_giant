@@ -217,7 +217,7 @@ class DAGWorker(nx.DiGraph):
             if self._debug:
                 self._collect_debug_msg()
             if self._is_maxloop_out():
-                print 'found maxloop out, please check DAG has cycles/unreachable nodes'
+                print 'find maxloop out, please check DAG has cycles/unreachable nodes'
                 break
         if self._debug:
             for node in self._dump_debug_queue():

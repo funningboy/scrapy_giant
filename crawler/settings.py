@@ -65,7 +65,7 @@ ITEM_PIPELINES = {
     'crawler.pipelines.otchisstock_pipeline.OtcHisStockPipeline': 800,
     'crawler.pipelines.otchistrader_pipeline2.OtcHisTraderPipeline2': 800,
     'crawler.pipelines.otchiscredit_pipeline.OtcHisCreditPipeline': 800,
-    #'crawlwe.pipelines.otchisfuture_pipeline.OtcHisFuturePipeline': 800,
+    'crawler.pipelines.otchisfuture_pipeline.OtcHisFuturePipeline': 800,
     # trader
     'crawler.pipelines.traderid_pipeline.TraderIdPipeline': 800
 }

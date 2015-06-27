@@ -1,8 +1,8 @@
 {
-    node: collect_hisitem,
+    task: collect_hisitem,
     kwargs: {
         opt: null,
-        target: 'all',
+        target: 'itemall',
         starttime: null,
         endtime: null,
         stockids: [],

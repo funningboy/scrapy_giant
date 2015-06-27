@@ -3,22 +3,17 @@
     task: collect_algitem,
     kwargs: {
         opt: null,
-        target: 'dualema',
-        starttime: datetime.utcnow() - timedelta(days=60),
+        target: 'btrader',
+        starttime: datetime.utcnow() - timedelta(days=10)
         endtime: datetime.utcnow(),
         stockids: [],
         traderids: [],
         order: ['-buy', '-sell', '-portfolio_value'],
         callback: to_summary, #to_detail, null
         limit: 100,
-        # dualema.cfg
         cfg: {
-            buf_win: 30,
-            short_ema_win: 20,
-            long_ema_win: 40,
-            buy_amount: 100,
-            sell_amount: 100
+            buf_win: 30
         }
     }
-    description: 'dualema algorithm'
+
 }

@@ -27,48 +27,48 @@ def collect_hisitem(opt, target, starttime, endtime, base='stock', order=[], sto
     """ as middleware collect raw his stock/toptrader/credit/future to item
     """
 
+    assert(opt in ['twse', 'otc'])
+    assert(target in ['stock', 'trader', 'credit', 'future', 'itemall'])
+    assert(base in ['stock', 'trader'])
+    #asssert ...
+
     item = {
-        'stockitem': None,
-        'traderitem': None,
-        'credititem': None,
-        'futureitem': None
+        'stockitem': [],
+        'traderitem': [],
+        'credititem': [],
+        'futureitem': []
     }
     
-    assert(opt in ['twse', 'otc'])
-    assert(target in ['stock', 'trader', 'credit', 'future', 'all'])
-   
     idhandler = iddb_tasks[opt](debug=debug)
     dbhandler = hisdb_tasks[opt](debug=debug)
 
-    if target in ['stock', 'all']:
+    if target in ['stock', 'itemall']:
         args = (starttime, endtime, stockids, base, order, limit)
         dt = dbhandler.stock.query_raw(*args)
         if dt:
             item.update({'stockitem': dt})
 
-    if target in ['credit', 'all']:
+    if target in ['credit', 'itemall']:
         args = (starttime, endtime, stockids, base, order, limit)
         dt = dbhandler.credit.query_raw(*args)
         if dt:
             item.update({'credititem': dt})
 
-    if target in ['trader', 'all']:
+    if target in ['trader', 'itemall']:
         args = (starttime, endtime, stockids, traderids, base, order, limit)
         dt = dbhandler.trader.query_raw(*args)
         if dt:
             item.update({'traderitem': dt})
 
-    if target in ['future', 'all']:
-        pass
-        #args = (starttime, endtime, stockids, base, order, limit)
-        #dt = dbhandler.future.query_raw(*args)
-        #if dt:
-        #    item.update({'futureitem': dt})
+    if target in ['future', 'itemall']:
+        args = (starttime, endtime, stockids, base, order, limit)
+        dt = dbhandler.future.query_raw(*args)
+        if dt:
+            item.update({'futureitem': dt})
    
-    return item, dbhandler
+    return item
 
 
-@shared_task
 def collect_hisframe(opt, target, starttime, endtime, base='stock', order=[], stockids=[], traderids=[], limit=10, callback=None, debug=False):
     """  as middleware collect raw his stock/toptrader/credit/future to df
     <stockid>                                | <stockid> ...
@@ -79,39 +79,39 @@ def collect_hisframe(opt, target, starttime, endtime, base='stock', order=[], st
 
     group = []
     assert(opt in ['twse', 'otc'])
-    assert(target in ['stock', 'trader', 'credit', 'future', 'all'])
+    assert(target in ['stock', 'trader', 'credit', 'future', 'itemall'])
     #assert stockids, traderids
+    #assert ...
 
     dbhandler = hisdb_tasks[opt](debug=debug)
 
-    if target in ['stock', 'all']:
+    if target in ['stock', 'itemall']:
         dbhandler.stock.ids = stockids
         args = (starttime, endtime, stockids, base, order, limit, dbhandler.stock.to_pandas)
         df = dbhandler.stock.query_raw(*args)
         if not df.empty:
             group.append(df)
 
-    if target in ['credit', 'all']:
+    if target in ['credit', 'itemall']:
         dbhandler.credit.ids = stockids
         args = (starttime, endtime, stockids, base, order, limit, dbhandler.credit.to_pandas)
         df = dbhandler.credit.query_raw(*args)
         if not df.empty:
             group.append(df)
 
-    if target in ['trader', 'all']:
+    if target in ['trader', 'itemall']:
         dbhandler.trader.ids = stockids if base == 'stock' else traderids
         args = (starttime, endtime, stockids, traderids, base, order, limit, dbhandler.trader.to_pandas)
         df = dbhandler.trader.query_raw(*args)
         if not df.empty:
             group.append(df)
         
-    if target in ['future', 'all']:
-        pass
-        #dbhandler.future.ids = stockids    
-        #args = (starttime, endtime, stockids, base, order, limit, dbhandler.futureto_pandas)
-        #df = dbhandler.future.query_raw(*args)
-        #if not df.empty:
-        #    group.append(df)
+    if target in ['future', 'itemall']:
+        dbhandler.future.ids = stockids    
+        args = (starttime, endtime, stockids, base, order, limit, dbhandler.futureto_pandas)
+        df = dbhandler.future.query_raw(*args)
+        if not df.empty:
+            group.append(df)
 
     if group:
         panel = pd.concat(group, axis=2).fillna(0)

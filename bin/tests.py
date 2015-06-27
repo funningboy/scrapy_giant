@@ -107,7 +107,7 @@ class TestThreadService(TestRunScrapyService):
         print "scrapy twsehisdb bin.tasks used %.4f(s)" % (t.timeit())
 
         # otc
-        jobs = ['otchisstock', 'otchistrader', 'otchistrader2', 'otchiscredit'] #'otchisfuture']
+        jobs = ['otchisstock', 'otchistrader', 'otchistrader2', 'otchiscredit', 'otchisfuture']
         tasks = group([
             run_scrapy_service.subtask(scrapy_tests[k]) for k in jobs
         ])
@@ -151,3 +151,8 @@ class TestTwseHisStock():
 class TestTwseHisTrader():
     pass
 
+class TestTwseHisCredit():
+    pass
+    
+class TestTwseHisFuture():
+    pass

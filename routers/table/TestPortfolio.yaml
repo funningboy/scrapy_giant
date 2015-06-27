@@ -1,0 +1,84 @@
+# 
+
+Edges:
+    [
+        [0,1,1],
+        [1,2,1],
+        [2,3,1],
+        [3,4,1]
+    ]
+
+Nodes:
+    [
+        # 0
+        'Manager.parse_task(
+            "./routers/tasks/HisStock.yaml", 
+            kwargs = {
+                "opt": "twse",
+                "target": "stock",
+                "starttime": "datetime.utcnow() - timedelta(days=15)",
+                "endtime": "datetime.utcnow()",
+                "stockids": ["2317", "2330", "1314"],
+                "base": "stock",
+                "order": ["-totalvolume"],
+                "limit": 3
+            }
+        )',
+        # 1
+        'Manager.parse_task(
+            "./routers/tasks/AlgDualema.yaml",
+            kwargs = {
+                "opt": "twse",
+                "target": "dualema",
+                "starttime": "datetime.utcnow() - timedelta(days=150)",
+                "endtime": "datetime.utcnow()",
+                "stockids": [],
+                "callback": null,
+                "limit": 3
+            }
+        )',
+        # 2
+        'Manager.parse_task(
+            "./routers/tasks/HisTrader.yaml",
+            kwargs = {
+                "opt": "twse",
+                "target": "trader",
+                "starttime": "datetime.utcnow() - timedelta(days=15)",
+                "endtime": "datetime.utcnow()",
+                "stockids": [],
+                "traderids": [],
+                "base": "stock",
+                "order": ["-totalvolume"],
+                "limit": 3
+            }
+        )',
+        # 3
+        'Manager.parse_task(
+            "./routers/tasks/HisTrader.yaml",
+            kwargs = {
+                "opt": "twse",
+                "target": "trader",
+                "starttime": "datetime.utcnow() - timedelta(days=15)",
+                "endtime": "datetime.utcnow()",
+                "stockids": [],
+                "traderids": [],
+                "base": "trader",
+                "order": ["-totalvolume"],
+                "limit": 3
+            }
+        )',
+        # 4
+        'Manager.parse_task(
+            "./routers/tasks/AlgBTrader.yaml",
+            kwargs = {
+                "opt": "twse",
+                "target": "btrader",
+                "starttime": "datetime.utcnow() - timedelta(days=5)",
+                "endtime": "datetime.utcnow()",
+                "stockids": [],
+                "traderids": [],
+                "callback": null,
+                "limit": 3
+            }
+        )',
+    ]

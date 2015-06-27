@@ -72,10 +72,12 @@ def spawn_scrapys(debug=False):
         ['twsehistrader2', debug],
         ['twsehiscredit'. debug],
         ['twsehisstock', debug],
+        ['twsehisfuture', debug],
         ['otchistrader', debug],
         ['otchistrader2', debug],
         ['otchiscredit', debug],
-        ['otchisstock', debug]
+        ['otchisstock', debug],
+        ['otchisfuture', debug]
     ]
     for it in tasks:
         cmds.append(

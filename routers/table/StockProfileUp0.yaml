@@ -2,7 +2,9 @@
 
 Edges:
     [
-        [0,1,1]
+        [0,1,1],
+        [1,2,1],
+        [2,3,1]
     ]
 
 Nodes:
@@ -12,26 +14,29 @@ Nodes:
             "./routers/tasks/HisStock.yaml", 
             kwargs = {
                 "opt": "twse",
-                "stockids": ["2317"]
+                "stockids": ["2317", "2330", "1314"]
             })',
         # 1
         'Manager.parse_task(
             "./routers/tasks/HisCredit.yaml",
             kwargs = {
                 "opt": "twse",
-                "stockids": ["2317"]
+                "stockids": ["2317", "2330", "1314"]
             })',
         # 2
-        #'Manager.parse_task(
-        #    "./routers/tasks/HisTrader.yaml",
-        #    kwargs = {
-        #        "opt": "twse",
-        #        "stockids": ["2317"]
-        #    })',
+        'Manager.parse_task(
+            "./routers/tasks/HisTrader.yaml",
+            kwargs = {
+                "opt": "twse",
+                "stockids": ["2317", "2330", "1314"]
+            })',
         # 3
-        #'Manager.parse_task(
-        #    "./routers/tasks/AlgDualema.yaml",
-        #    })'
+        'Manager.parse_task(
+            "./routers/tasks/HisIteamAll.yaml",
+            kwargs = {
+                "opt": "twse",
+                "stockids": ["2317", "2330", "1214"]
+            })'
     ]
 
 

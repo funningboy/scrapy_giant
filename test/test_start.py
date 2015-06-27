@@ -189,10 +189,10 @@ class TestTwseHisCredit(TestBase):
         super(TestTwseHisCredit, self).tearDown()
 
 @unittest.skipIf(skip_tests['TestTwseHisFufure'], "skip")
-class TestTwseHisFufure(TestBase):
+class TestTwseHisFuture(TestBase):
 
     def setUp(self):
-        super(TestTwseHisFufure, self).setUp()
+        super(TestTwseHisFuture, self).setUp()
         kwargs = {
             'debug': True,
             'opt': 'twse'
@@ -205,7 +205,7 @@ class TestTwseHisFufure(TestBase):
 
     def test_on_run(self):
         expect = ['2317', '1314', '2330']
-        cursor = self._db.credit.coll.objects(Q(stockid__in=expect)).order_by('-date')
+        cursor = self._db.future.coll.objects(Q(stockid__in=expect)).order_by('-date')
         item = list(cursor)[0]
         stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
         print stream
