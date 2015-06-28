@@ -15,8 +15,7 @@ class GiantWorker(DAGWorker):
 
                 populate_items = [
                     self._populate_hisitem,
-                    self._populate_algitem,
-                    self._populate_itemall,
+                    self._populate_algitem
                 ]
                 for it in populate_items:
                     it(item, kwargs)
@@ -24,33 +23,25 @@ class GiantWorker(DAGWorker):
         self.node[node]['ptr']._kwargs = kwargs
 
     def _populate_hisitem(self, item, kwargs):
-        if 'stockitem' in item:
-            if isinstance(item['stockitem'], list):
-                stockids = [i['stockid'] for i in item['stockitem'] if i['stockid']]
-                kwargs['stockids'] += stockids
+        for name in ['stockitem', 'traderitem', 'credititem', 'futureitem']:
+            if name in item:
+                if isinstance(item[name], list):
+                    stockids = [i['stockid'] for i in item[name] if i['stockid']]
+                    kwargs['stockids'] += stockids
+                    kwargs['stockids'] = list(set(kwargs['stockids']))
 
-        if 'traderitem' in item:
-            if isinstance(item['traderitem'], list):
-                traderids = [i['traderid'] for i in item['traderitem'] if i['traderid']]
-                kwargs['traderids'] += traderids
-
-                stockids = [i['stockid'] for i in item['traderitem'] if i['stockid']]
-                kwargs['stockids'] += stockids
-
-        if 'credititem' in item:
-            if isinstance(item['credititem'], list):
-                stockids = [i['stockid'] for i in item['credititem'] if i['stockid']]
-                kwargs['stockids'] += stockids
-
-        if 'futureitem' in item:
-            if isinstance(item['futureitem'], list):
-                stockids = [i['stockid'] for i in item['futureitem'] if i['stockid']]
-                kwargs['stockids'] += stockids
-
+                    if name in ['traderitem']:
+                        traderids = [i['traderid'] for i in item[name] if i['traderid']]
+                        kwargs['traderids'] += traderids
+                        kwargs['traderids'] = list(set(kwargs['traderids']))
+         
     def _populate_algitem(self, item, kwargs):
-        pass
+        for name in ['dualemaitem', 'btraderitem', 'bbanditem', 'kmeansitem']:
+            if name in item:
+                if isinstance(item[name], list):
+                    stockids = [i['stockid'] for i in item[name] if i['stockid']]
+                    kwargs['stockids'] += stockids
+                    kwargs['stockids'] = list(set(kwargs['stockids']))
+        
 
-    def _populate_itemall(self, item, kwargs):
-        kwargs['stockids'] = list(set(kwargs['stockids']))
-        kwargs['traderids'] = list(set(kwargs['traderids']))
  

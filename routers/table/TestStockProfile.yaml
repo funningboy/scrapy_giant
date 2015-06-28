@@ -15,9 +15,9 @@ Nodes:
             "./routers/tasks/HisStock.yaml", 
             kwargs = {
                 "opt": "twse",
-                "target": "stock",
-                "starttime": datetime.utcnow() - timedelta(days=15),
-                "endtime": datetime.utcnow(),
+                "targets": ["stock"],
+                "starttime": "datetime.utcnow() - timedelta(days=15)",
+                "endtime": "datetime.utcnow()",
                 "stockids": ["2317", "2330", "1314"],
                 "base": "stock",
                 "order": ["-totalvolume"],
@@ -29,9 +29,9 @@ Nodes:
             "./routers/tasks/HisCredit.yaml",
             kwargs = {
                 "opt": "twse",
-                "target": "credit",
-                "starttime": datetime.utcnow() -timedelta(days=15),
-                "endtime": datetime.utcnow(),
+                "targets": ["credit"],
+                "starttime": "datetime.utcnow() -timedelta(days=15)",
+                "endtime": "datetime.utcnow()",
                 "stockids": ["2317", "2330", "1314"],
                 "base": "stock",
                 "order": ["+bearishused", "+financeused"],
@@ -43,7 +43,7 @@ Nodes:
             "./routers/tasks/HisFuture.yaml",
             kwargs = {
                 "opt": "twse",
-                "target":  "future",
+                "targets":  ["future"],
                 "starttime": "datetime.utcnow() - timedelta(days=15)",
                 "endtime": "datetime.utcnow()",
                 "stockids": ["2317", "2330", "1314"],
@@ -57,7 +57,7 @@ Nodes:
             "./routers/tasks/HisTrader.yaml",
             kwargs = {
                 "opt": "twse",
-                "target": "trader",
+                "targets": ["trader"],
                 "starttime": "datetime.utcnow() - timedelta(days=15)",
                 "endtime": "datetime.utcnow()",
                 "stockids": ["2317", "2330", "1314"],
@@ -69,10 +69,10 @@ Nodes:
         )',
         # 4
         'Manager.parse_task(
-            "./routers/tasks/HisItemAll.yaml",
+            "./routers/tasks/HisTrader.yaml",
             kwargs = {
                 "opt": "twse",
-                "target": "itemall",
+                "targets": ["stock", "credit", "future", "trader"],
                 "starttime": "datetime.utcnow() - timedelta(days=15)",
                 "endtime": "datetime.utcnow()",
                 "stockids": ["2317", "2330", "1314"],
@@ -81,7 +81,8 @@ Nodes:
                 "order": [],
                 "limit": 3
             }
-        )'
+        )',
+
     ]
 
 

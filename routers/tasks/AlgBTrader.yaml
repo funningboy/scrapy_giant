@@ -1,19 +1,17 @@
 {
-    #algorithm/tasks.py
     task: collect_algitem,
     kwargs: {
         opt: null,
-        target: 'btrader',
-        starttime: datetime.utcnow() - timedelta(days=10)
+        targets: ['btrader'],
+        starttime: datetime.utcnow() - timedelta(days=10),
         endtime: datetime.utcnow(),
         stockids: [],
         traderids: [],
         order: ['-buy', '-sell', '-portfolio_value'],
-        callback: to_summary, #to_detail, null
         limit: 100,
         cfg: {
             buf_win: 30
         }
-    }
-
+    },
+    description: 'dualema algorithm'
 }

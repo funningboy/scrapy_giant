@@ -720,12 +720,16 @@ class TwseFutureHisDBHandler(object):
                         totaldiff: diff,
                         data: [{
                             date: this.date,
-                            open: this.future.open,
-                            high: this.future.high,
-                            low: this.future.low,
-                            close: this.future.close,
-                            price: this.future.close,
-                            volume: this.future.volume
+                            fopen: this.future.open,
+                            fhigh: this.future.high,
+                            flow: this.future.low,
+                            fclose: this.future.close,
+                            fprice: this.future.close,
+                            fvolume: this.future.volume,
+                            fsetprice: this.future.setprice,
+                            funtrdcount: this.future.untrdcount,
+                            fbestbuy: this.future.bestbuy,
+                            fbestsell: this.future.bestsell
                          }]
                     };
                     emit(key, value);

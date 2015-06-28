@@ -2,7 +2,7 @@
     task: collect_hisitem,
     kwargs: {
         opt: null,
-        target: 'itemall',
+        targets: ['stock', 'credit', 'future', 'trader'],
         starttime: null,
         endtime: null,
         stockids: [],

@@ -17,32 +17,33 @@ from algorithm.algdb_handler import TwseDualemaAlg
 
 skip_tests = {
     'TestTwseDualemaAlg': False,
+    'TestTwseBTraderAlg': False
 }
 
+@unittest.skipIf(skip_tests['TestTwseDualemaAlg'], "skip")
 class TestTwseDualemaAlg(NoSQLTestCase):
 
     def setUp(self):
         self._kwargs = {
-            'starttime': datetime.utcnow() - timedelta(days=10),
+            'opt': 'twse',
+            'starttime': datetime.utcnow() - timedelta(days=150),
             'endtime': datetime.utcnow(),
             'stockids': ['2317', '2330', '1314'],
             'traderids': [],
-            'opt': 'twse',
-            'algorithm': None,
+            'limit': 3,
+            'cfg': {},
             'debug': True
         }   
 
     def test_on_run(self):
         alg = TwseDualemaAlg(**copy.deepcopy(self._kwargs))
-        panel = alg.run()
-        self.assertTrue(panel is not None)
-        self.assertFalse(panel.empty)
-        self.assertTrue(set(sorted(list(panel.index))) == set(sorted(['2317', '2330', '1314'])))
-        self.assertTrue(set(sorted(list(panel.columns))) >= set(sorted(['portfolio_value', 'buys', 'date', 'bufwin'])))
-        panel = panel.query('buys >=0 and sells >=0 and portfolio_value >=0')  
-        self.assertFalse(panel.empty)
-        # trans index as map key
-        #panel.T.to_dict()
+        df = alg.run()
+        self.assertTrue(df is not None)
+        self.assertFalse(df.empty)
+        self.assertTrue(set(sorted(list(df.index))) == set(sorted(['2317', '2330', '1314'])))
+        self.assertTrue(set(sorted(list(df.columns))) >= set(sorted(['portfolio_value', 'buys', 'date', 'bufwin'])))
+        df = df.query('buys >=0 and sells >=0 and portfolio_value >=0')  
+        self.assertFalse(df.empty)
 
     def test_on_detail(self):
         alg = TwseDualemaAlg(**copy.deepcopy(self._kwargs))
@@ -52,8 +53,13 @@ class TestTwseDualemaAlg(NoSQLTestCase):
     
     def test_on_summary(self):
         alg = TwseDualemaAlg(**copy.deepcopy(self._kwargs))
+        alg.sumycoll.drop_collection()
         alg.run(alg.to_summary)
-        item = alg.query_summary(watchtime=datetime.utcnow())
-        print item
+        starttime, endtime = datetime.utcnow() - timedelta(days=1), datetime.utcnow()
+        if endtime.isoweekday() in [6, 7]:
+            starttime -= timedelta(days=2)
+        item = alg.query_summary(starttime=starttime, endtime=endtime)
+        self.assertTrue(len(item)>0)
+        self.assertTrue(set(sorted(list(item[0].keys()))) >= set(sorted(['watchtime', 'totalportfolio', 'totalbuys'])))
 
 

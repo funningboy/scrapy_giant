@@ -81,3 +81,8 @@ class Report(object):
         else:
             return self._report
 
+    def write(self, stream, filenm):
+        f = open(filenm, 'w')
+        f.write(stream)
+        f.close()
+

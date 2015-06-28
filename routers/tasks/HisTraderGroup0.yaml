@@ -3,7 +3,7 @@
     task: collect_hisitem,
     kwargs: {
         opt: null,
-        target: 'trader',
+        targets: ['trader'],
         starttime: datetime.utcnow() - timedelta(days=5),
         endtime: datetime.utcnow(),
         stockids: [],

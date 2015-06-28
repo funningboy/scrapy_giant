@@ -25,7 +25,7 @@ class TestTwseHisItemQuery(NoSQLTestCase):
     def test_on_stock(self):
         kwargs = {
             'opt': 'twse',
-            'target': 'stock',
+            'targets': ['stock'],
             'starttime': datetime.utcnow() - timedelta(days=5),
             'endtime': datetime.utcnow(),
             'stockids': ['2317', '2330'],
@@ -35,7 +35,7 @@ class TestTwseHisItemQuery(NoSQLTestCase):
             'limit': 1,
             'debug': True
         }
-        item, _ = collect_hisitem.delay(**kwargs).get()
+        item = collect_hisitem.delay(**kwargs).get()
         self.assertTrue(item)
         self.assertTrue(item['stockitem'])
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
@@ -43,7 +43,7 @@ class TestTwseHisItemQuery(NoSQLTestCase):
     def test_on_trader(self):
         kwargs = {
             'opt': 'twse',
-            'target': 'trader',
+            'targets': ['trader'],
             'starttime': datetime.utcnow() - timedelta(days=5),
             'endtime': datetime.utcnow(),
             'stockids': ['2317', '2330'],
@@ -53,7 +53,7 @@ class TestTwseHisItemQuery(NoSQLTestCase):
             'limit': 1,
             'debug': True
         }
-        item, _ = collect_hisitem.delay(**kwargs).get()
+        item = collect_hisitem.delay(**kwargs).get()
         self.assertTrue(item)
         self.assertTrue(item['traderitem'])
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
@@ -67,7 +67,7 @@ class TestTwseHisItemQuery(NoSQLTestCase):
     def test_on_all(self):
         kwargs = {
             'opt': 'twse',
-            'target': 'all',
+            'targets': ['stock', 'trader', 'future', 'credit'],
             'starttime': datetime.utcnow() - timedelta(days=5),
             'endtime': datetime.utcnow(),
             'stockids': ['2317', '2330'],
@@ -78,9 +78,9 @@ class TestTwseHisItemQuery(NoSQLTestCase):
             'limit': 2,
             'debug': True
         }
-        item, _ = collect_hisitem.delay(**kwargs).get()
+        item = collect_hisitem.delay(**kwargs).get()
         self.assertTrue(item)
-        [self.assertTrue(item[i]) for i in ['stockitem', 'traderitem', 'credititem']] 
+        [self.assertTrue(item[i]) for i in ['stockitem', 'traderitem', 'credititem', 'futureitem']] 
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
 
 
@@ -90,7 +90,7 @@ class TestTwseHisFrameQuery(NoSQLTestCase):
     def test_on_all(self):
         kwargs = {
             'opt': 'twse',
-            'target': 'all',
+            'targets': ['stock', 'trader', 'future', 'credit'],
             'starttime': datetime.utcnow() - timedelta(days=5),
             'endtime': datetime.utcnow(),
             'stockids': ['2317'],
@@ -101,7 +101,7 @@ class TestTwseHisFrameQuery(NoSQLTestCase):
             'limit': 1,
             'debug': True
         }
-        panel, _ = collect_hisframe.delay(**kwargs).get()
+        panel, _ = collect_hisframe(**kwargs)
         self.assertTrue(panel is not None)
         self.assertFalse(panel.empty)
         self.assertFalse(panel['2317'].empty)

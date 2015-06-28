@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from workers.gworker import GiantWorker
 from workers.nodes import Node
 from handler.tasks import collect_hisitem
-
+from algorithm.tasks import collect_algitem
 #from algorithm.tasks import collect_algitem
 
 class Manager(threading.Thread):
@@ -33,7 +33,7 @@ class Manager(threading.Thread):
             # collect_hisitem/target, collect_algitem/target
             parse_kwargs = [
                 cls._parse_opt,
-                cls._parse_target,
+                cls._parse_targets,
                 cls._parse_starttime,
                 cls._parse_endtime,
                 cls._parse_stockids,
@@ -45,165 +45,106 @@ class Manager(threading.Thread):
                 cls._parse_cfg,
                 cls._parse_debug
             ]        
+
+            [
+            ]
             for it in parse_kwargs:
                 it(stream['kwargs'], kwargs)        
             return stream
 
     @classmethod
     def _parse_opt(cls, okwargs, nkwargs={}):
-        opt = None
-        if 'opt' in nkwargs:
-            try:
-                opt = eval(nkwargs['opt'])
-            except:
-                opt = str(nkwargs['opt'])
-                pass
-        elif 'opt' in okwargs:
-            try:
-                opt = eval(okwargs['opt'])
-            except:
-                opt = str(okwargs['opt'])
-                pass
-
-        if opt: 
-            okwargs['opt'] = opt
-        else:
+        try:
+            if 'opt' in okwargs:
+                if 'opt' in nkwargs:
+                    okwargs.update({'opt': nkwargs['opt']})
+                else:
+                    okwargs.update({'opt': okwargs['opt']})
+        except:
             print "parse opt fail"
             raise
 
     @classmethod
-    def _parse_target(cls, okwargs, nkwargs={}):
-        target = None
-        if 'target' in nkwargs:
-            try:
-                target = eval(nkwargs['target'])
-            except:
-                target = str(nkwargs['target'])
-                pass
-        elif 'target' in okwargs:
-            try:
-                target = eval(okwargs['target'])
-            except:
-                target = str(okwargs['target'])
-                pass
-
-        if target:
-            okwargs['target'] = target
-        else:
-            print "parse target fail"
+    def _parse_targets(cls, okwargs, nkwargs={}):
+        try:
+            if 'targets' in okwargs:
+                if 'targets' in nkwargs:
+                    okwargs.update({'targets': nkwargs['targets']})
+                else:
+                    okwargs.update({'targets': okwargs['targets']})
+        except:
+            print "parse targets fail"
             raise
 
     @classmethod
     def _parse_starttime(cls, okwargs, nkwargs={}):
-        starttime = datetime.utcnow() - timedelta(days=30)
-        if 'starttime' in nkwargs:
-            try:
-                starttime = eval(nkwargs['starttime'])
-            except:
-                starttime = nkwargs['starttime']
-                pass
-        elif 'starttime' in okwargs:
-            try:
-                starttime = eval(okwargs['endtime'])
-            except:
-                starttime = okwargs['endtime']
-                pass
-
-        if isinstance(starttime, datetime):
-            okwargs['starttime'] = starttime 
-        else:
+        try:
+            if 'starttime' in okwargs:
+                if 'starttime' in nkwargs:
+                    okwargs.update({'starttime': eval(nkwargs['starttime'])})
+                else:
+                    okwargs.update({'starttime': eval(okwargs['starttime'])})
+        except:
             print "parse starttime fail"
-            raise 
+            pass
 
     @classmethod
     def _parse_endtime(cls, okwargs, nkwargs={}):
-        endtime = datetime.utcnow()
-        if 'endtime' in nkwargs:
-            try:
-                endtime = eval(nkwargs['endtime'])
-            except:
-                endtime = nkwargs['endtime']
-                pass
-        elif 'endtime' in okwargs:
-            try:
-                endtime = eval(okwargs['endtime'])
-            except:
-                endtime = okwargs['endtime']
-                pass
-
-        if isinstance(endtime, datetime):
-            okwargs['endtime'] = endtime
-        else:
+        try:
+            if 'endtime' in okwargs:
+                if 'endtime' in nkwargs:
+                    okwargs.update({'endtime': eval(nkwargs['endtime'])})
+                else:
+                    okwargs.update({'endtime': eval(nkwargs['endtime'])})
+        except:
             print "parse endtime fail"
             raise
 
     @classmethod
     def _parse_stockids(cls, okwargs, nkwargs={}):
-        stockids = []
-        if 'stockids' in nkwargs:
-            try:
-                stockids = eval(nkwargs['stockids'])
-            except:
-                stockids = list(nkwargs['stockids']) 
-                pass
-        elif 'stockids' in okwargs:
-            try:
-                stockids = eval(okwargs['stockids'])
-            except:
-                stockids = list(nkwargs['stockids'])
-                pass
-
-        if isinstance(stockids, list):
-            okwargs['stockids'] = stockids
-        else:
+        try:
+            if 'stockids' in okwargs:
+                if 'stockids' in nkwargs:
+                    okwargs.update({'stockids': nkwargs['stockids']})
+                else:
+                    okwargs.update({'stockids': okwargs['stockids']})
+        except:
             print "parse stockids fail"
             raise
 
     @classmethod
     def _parse_traderids(cls, okwargs, nkwargs={}):
-        traderids = []
-        if 'traderids' in nkwargs:
-            try:
-                traderids = eval(nkwargs['traderids'])
-            except:
-                traderids = list(nkwargs['traderids'])
-                pass
-        elif 'traderids' in okwargs:
-            try:
-                traderids = eval(okwargs['traderids'])
-            except:
-                traderids = list(nkwargs['traderids'])
-                pass
-
-        if isinstance(traderids, list):
-            okwargs['traderids'] = traderids
-        else:
+        try:
+            if 'traderids' in okwargs:
+                if 'traderids' in nkwargs:
+                    okwargs.update({'traderids': nkwargs['traderids']})
+                else:
+                    okwargs.update({'traderids': okwargs['traderids']})
+        except:
             print "parse traderids fail"
             raise
 
     @classmethod
     def _parse_base(cls, okwargs, nkwargs={}):
-        pass
+        try:
+            if 'base' in okwargs:
+                if 'base' in nkwargs:
+                    okwargs.update({'base': nkwargs['base']})
+                else:
+                    okwargs.update({'base': okwargs['base']})
+        except:
+            print "parse base fail"
+            raise
 
     @classmethod
     def _parse_order(cls, okwargs, nkwargs={}):
-        order = []
-        if 'order' in nkwargs:
-            try:
-                order = eval(nkwargs['order'])
-            except:
-                order = list(nkwargs['order'])
-                pass
-        elif 'order' in okwargs:
-            try:
-                order = eval(okwargs['order'])
-            except:
-                order = list(okwargs['order'])
-                pass
-
-        if isinstance(order, list):
-            okwargs['order'] = order
-        else:
+        try:
+            if 'order' in okwargs:
+                if 'order' in nkwargs:
+                    okwargs.update({'order': nkwargs['order']})
+                else:
+                    okwargs.update({'order': okwargs['order']})
+        except:
             print "parse order fail"
             raise
 
@@ -213,23 +154,13 @@ class Manager(threading.Thread):
 
     @classmethod
     def _parse_limit(cls, okwargs, nkwargs={}):
-        limit = 20
-        if 'limit' in nkwargs:
-            try:
-                limit = eval(nkwargs['limit'])
-            except:
-                limit = int(nkwargs['limit'])
-                pass
-        elif 'limit' in okwargs:
-            try:
-                limit = eval(okwargs['lmit'])
-            except:
-                limit = int(okwargs['limit'])
-                pass
-
-        if isinstance(limit, int):
-            okwargs['limit'] = limit
-        else:
+        try:
+            if 'limit' in okwargs:
+                if 'limit' in nkwargs:
+                    okwargs.update({'limit': nkwargs['limit']})
+                else:
+                    okwargs.update({'limit': okwargs['limit']})
+        except:
             print "parse limit fail"
             raise
 
@@ -244,7 +175,15 @@ class Manager(threading.Thread):
 
     @classmethod
     def _parse_cfg(cls, okwargs, nkwargs={}):
-        pass
+        try:
+            if 'cfg' in okwargs:
+                if 'cfg' in nkwargs:
+                    okwargs.update({'cfg': nkwargs['cfg']})
+                else:
+                    okwargs.update({'cfg': okwargs['cfg']})
+        except:
+            print "parse cfg fail"
+            raise
 
     @classmethod
     def create_graphs(cls, path, priority=1):
@@ -324,12 +263,18 @@ class Manager(threading.Thread):
         pass
 
     @classmethod
-    def run(cls, path='./routers/table/TestTraderProfile.yaml'):
+    def run(cls, path='./routers/table/TestPortfolio.yaml'):
         #while True:
-        cls.create_graphs(path)
+        paths = [
+            './routers/table/TestStockProfile.yaml',
+            './routers/table/TestTraderProfile.yaml',
+            './routers/table/TestPortfolio.yaml'
+        ]
+        for path in paths:
+            cls.create_graphs(path)
             
 
 # register at wsgi.py
 m = Manager()
 m.start()
-#m.join()
+m.join()

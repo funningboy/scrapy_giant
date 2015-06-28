@@ -27,22 +27,29 @@ algdb_tasks = {
 # as background service
 @shared_task
 def run_algorithm_service(opt, alg, starttime, endtime, debug=False):
-    id = iddb_tasks[opt](debug=debug)
-    stockids = id.stock.get_ids()
-    traderids = id.trader.get_ids()
-    alg = algdb_tasks[opt][alg](debug=debug)
-    args = (starttime, endtime, stockids, traderids, alg.to_summary)
-    if alg not in ['btrader']:
-        args.pop(3)
-    alg.run(*args)
-
-def collect_algframe(collect):
-    collect = {
-        'dualema': {
-        },
-        'btrader': {
-        },
-        'bbands': {
-        },
-    }
     pass
+
+@shared_task
+def collect_algitem(opt, targets, starttime, endtime, base='stock', order=[], stockids=[], traderids=[], limit=10, cfg={}, callback=None, debug=False):
+    item = {}
+
+    for target in targets:
+        kwargs = {
+            'opt': opt,
+            'starttime': starttime,
+            'endtime': endtime,
+            'base': base,
+            'order': order,
+            'stockids': stockids,
+            'traderids': traderids,
+            'limit': limit,
+            'cfg': cfg,
+            'debug': debug
+        }
+        if target in ['dualema', 'btrader', 'bbands']:
+            alghandler = algdb_tasks[opt][target](**kwargs) 
+            dt = alghandler.run(alghandler.to_detail)
+            if dt:
+                item.update({target+'item': dt})
+    return item
+

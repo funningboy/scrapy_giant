@@ -1,0 +1,17 @@
+{
+    task: collect_algitem,
+    kwargs: {
+        opt: null,
+        targets: ['bbands'],
+        starttime: datetime.utcnow() - timedelta(days=10),
+        endtime: datetime.utcnow(),
+        stockids: [],
+        traderids: [],
+        order: ['-buy', '-sell', '-portfolio_value'],
+        limit: 100,
+        cfg: {
+            buf_win: 30
+        }
+    },
+    description: 'bbands algorithm'
+}
