@@ -9,10 +9,13 @@ from workers.nodes import Node
 from bin.tasks import nsum, navg
 
 skip_tests = {
+    # static graph
     'TestTaskPtr': False,
     'TestDAGChain': False,
     'TestDAGParallel': False,
-    'TestDAGNoCycle': False
+    'TestDAGNoCycle': False,
+    # dynamic graph
+    'TestDAGDymUpdate': False
 }
 
 class TestDAGWorker(DAGWorker):
@@ -154,7 +157,7 @@ class TestDAGNoCycle(NoSQLTestCase):
             self.assertTrue(nodes[i]['retval'] == expect[i])
 
     def tearDown(self):
-        with open("test.adjlist",'wb') as fh:
-            nx.write_adjlist(self.G, fh)
+        #with open("test.adjlist",'wb') as fh:
+        #    nx.write_adjlist(self.G, fh)
         self.G.clear()
         del self.G

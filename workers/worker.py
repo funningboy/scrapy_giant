@@ -177,11 +177,11 @@ class DAGWorker(nx.DiGraph):
         return self._maxloop_count >= self._maxloop and self._maxloop != -1
         
     def clear(self):
-        self._run_queue = []    
-        self._wait_queue = []
-        self._finish_queue = []
-        self._record_queue = []
-        self._debug_queue = []
+        self._run_queue[:] = []    
+        self._wait_queue[:] = []
+        self._finish_queue[:] = []
+        self._record_queue[:] = []
+        self._debug_queue[:] = []
 
     def debug(self):
         if self._debug:

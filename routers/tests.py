@@ -1,11 +1,40 @@
 # -*- coding: utf-8 -*-
 
+import unittest
 from datetime import datetime, timedelta 
+from main.tests import NoSQLTestCase
+from routers.manager import GiantManager
+skip_tests = {
+	# static 
+	'TestManagerStatic': False
+	# 
+} 
 
+@unittest.skipIf(skip_tests['TestManagerStatic'], "skip")
+class TestManagerStatic(NoSQLTestCase):
 
-#skip_tests = 
+	_paths = [
+		'routers/table/TestStockProfile.yaml',
+		'routers/table/TestTraderProfiel.yaml',
+		'routers/table/TestPortfolio.yaml'
+	]
 
-      graph.set_start_to_run(0)
-        graph.run(graph.debug)
-        for i in graph.record:
-            print json.dumps(dict(i['retval']), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
+	def setUp(self):
+		self._mgr = GiantManager()
+		self._mgr.start()
+
+	def test_on_work(self):
+		for path in self._paths:
+			G = self._mgr.create_graph(path)
+			self.assertTrue(G)
+			if G:
+				task = self._mgr._create_task(G, priority=1)
+				self._mgr._add_task_queue(task)
+
+	def tearDown(self):
+		while True:
+			if self._mgr.is_ready_to_stop():
+				self._mgr.stop()
+				break
+
+ 

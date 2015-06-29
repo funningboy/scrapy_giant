@@ -10,6 +10,7 @@
         order: ['-buy', '-sell', '-portfolio_value'],
         limit: 100,
         debug: False,
+        #atlast: ['buy>2', 'sell>3', 'portfolio_value']
         cfg: {
             buf_win: 30
         }

@@ -12,17 +12,21 @@ from handler.tasks import collect_hisitem
 from algorithm.tasks import collect_algitem
 #from algorithm.tasks import collect_algitem
 
-class Manager(threading.Thread):
+class GiantManager(threading.Thread):
 
-    _run_queue = []
-    _wait_queue = []
-    _max_concurrent = 10
-
+    _task_queue = []
     _task_keys = ['kwargs', 'task', 'description']
     _graph_keys = ['Nodes', 'Edges']
+    daemon = True
+    _stop = threading.Event()
 
-    def __init__(self):
-        threading.Thread.__init__(self)
+    @classmethod
+    def stop(cls):
+        cls._stop.set()
+
+    @classmethod
+    def stopped(cls):
+        return cls._stop.isSet()
 
     @classmethod
     def _parse_kwargs_all(cls):
@@ -78,6 +82,7 @@ class Manager(threading.Thread):
 
     @classmethod
     def _create_methods(cls):
+        """ static create """
         methods = [
             cls._create_edges,
             cls._create_nodes,
@@ -87,21 +92,29 @@ class Manager(threading.Thread):
         return methods
 
     @classmethod
-    def create_graphs(cls, path, priority=1):
+    def _update_method(cls):
+        """ dynamic update """
+        pass
+
+    @classmethod
+    def create_graph(cls, path):
         with open(path, 'r') as stream:
             stream = yaml.load(stream)
             assert(set(stream.keys()) == set(cls._graph_keys))
-
             G = GiantWorker()
             for it in cls._create_methods():
                 it(stream, G)
-
-            task = cls._create_task()
-            cls._add_wait_queue(task)
+            return G
+ 
+    @classmethod
+    def _delete_node(cls, graph, n):
+        if n in graph.nodes():
+            graph.remove_node(n)
 
     @classmethod
-    def _delete_nodes(cls, graph, n):
-        graph.remove_node(n)
+    def _add_node(cls, graph, n, attr={'ptr': None}):
+        if n not in graph.nodes():
+            graph.add_node(n, attr)
 
     @classmethod
     def _create_nodes(cls, stream, graph):
@@ -129,13 +142,20 @@ class Manager(threading.Thread):
                 raise
 
     @classmethod
-    def _delete_edges(cls, graph, u, v):
-        graph.remove_edges(u, v)
+    def _add_edge(graph, u, v, weight=1):
+        if (u,v) not in graph.edges():
+            graph.add_edge(u, v, weight)
+
+    @classmethod
+    def _delete_edge(cls, graph, u, v):
+        if (u,v) in graph.edges():
+            graph.remove_edge(u, v)
 
     @classmethod
     def _valid_graph(cls, stream, graph):
         if not nx.is_directed_acyclic_graph(graph):
-            print "find cycle/loop at router table"
+            print "cycles:"
+            print list(nx.simple_cycles(graph))
             raise
 
     @classmethod
@@ -154,54 +174,31 @@ class Manager(threading.Thread):
         return task
 
     @classmethod
-    def _run_task(cls, task):
+    def _on_run(cls, task):
         task['graph'].run()
 
     @classmethod
-    def _add_wait_queue(cls, task):
-        if task not in cls._wait_queue:
-            cls._wait_queue.append(task)
+    def _add_task_queue(cls, task):
+        if task not in cls._task_queue:
+            cls._task_queue.append(task)
 
     @classmethod
-    def _del_wait_queue(cls, task):
-        if task in cls._wait_queue:
-            cls._wait_queue.remove(task)
-
-    @classmethod
-    def _add_run_queue(cls, task):
-        if task not in cls._run_queue:
-            cls._run_queue.append(task)
-
-  @classmethod
-    def _del_run_queue(cls, task):
-        if task in cls._run_queue:
-            cls._run_queue.remove(task)
+    def _del_task_queue(cls, task):
+        if task in cls._task_queue:
+            cls._task_queue.remove(task)
 
     @classmethod
     def _find_ready_to_run(cls):
-        limit = cls._max_concurrent - len(cls._run_queue)
-        for it in sorted(cls._wait_queue, key=lambda x: x['priority'])[:limit]:
-            yield it
-
-    @classmethod
-    def _find_ready_to_join(cls):
-        for it in cls._run_queue:
+        for it in sorted(cls._task_queue, key=lambda x: x['priority']):
             yield it
 
     @classmethod
     def run(cls):
         while True:
             for it in cls._find_ready_to_run():
-                cls._add_run_queue(it)
-                cls._del_wait_queue(it)
+                cls._on_run(it)
+                cls._del_task_queue(it)
 
-            for it in cls._find_ready_to_join():
-                cls._run_task(it)
-                cls._del_run_queue(it)
-            
-            
-
-# register at wsgi.py
-m = Manager()
-m.start()
-m.join()
+    @classmethod
+    def is_ready_to_stop(cls):
+        return len(cls._task_queue) == 0
