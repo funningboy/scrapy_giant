@@ -10,7 +10,8 @@
         base: 'stock',
         order: ['-totalvolume', '-totaldiff'],
         callback: null,
-        limit: 100
+        limit: 100,
+        debug: False
     },
     description: '臺灣50指數成分股票'
 }

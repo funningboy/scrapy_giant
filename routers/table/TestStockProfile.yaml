@@ -21,7 +21,8 @@ Nodes:
                 "stockids": ["2317", "2330", "1314"],
                 "base": "stock",
                 "order": ["-totalvolume"],
-                "limit": 1
+                "limit": 1,
+                "debug": True
             }
         )',
         # 1
@@ -35,7 +36,8 @@ Nodes:
                 "stockids": ["2317", "2330", "1314"],
                 "base": "stock",
                 "order": ["+bearishused", "+financeused"],
-                "limit": 1
+                "limit": 1,
+                "debug": True
             }
         )',
         # 2
@@ -49,7 +51,8 @@ Nodes:
                 "stockids": ["2317", "2330", "1314"],
                 "base": "stock",
                 "order": ["-totalvolume"],
-                "limit": 1
+                "limit": 1,
+                "debug": True
             }
         )',
         # 3
@@ -64,7 +67,8 @@ Nodes:
                 "traderids": [],
                 "base": "stock",
                 "order": ["-totalvolume"],
-                "limit": 1
+                "limit": 1,
+                "debug": True
             }
         )',
         # 4
@@ -79,7 +83,8 @@ Nodes:
                 "traderids": [],
                 "base": "stock",
                 "order": [],
-                "limit": 3
+                "limit": 3,
+                "debug": True
             }
         )',
 

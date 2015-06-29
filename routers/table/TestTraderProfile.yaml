@@ -18,7 +18,8 @@ Nodes:
                 "traderids": [],
                 "base": "stock",
                 "order": ["-totalvolume"],
-                "limit": 1
+                "limit": 1,
+                "debug": True
             })',
         # 1
         'Manager.parse_task(
@@ -32,7 +33,8 @@ Nodes:
                 "traderids": [],
                 "base": "trader",
                 "order": ["-totalvolume"],
-                "limit": 3
+                "limit": 3,
+                "debug": True
             })',
         # 2
         'Manager.parse_task(
@@ -46,6 +48,7 @@ Nodes:
                 "traderids": [],
                 "base": "stock",
                 "order": [],
-                "limit": 3
+                "limit": 3,
+                "debug": True
             })'
     ]

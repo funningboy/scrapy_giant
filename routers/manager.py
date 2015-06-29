@@ -3,6 +3,7 @@
 import yaml
 import threading
 import json
+import networkx as nx
 from bson import json_util
 from datetime import datetime, timedelta
 from workers.gworker import GiantWorker
@@ -17,203 +18,90 @@ class Manager(threading.Thread):
     _wait_queue = []
     _max_concurrent = 10
 
+    _task_keys = ['kwargs', 'task', 'description']
+    _graph_keys = ['Nodes', 'Edges']
+
     def __init__(self):
         threading.Thread.__init__(self)
+
+    @classmethod
+    def _parse_kwargs_all(cls):
+        methods = [
+            (cls._parse_kwargs, 'opt'),
+            (cls._parse_kwargs, 'targets'),
+            (cls._parse_kwargs, 'starttime'),
+            (cls._parse_kwargs, 'endtime'),
+            (cls._parse_kwargs, 'stockids'),
+            (cls._parse_kwargs, 'traderids'),
+            (cls._parse_kwargs, 'base'),
+            (cls._parse_kwargs, 'order'),
+            (cls._parse_kwargs, 'callback'),
+            (cls._parse_kwargs, 'limit'),
+            (cls._parse_kwargs, 'cfg'),
+            (cls._parse_kwargs, 'debug'),
+        ] 
+        return methods
 
     @classmethod
     def parse_task(cls, path, kwargs={}):
         with open(path) as stream:
             try:
                 stream = yaml.load(stream)
-                assert(set(stream.keys()) == set(['kwargs', 'task', 'description']))
+                assert(set(stream.keys()) == set(cls._task_keys))
             except:
                 print "loading %s fail" %(path)
                 raise
-            
-            # collect_hisitem/target, collect_algitem/target
-            parse_kwargs = [
-                cls._parse_opt,
-                cls._parse_targets,
-                cls._parse_starttime,
-                cls._parse_endtime,
-                cls._parse_stockids,
-                cls._parse_traderids,
-                cls._parse_base,
-                cls._parse_order,
-                cls._parse_callback,
-                cls._parse_limit,
-                cls._parse_cfg,
-                cls._parse_debug
-            ]        
-
-            [
-            ]
-            for it in parse_kwargs:
-                it(stream['kwargs'], kwargs)        
+        
+            for p, t in cls._parse_kwargs_all():
+                p(t, stream['kwargs'], kwargs)        
             return stream
 
     @classmethod
-    def _parse_opt(cls, okwargs, nkwargs={}):
+    def _parse_kwargs(cls, token, okwargs, nkwargs={}):
         try:
-            if 'opt' in okwargs:
-                if 'opt' in nkwargs:
-                    okwargs.update({'opt': nkwargs['opt']})
+            if token in okwargs:
+                if token in nkwargs:
+                    try:
+                        okwargs.update({token: eval(nkwargs[token])})
+                    except:
+                        okwargs.update({token: nkwargs[token]})
+                        pass
                 else:
-                    okwargs.update({'opt': okwargs['opt']})
+                    try:
+                        okwargs.update({token: eval(okwargs[token])})
+                    except:
+                        okwargs.update({token: okwargs[token]})
+                        pass
         except:
-            print "parse opt fail"
+            print "parse %s fail" %(token)
             raise
 
     @classmethod
-    def _parse_targets(cls, okwargs, nkwargs={}):
-        try:
-            if 'targets' in okwargs:
-                if 'targets' in nkwargs:
-                    okwargs.update({'targets': nkwargs['targets']})
-                else:
-                    okwargs.update({'targets': okwargs['targets']})
-        except:
-            print "parse targets fail"
-            raise
-
-    @classmethod
-    def _parse_starttime(cls, okwargs, nkwargs={}):
-        try:
-            if 'starttime' in okwargs:
-                if 'starttime' in nkwargs:
-                    okwargs.update({'starttime': eval(nkwargs['starttime'])})
-                else:
-                    okwargs.update({'starttime': eval(okwargs['starttime'])})
-        except:
-            print "parse starttime fail"
-            pass
-
-    @classmethod
-    def _parse_endtime(cls, okwargs, nkwargs={}):
-        try:
-            if 'endtime' in okwargs:
-                if 'endtime' in nkwargs:
-                    okwargs.update({'endtime': eval(nkwargs['endtime'])})
-                else:
-                    okwargs.update({'endtime': eval(nkwargs['endtime'])})
-        except:
-            print "parse endtime fail"
-            raise
-
-    @classmethod
-    def _parse_stockids(cls, okwargs, nkwargs={}):
-        try:
-            if 'stockids' in okwargs:
-                if 'stockids' in nkwargs:
-                    okwargs.update({'stockids': nkwargs['stockids']})
-                else:
-                    okwargs.update({'stockids': okwargs['stockids']})
-        except:
-            print "parse stockids fail"
-            raise
-
-    @classmethod
-    def _parse_traderids(cls, okwargs, nkwargs={}):
-        try:
-            if 'traderids' in okwargs:
-                if 'traderids' in nkwargs:
-                    okwargs.update({'traderids': nkwargs['traderids']})
-                else:
-                    okwargs.update({'traderids': okwargs['traderids']})
-        except:
-            print "parse traderids fail"
-            raise
-
-    @classmethod
-    def _parse_base(cls, okwargs, nkwargs={}):
-        try:
-            if 'base' in okwargs:
-                if 'base' in nkwargs:
-                    okwargs.update({'base': nkwargs['base']})
-                else:
-                    okwargs.update({'base': okwargs['base']})
-        except:
-            print "parse base fail"
-            raise
-
-    @classmethod
-    def _parse_order(cls, okwargs, nkwargs={}):
-        try:
-            if 'order' in okwargs:
-                if 'order' in nkwargs:
-                    okwargs.update({'order': nkwargs['order']})
-                else:
-                    okwargs.update({'order': okwargs['order']})
-        except:
-            print "parse order fail"
-            raise
-
-    @classmethod
-    def _parse_callback(cls, okwargs, nkwargs={}):
-        pass
-
-    @classmethod
-    def _parse_limit(cls, okwargs, nkwargs={}):
-        try:
-            if 'limit' in okwargs:
-                if 'limit' in nkwargs:
-                    okwargs.update({'limit': nkwargs['limit']})
-                else:
-                    okwargs.update({'limit': okwargs['limit']})
-        except:
-            print "parse limit fail"
-            raise
-
-    @classmethod
-    def _parse_debug(cls, okwargs, nkwargs={}):
-        try:
-            #django.setting
-            okwargs['debug'] = True
-        except:
-            print "parse debug fail"
-            raise
-
-    @classmethod
-    def _parse_cfg(cls, okwargs, nkwargs={}):
-        try:
-            if 'cfg' in okwargs:
-                if 'cfg' in nkwargs:
-                    okwargs.update({'cfg': nkwargs['cfg']})
-                else:
-                    okwargs.update({'cfg': okwargs['cfg']})
-        except:
-            print "parse cfg fail"
-            raise
+    def _create_methods(cls):
+        methods = [
+            cls._create_edges,
+            cls._create_nodes,
+            cls._valid_graph,
+            cls._start_to_run
+        ]
+        return methods
 
     @classmethod
     def create_graphs(cls, path, priority=1):
         with open(path, 'r') as stream:
             stream = yaml.load(stream)
-            assert(set(stream.keys()) == set(['Nodes', 'Edges']))
+            assert(set(stream.keys()) == set(cls._graph_keys))
 
             G = GiantWorker()
-            create_methods = [
-                cls._create_edges,
-                cls._create_nodes,
-                cls._valid_graph,
-                cls._start_to_run
-            ]
-            for it in create_methods:
+            for it in cls._create_methods():
                 it(stream, G)
 
-            task = {
-                'priority': priority,
-                'graph': G,
-            }
-            cls._wait_queue.append(task)
+            task = cls._create_task()
+            cls._add_wait_queue(task)
 
     @classmethod
-    def update_graphs(cls, stream, graph):
-        pass
-
-    @classmethod
-    def _del_nodes(cls, stream, graph):
-        pass
+    def _delete_nodes(cls, graph, n):
+        graph.remove_node(n)
 
     @classmethod
     def _create_nodes(cls, stream, graph):
@@ -224,6 +112,7 @@ class Manager(threading.Thread):
                 task = eval(node['task'])
                 n = Node(func=task, kwargs=node['kwargs'])
                 graph.add_node(i, {'ptr': n})
+                graph.node[i]['ptr'].run()
             except:
                 print "create graph.node %d fail" %(i)
                 raise
@@ -240,38 +129,76 @@ class Manager(threading.Thread):
                 raise
 
     @classmethod
-    def _del_edges(cls, stream, graph):
-        pass
+    def _delete_edges(cls, graph, u, v):
+        graph.remove_edges(u, v)
 
     @classmethod
     def _valid_graph(cls, stream, graph):
-        pass
+        if not nx.is_directed_acyclic_graph(graph):
+            print "find cycle/loop at router table"
+            raise
 
     @classmethod
     def _start_to_run(cls, stream, graph):
-        graph.set_start_to_run(0)
-        graph.run()
-        for i in graph.record:
-            print json.dumps(dict(i['retval']), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
+        starts = nx.topological_sort(graph)
+        for i in starts:
+            if not nx.ancestors(graph, i):
+                graph.set_start_to_run(i)
 
     @classmethod
-    def _is_ready_to_run(cls):
-        pass
+    def _create_task(cls, graph, priority=1):
+        task = {
+            'priority': priority,
+            'graph': graph,
+        }
+        return task
 
     @classmethod
-    def _is_ready_to_join(cls):
-        pass
+    def _run_task(cls, task):
+        task['graph'].run()
 
     @classmethod
-    def run(cls, path='./routers/table/TestPortfolio.yaml'):
-        #while True:
-        paths = [
-            './routers/table/TestStockProfile.yaml',
-            './routers/table/TestTraderProfile.yaml',
-            './routers/table/TestPortfolio.yaml'
-        ]
-        for path in paths:
-            cls.create_graphs(path)
+    def _add_wait_queue(cls, task):
+        if task not in cls._wait_queue:
+            cls._wait_queue.append(task)
+
+    @classmethod
+    def _del_wait_queue(cls, task):
+        if task in cls._wait_queue:
+            cls._wait_queue.remove(task)
+
+    @classmethod
+    def _add_run_queue(cls, task):
+        if task not in cls._run_queue:
+            cls._run_queue.append(task)
+
+  @classmethod
+    def _del_run_queue(cls, task):
+        if task in cls._run_queue:
+            cls._run_queue.remove(task)
+
+    @classmethod
+    def _find_ready_to_run(cls):
+        limit = cls._max_concurrent - len(cls._run_queue)
+        for it in sorted(cls._wait_queue, key=lambda x: x['priority'])[:limit]:
+            yield it
+
+    @classmethod
+    def _find_ready_to_join(cls):
+        for it in cls._run_queue:
+            yield it
+
+    @classmethod
+    def run(cls):
+        while True:
+            for it in cls._find_ready_to_run():
+                cls._add_run_queue(it)
+                cls._del_wait_queue(it)
+
+            for it in cls._find_ready_to_join():
+                cls._run_task(it)
+                cls._del_run_queue(it)
+            
             
 
 # register at wsgi.py

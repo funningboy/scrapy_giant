@@ -10,8 +10,9 @@ from bin.tasks import nsum, navg
 
 skip_tests = {
     'TestTaskPtr': False,
-    'TestChain': False,
-    'TestDAGGraphNoCycle': False
+    'TestDAGChain': False,
+    'TestDAGParallel': False,
+    'TestDAGNoCycle': False
 }
 
 class TestDAGWorker(DAGWorker):
@@ -34,7 +35,6 @@ class TestDAGWorker(DAGWorker):
         args = [i for i in args if i]
         self.node[node]['ptr']._args = args
    
-
 @unittest.skipIf(skip_tests['TestTaskPtr'], "skip")
 class TestTaskPtr(NoSQLTestCase):
 
@@ -51,10 +51,14 @@ class TestTaskPtr(NoSQLTestCase):
         retval = self.G.node[0]['ptr'].retval
         self.assertTrue(retval == 3)
 
-@unittest.skipIf(skip_tests['TestChain'], "skip")
-class TestChain(NoSQLTestCase):
+    def tearDown(self):
+        self.G.clear()
+        del self.G
+
+@unittest.skipIf(skip_tests['TestDAGChain'], "skip")
+class TestDAGChain(NoSQLTestCase):
     """ n: n(0), n(1), n(2)
-        e: e(n(0)->n(1),weight=2), e(n(1)->n(2),weight=2), e(n(2)->n(3),weight=2)
+        e: e(n(0)->n(1),weight=1), e(n(1)->n(2),weight=1)
     """
 
     def setUp(self):
@@ -70,7 +74,7 @@ class TestChain(NoSQLTestCase):
         self.assertTrue(nx.ancestors(self.G,0) == set([]))
         self.assertTrue(nx.descendants(self.G,0) == set([1,2]))
         self.G.set_start_to_run(0)
-        self.G.run()
+        self.G.run(self.G.debug)
 
     def test_on_run(self):
         nodes = sorted(self.G.record, key=lambda x: x['node'])
@@ -80,8 +84,46 @@ class TestChain(NoSQLTestCase):
             self.assertTrue(nodes[i]['visited'] == 1)
             self.assertTrue(nodes[i]['retval'] == expect[i])
 
-@unittest.skipIf(skip_tests['TestDAGGraphNoCycle'], "skip")
-class TestDAGGraphNoCycle(NoSQLTestCase):
+    def tearDown(self):
+        self.G.clear()
+        del self.G
+
+@unittest.skipIf(skip_tests['TestDAGParallel'], "skip")
+class TestDAGParallel(NoSQLTestCase):
+    """ n: n(0), n(1), n(2), n(3)
+        e: e(n(0)->n(1), weight=2),
+           e(n(0)->n(2), weight=2),
+           e(n(2)->n(3), weight=2)
+    """
+
+    def setUp(self):
+        self.G = TestDAGWorker(debug=True)
+        self.G.add_edge(0, 1, weight=2)
+        self.G.add_edge(0, 2, weight=2)
+        self.G.add_edge(2, 3, weight=2)
+        for i in range(0,4):
+            n = Node(func=nsum, args=(1,2))
+            self.G.add_node(i, {'ptr': n})
+        self.assertTrue(nx.is_directed_acyclic_graph(self.G))
+        self.assertTrue(nx.ancestors(self.G,0) == set([]))
+        self.assertTrue(nx.descendants(self.G,0) == set([1,2,3]))
+        self.G.set_start_to_run(0)
+        self.G.run(self.G.debug)
+
+    def test_on_run(self):
+        nodes = sorted(self.G.record, key=lambda x: x['node'])
+        self.assertTrue(len(nodes) == 4)
+        expect = [3,6,6,9]
+        for i in range(4):
+            self.assertTrue(nodes[i]['visited'] == 1)
+            self.assertTrue(nodes[i]['retval'] == expect[i])
+
+    def tearDown(self):
+        self.G.clear()
+        del self.G
+
+@unittest.skipIf(skip_tests['TestDAGNoCycle'], "skip")
+class TestDAGNoCycle(NoSQLTestCase):
     """ n: n(0), n(1), n(2), n(3)
         e: e(n(0)->n(1),weight=2), e(n(1)->n(2),weight=2),
            e(n(0)->n(3),weight=2), e(n(3)->n(2),weight=2),
@@ -101,7 +143,7 @@ class TestDAGGraphNoCycle(NoSQLTestCase):
         # no cycle, loop
         self.assertTrue(nx.is_directed_acyclic_graph(self.G))
         self.G.set_start_to_run(0)
-        self.G.run()
+        self.G.run(self.G.debug)
 
     def test_on_run(self):
         nodes = sorted(self.G.record, key=lambda x: x['node'])  
@@ -112,7 +154,7 @@ class TestDAGGraphNoCycle(NoSQLTestCase):
             self.assertTrue(nodes[i]['retval'] == expect[i])
 
     def tearDown(self):
-        fh=open("test.adjlist",'wb')
-        nx.write_adjlist(self.G, fh)
-
-        
+        with open("test.adjlist",'wb') as fh:
+            nx.write_adjlist(self.G, fh)
+        self.G.clear()
+        del self.G

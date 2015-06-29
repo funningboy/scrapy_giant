@@ -11,7 +11,8 @@
         base: 'trader',
         order: ['-totalvolume'],
         callback: null,
-        limit: 100
+        limit: 100,
+        debug: False
     },
     description: '虎尾幫: (9697)富邦-虎尾,（6386)光合-虎尾, (700F)兆豐-虎尾, (592N)元富-虎尾, (9A9b)永豐-虎尾'
 }}

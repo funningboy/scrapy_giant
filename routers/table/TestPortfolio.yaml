@@ -19,7 +19,8 @@ Nodes:
                 "stockids": ["2317", "2330", "1314"],
                 "base": "stock",
                 "order": ["-totalvolume"],
-                "limit": 3
+                "limit": 3,
+                "debug": True
             }
         )',
         # 1
@@ -31,7 +32,8 @@ Nodes:
                 "starttime": "datetime.utcnow() - timedelta(days=150)",
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
-                "limit": 3
+                "limit": 3,
+                "debug": True
             }
         )',
         # 2
@@ -43,7 +45,8 @@ Nodes:
                 "starttime": "datetime.utcnow() - timedelta(days=15)",
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
-                "limit": 3
+                "limit": 3,
+                "debug": True
             }
         )',
         # 3
@@ -55,7 +58,8 @@ Nodes:
                 "starttime": "datetime.utcnow() - timedelta(days=15)",
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
-                "limit": 3
+                "limit": 3,
+                "debug": True
             }
         )'
     ]

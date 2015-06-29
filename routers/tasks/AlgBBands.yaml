@@ -9,6 +9,7 @@
         traderids: [],
         order: ['-buy', '-sell', '-portfolio_value'],
         limit: 100,
+        debug: False,
         cfg: {
             buf_win: 30
         }

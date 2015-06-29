@@ -72,15 +72,14 @@ class TwseAlgDBHandler(object):
         stockids = self._kwargs['stockids']
         for stockid in stockids:
             self._kwargs.update({'stockids': [stockid]})
-            print copy.deepcopy(self._kwargs)
-            data, handler = collect_hisframe(**copy.deepcopy(self._kwargs))
-            yield stockid, data, handler
+            df, handler = collect_hisframe(**copy.deepcopy(self._kwargs))
+            yield stockid, df, handler
 
     def run(self, callback=None):
-        for stockid, data, dbhandler in self.iter_hisframe():
-            if not data.empty and dbhandler:
+        for stockid, df, dbhandler in self.iter_hisframe():
+            if not df.empty and dbhandler:
                 alg = self._alg(dbhandler, **self._cfg)
-                results = alg.run(data).fillna(0)
+                results = alg.run(df).fillna(0)
                 self._report.collect("%s" %(stockid), results)
 
         df = self._report.summary()

@@ -10,7 +10,8 @@
         base: 'stock',
         order: [],
         callback: null,
-        limit: 50
+        limit: 50,
+        debug: False
     },
     description: 'collect all hisitem based on each leaf items'
 }

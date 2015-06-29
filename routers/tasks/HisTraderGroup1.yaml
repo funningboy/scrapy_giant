@@ -11,7 +11,8 @@
         base: 'trader',
         order: ['-totalvolume'],
         callback: null,
-        limit: 100
+        limit: 100,
+        debug: False
     },
     description: '林滄海,海哥的主力券商: (9658)富邦-建國, (9216)凱基-信義, (9255)凱基-和平, (1260)宏遠, (585b)統一-內湖'
 }

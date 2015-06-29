@@ -11,7 +11,8 @@
         base: 'trader',
         order: ['-totalvolume'],
         callback: null,
-        limit: 100
+        limit: 100,
+        debug: False
     },
     description: '塑化大家族主力券商: (9216)凱基-台北, (779u)國票-長程, (525B)大慶-復興. (9676)富邦-仁愛'
 }

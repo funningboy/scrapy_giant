@@ -86,6 +86,7 @@ class OtcHisTraderSpider(CrawlSpider):
         arr = np.asarray(bytearray(response.body), dtype=np.uint8)
         img = cv2.imdecode(arr, -1)
         text = OtcHisTraderCaptcha1(False).run(img)
+        # or use rank recorder to find best text selected
         #text = raw_input('test:')
         #print text
         content = {

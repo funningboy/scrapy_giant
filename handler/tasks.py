@@ -22,14 +22,13 @@ iddb_tasks = {
     'otc': OtcIdDBHandler
 }
 
+hisitems = ['stock', 'credit', 'future', 'trader']
+
 @shared_task
 def collect_hisitem(opt, targets, starttime, endtime, base='stock', order=[], stockids=[], traderids=[], limit=10, callback=None, debug=False):
     """ as middleware collect raw his stock/toptrader/credit/future to item
     """
 
-    assert(opt in ['twse', 'otc'])
-    #assert(target in ['stock', 'trader', 'credit', 'future'])
-    assert(base in ['stock', 'trader'])
     #asssert ...
 
     item = {}
@@ -37,7 +36,7 @@ def collect_hisitem(opt, targets, starttime, endtime, base='stock', order=[], st
     dbhandler = hisdb_tasks[opt](debug=debug)
 
     for target in targets:
-        if target in ['stock', 'credit', 'future', 'trader']:
+        if target in hisitems:
             ptr = getattr(dbhandler, target)
             if target in ['trader']:
                 args = (starttime, endtime, stockids, traderids, base, order, limit)
@@ -58,16 +57,12 @@ def collect_hisframe(opt, targets, starttime, endtime, base='stock', order=[], s
     20140929    100 | 102 | 0.3        | 200 |20140929 | 110  | ...
     """
 
-    group = []
-    assert(opt in ['twse', 'otc'])
-    #assert(target in ['stock', 'trader', 'credit', 'future'])
-    #assert stockids, traderids
     #assert ...
-
+    group = []
     dbhandler = hisdb_tasks[opt](debug=debug)
 
     for target in targets:
-        if target in ['stock', 'credit', 'future', 'trader']:
+        if target in hisitems:
             ptr = getattr(dbhandler, target)
             cb = ptr.to_pandas
             if target in ['trader']:

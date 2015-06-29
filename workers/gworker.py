@@ -3,6 +3,20 @@ from workers.worker import DAGWorker
 
 class GiantWorker(DAGWorker):
 
+    _hisitemtb = [
+        'stcokitem',
+        'traderitem',
+        'credititem',
+        'futureitem'
+    ]
+
+    _algitemtb = [
+        'dualemaitem', 
+        'btraderitem', 
+        'bbanditem', 
+        'kmeansitem'
+    ]
+    
     def __init__(self, **kwargs):
         super(GiantWorker, self).__init__()
 
@@ -23,7 +37,7 @@ class GiantWorker(DAGWorker):
         self.node[node]['ptr']._kwargs = kwargs
 
     def _populate_hisitem(self, item, kwargs):
-        for name in ['stockitem', 'traderitem', 'credititem', 'futureitem']:
+        for name in self._hisitemtb:
             if name in item:
                 if isinstance(item[name], list):
                     stockids = [i['stockid'] for i in item[name] if i['stockid']]
@@ -36,7 +50,7 @@ class GiantWorker(DAGWorker):
                         kwargs['traderids'] = list(set(kwargs['traderids']))
          
     def _populate_algitem(self, item, kwargs):
-        for name in ['dualemaitem', 'btraderitem', 'bbanditem', 'kmeansitem']:
+        for name in self._algitemtb:
             if name in item:
                 if isinstance(item[name], list):
                     stockids = [i['stockid'] for i in item[name] if i['stockid']]
