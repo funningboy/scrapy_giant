@@ -11,15 +11,15 @@ from algorithm.tasks import collect_algitem
 
 class Loader(threading.Thread):
 
-    _wait_queue = []
-    _run_queue = []
+    _waits = []
+    _runs = []
     _max_tasks = 10
     _task_keys = ['kwargs', 'task', 'description']
     _graph_keys = ['Nodes', 'Edges']
     daemon = True
     _stop = threading.Event()
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         super(Loader, self).__init__()
         threading.Thread.__init__(self)
 
@@ -163,29 +163,29 @@ class Loader(threading.Thread):
     def _join_to_run(self, task):
         task['graph'].join()
    
-    def _add_run_queue(self, task):
-        if task not in self._run_queue:
-            self._run_queue.append(task)
+    def _add_runs(self, task):
+        if task not in self._runs:
+            self._runs.append(task)
     
-    def _del_run_queue(self, task):
-        if task in self._run_queue:
-            self._run_queue.remove(task)
+    def _del_runs(self, task):
+        if task in self._runs:
+            self._runs.remove(task)
  
-    def _add_wait_queue(self, task):
-        if task not in self._wait_queue:
-            self._wait_queue.append(task)
+    def _add_waits(self, task):
+        if task not in self._waits:
+            self._waits.append(task)
 
-    def _del_wait_queue(self, task):
-        if task in self._wait_queue:
-            self._wait_queue.remove(task)
+    def _del_waits(self, task):
+        if task in self._waits:
+            self._waits.remove(task)
 
     def _find_ready_to_run(self):
-        end = self._max_tasks - len(self._run_queue)
-        for it in sorted(self._wait_queue, key=lambda x: x['priority'])[:end]:
+        end = self._max_tasks - len(self._runs)
+        for it in sorted(self._waits, key=lambda x: x['priority'])[:end]:
             yield it
 
     def _find_ready_to_join(self):
-        for it in self._run_queue:
+        for it in self._runs:
             if not it['graph'].isAlive():
                 yield it
 
@@ -194,12 +194,12 @@ class Loader(threading.Thread):
 
             for graph in self._find_ready_to_join():
                 self._join_to_run(graph)
-                self._del_run_queue(graph)
+                self._del_runs(graph)
 
             for graph in self._find_ready_to_run():
                 self._start_to_run(graph)
-                self._add_run_queue(graph)
-                self._del_wait_queue(graph)
+                self._add_runs(graph)
+                self._del_waits(graph)
 
     def is_ready_to_stop(self):
-        return sum([len(self._run_queue),  len(self._wait_queue)]) == 0
+        return sum([len(self._runs),  len(self._waits)]) == 0

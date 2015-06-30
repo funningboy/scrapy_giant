@@ -15,17 +15,16 @@ class DAGWorker(nx.DiGraph, threading.Thread):
         self._maxloop = kwargs.pop('maxloop', -1)
         super(DAGWorker, self).__init__()
         threading.Thread.__init__(self)
-        self._run_queue = []
-        self._wait_queue = []
-        self._finish_queue = []
-        self._record_queue = []
-        self._debug_queue = []
+        self._runs = []
+        self._waits = []
+        self._finishs = []
+        self._records = [
         self._maxloop_count = 0
         self._stop = threading.Event()
 
     @property
     def record(self):
-        return self._record_queue
+        return self._records
 
     def stop(self):
         self._stop.set()
@@ -37,7 +36,7 @@ class DAGWorker(nx.DiGraph, threading.Thread):
         if self.node[node]['ptr'].status != 'start':
             self.node[node]['ptr'].status = 'start'
             self._start_to_run(node)
-            self._add_run_queue(node)
+            self._add_runs(node)
 
     def _is_ready_to_run(self, node):
         if self.node[node]['ptr'].status == 'idle':
@@ -53,7 +52,7 @@ class DAGWorker(nx.DiGraph, threading.Thread):
                 self.edge[pre][cur]['weight'] -= 1
 
     def _find_ready_to_run(self):
-        results = map(lambda x: self._is_ready_to_run(x), self._wait_queue)
+        results = map(lambda x: self._is_ready_to_run(x), self._waits)
         for it in set(filter(lambda x: x[1] == True, results)):
             yield it[0]
 
@@ -69,7 +68,7 @@ class DAGWorker(nx.DiGraph, threading.Thread):
 
     def _find_ready_to_wait(self):
         results = []
-        [results.extend(self._is_ready_to_wait(it)) for it in self._finish_queue]
+        [results.extend(self._is_ready_to_wait(it)) for it in self._finishs]
         for it in set(filter(lambda x: x[1] == True, results)):
             yield it[0]
 
@@ -77,7 +76,7 @@ class DAGWorker(nx.DiGraph, threading.Thread):
         return (node, self.node[node]['ptr'].is_ready() and self.node[node]['ptr'].status == 'run')
 
     def _find_ready_to_join(self):
-        results = map(lambda x: self._is_ready_to_join(x), self._run_queue)
+        results = map(lambda x: self._is_ready_to_join(x), self._runs)
         for it in set(filter(lambda x: x[1] == True, results)):
             yield it[0]
 
@@ -102,97 +101,81 @@ class DAGWorker(nx.DiGraph, threading.Thread):
                 'visited': self.node[node]['ptr'].visited,
                 'runtime': round(self.node[node]['ptr'].runtime.timeit(), 2)
             }
-            self._record_queue.append(rec)
+            self._records.append(rec)
 
     def _switch_to_idle(self, node):
         if self.node[node]['ptr'].status != 'idle':
             self.node[node]['ptr'].status = 'idle'
 
-    def _add_run_queue(self, node):
-        if node not in self._run_queue:
-            self._run_queue.append(node)
+    def _add_runs(self, node):
+        if node not in self._runs:
+            self._runs.append(node)
 
-    def _del_run_queue(self, node):
-        if node in self._run_queue:
-            self._run_queue.remove(node)
+    def _del_runs(self, node):
+        if node in self._runs:
+            self._runs.remove(node)
 
-    def _add_wait_queue(self, node):
-        if node not in self._wait_queue:
-            self._wait_queue.append(node)
+    def _add_waits(self, node):
+        if node not in self._waits:
+            self._waits.append(node)
 
-    def _del_wait_queue(self, node):
-        if node in self._wait_queue:
-            self._wait_queue.remove(node)
+    def _del_waits(self, node):
+        if node in self._waits:
+            self._waits.remove(node)
 
-    def _add_finish_queue(self, node):
-        if node not in self._finish_queue:
-            self._finish_queue.append(node)
+    def _add_finishs(self, node):
+        if node not in self._finishs:
+            self._finishs.append(node)
 
-    def _del_finish_queue(self, node):
-        if node in self._finish_queue:
-            self._finish_queue.remove(node)
+    def _del_finishs(self, node):
+        if node in self._finishs:
+            self._finishs.remove(node)
 
     def _find_ready_to_finish(self):
-        return len(self._run_queue) == 0
+        return len(self._runs) == 0
 
-    def _dump_run_queue(self):
-        return map(lambda x: (x, self.node[x]['ptr'].status), self._run_queue)
+    def _dump_runs(self):
+        return map(lambda x: (x, self.node[x]['ptr'].status), self._runs)
 
-    def _dump_wait_queue(self):
-        return map(lambda x: (x, self.node[x]['ptr'].status), self._wait_queue)
+    def _dump_waits(self):
+        return map(lambda x: (x, self.node[x]['ptr'].status), self._waits)
 
-    def _dump_finish_queue(self):
-        return map(lambda x: (x, self.node[x]['ptr'].status), self._finish_queue)
+    def _dump_finishs(self):
+        return map(lambda x: (x, self.node[x]['ptr'].status), self._finishs)
 
     @property
-    def cover(self):
+    def cover_rate(self):
         try:
-            cover = len(self._finish_queue) / self.number_of_nodes()
+            cover = len(self._finishs) / self.number_of_nodes()
             return round(cover, 2)
         except:
             return 0
 
     @property
-    def uncover(self):
+    def uncover_rate(self):
         try:
-            uncover = (self.number_of_nodes() - len(self._finish_queue)) / self.number_of_nodes()
+            uncover = (self.number_of_nodes() - len(self._finishs)) / self.number_of_nodes()
             return round(uncover, 2)
         except:
             return 0
 
-    def _collect_debug_msg(self):
-        item = {
-            'run': self._dump_run_queue(),
-            'wait': self._dump_wait_queue(),
-            'finish': self._dump_finish_queue()
-        }
-        if self._debug_queue:
-            if self._debug_queue[-1] == item:
-                self._maxloop_count += 1
-            else:
-                self._debug_queue.append(item)
-                self._maxloop_count = 0
-        else:
-            self._debug_queue.append(item)
-
-    def _dump_debug_queue(self):
-        for it in self._debug_queue:
-            yield it
-  
     def _is_maxloop_out(self):
         return self._maxloop_count >= self._maxloop and self._maxloop != -1
         
-    def clear(self):
-        self._run_queue[:] = []    
-        self._wait_queue[:] = []
-        self._finish_queue[:] = []
-        self._record_queue[:] = []
-        self._debug_queue[:] = []
+    def close(self):
+        self._runs[:] = []    
+        self._waits[:] = []
+        self._finishs[:] = []
+        self._records[:] = []
 
     def debug(self):
         if self._debug:
-            for node in self._dump_debug_queue():
-                print node
+            msg = {
+                'runs': self._runs,
+                'waits': self._waits,
+                'finishs': self._finishs
+            }
+            print msg
 
     def run(self, callback=None):
         # need gevent let ?
@@ -200,22 +183,22 @@ class DAGWorker(nx.DiGraph, threading.Thread):
 
             for node in self._find_ready_to_join():
                 self._join_to_run(node)
-                self._add_finish_queue(node)
-                self._del_run_queue(node)
+                self._add_finishs(node)
+                self._del_runs(node)
 
             for node in self._find_ready_to_wait():
-                self._add_wait_queue(node)
+                self._add_waits(node)
 
             for node in self._find_ready_to_run():
                 self._start_to_run(node)
-                self._add_run_queue(node)
-                self._del_wait_queue(node)
+                self._add_runs(node)
+                self._del_waits(node)
 
-            if self._debug:
-                self._collect_debug_msg()
-                if self._is_maxloop_out():
-                    print 'find maxloop out, please check DAG has cycles/unreachable nodes'
-                    if callback:
-                        callback()
-                    self.clear()
-                    break
+            if self._is_maxloop_out():
+                print 'find maxloop out, please check DAG has cycles/unreachable nodes'
+
+                if self._debug:
+                    self.debug()
+                    s
+                self.clear()
+                break
