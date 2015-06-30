@@ -261,11 +261,11 @@ LOGGING = {
 # but only periodic
 CELERYBEAT_SCHEDULE = {
     # register test services if debug is on
-    'run_test_service_add': {
-        'task': 'bin.tasks.add',
-        'schedule': timedelta(seconds=30),
-        'args': (10, 11)
-    },
+    #'run_test_service_add': {
+    #    'task': 'bin.tasks.add',
+    #    'schedule': timedelta(seconds=30),
+    #    'args': (10, 11)
+    #},
     # register all scrapy services
     'run_scrapy_service_twseid': {
         'task': 'bin.tasks.run_scrapy_service',

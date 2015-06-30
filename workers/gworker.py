@@ -18,7 +18,7 @@ class GWorker(DAGWorker):
     ]
     
     def __init__(self, **kwargs):
-        super(GWorker, self).__init__()
+        super(GWorker, self).__init__(**kwargs)
 
     def _populate_items(self):
         methods = [

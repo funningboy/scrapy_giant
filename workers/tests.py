@@ -53,7 +53,7 @@ class TestTaskPtr(NoSQLTestCase):
         self.assertTrue(retval == 3)
 
     def tearDown(self):
-        self.G.clear()
+        self.G.close()
         del self.G
 
 @unittest.skipIf(skip_tests['TestDAGChain'], "skip")
@@ -76,19 +76,21 @@ class TestDAGChain(NoSQLTestCase):
         self.assertTrue(nx.descendants(self.G,0) == set([1,2]))
         self.G.set_start_to_run(0)
         self.G.start()
-        self.G.join()
 
     def test_on_run(self):
+        while True:
+            if not self.G.isAlive():
+                break
         nodes = sorted(self.G.record, key=lambda x: x['node'])
         self.assertTrue(len(nodes) == 3)
         expect = [3,6,9]
         for i in range(3):
             self.assertTrue(nodes[i]['visited'] == 1)
             self.assertTrue(nodes[i]['retval'] == expect[i])
-            self.assertTrue(nodes[i]['runtime'] <= 0.1)
+            self.assertTrue(nodes[i]['runtime'] <= 10)
 
     def tearDown(self):
-        self.G.clear()
+        self.G.join()
         del self.G
 
 @unittest.skipIf(skip_tests['TestDAGParallel'], "skip")
@@ -112,19 +114,21 @@ class TestDAGParallel(NoSQLTestCase):
         self.assertTrue(nx.descendants(self.G,0) == set([1,2,3]))
         self.G.set_start_to_run(0)
         self.G.start()
-        self.G.join()
 
     def test_on_run(self):
+        while True:
+            if not self.G.isAlive():
+                break
         nodes = sorted(self.G.record, key=lambda x: x['node'])
         self.assertTrue(len(nodes) == 4)
         expect = [3,6,6,9]
         for i in range(4):
             self.assertTrue(nodes[i]['visited'] == 1)
             self.assertTrue(nodes[i]['retval'] == expect[i])
-            self.assertTrue(nodes[i]['runtime'] <= 0.1)
+            self.assertTrue(nodes[i]['runtime'] <= 10)
 
     def tearDown(self):
-        self.G.clear()
+        self.G.join()
         del self.G
 
 @unittest.skipIf(skip_tests['TestDAGNoCycle'], "skip")
@@ -149,19 +153,21 @@ class TestDAGNoCycle(NoSQLTestCase):
         self.assertTrue(nx.is_directed_acyclic_graph(self.G))
         self.G.set_start_to_run(0)
         self.G.start()
-        self.G.join()
 
     def test_on_run(self):
+        while True:
+            if not self.G.isAlive():
+                break
         nodes = sorted(self.G.record, key=lambda x: x['node'])  
         self.assertTrue(len(nodes) == 4)
         expect = [3, 6, 18, 6]
         for i in range(4):
             self.assertTrue(nodes[i]['visited'] == 1)
             self.assertTrue(nodes[i]['retval'] == expect[i])
-            self.assertTrue(nodes[i]['runtime'] <= 0.1)
+            self.assertTrue(nodes[i]['runtime'] <= 10)
 
     def tearDown(self):
         #with open("test.adjlist",'wb') as fh:
         #    nx.write_adjlist(self.G, fh)
-        self.G.clear()
+        self.G.join()
         del self.G

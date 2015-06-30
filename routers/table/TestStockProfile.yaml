@@ -73,7 +73,7 @@ Nodes:
         )',
         # 4
         'Loader.parse_task(
-            "./routers/tasks/HisTrader.yaml",
+            "./routers/tasks/HisItemAll.yaml",
             kwargs = {
                 "opt": "twse",
                 "targets": ["stock", "credit", "future", "trader"],

@@ -14,5 +14,5 @@
             buf_win: 30
         }
     },
-    description: 'dualema algorithm'
+    description: 'dualema algorithm # DualemaAlgorithm.__class.__.__doc__'
 }

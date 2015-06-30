@@ -13,13 +13,14 @@ class DAGWorker(nx.DiGraph, threading.Thread):
     def __init__(self, **kwargs):
         self._debug = kwargs.pop('debug', False)
         self._maxloop = kwargs.pop('maxloop', -1)
-        super(DAGWorker, self).__init__()
-        threading.Thread.__init__(self)
+        super(DAGWorker, self).__init__(**kwargs)
         self._runs = []
         self._waits = []
         self._finishs = []
-        self._records = [
+        self._records = []
         self._maxloop_count = 0
+        threading.Thread.__init__(self)
+        self.daemon = True
         self._stop = threading.Event()
 
     @property
@@ -95,17 +96,23 @@ class DAGWorker(nx.DiGraph, threading.Thread):
         if self.node[node]['ptr'].status != 'finish':
             self.node[node]['ptr'].status = 'finish'
             self.node[node]['ptr'].finish()
-            rec = {
-                'node': node,
-                'retval': self.node[node]['ptr'].retval,
-                'visited': self.node[node]['ptr'].visited,
-                'runtime': round(self.node[node]['ptr'].runtime.timeit(), 2)
-            }
-            self._records.append(rec)
+
+    def _create_record(self, node):
+        rec = {
+            'node': node,
+            'retval': self.node[node]['ptr'].retval,
+            'visited': self.node[node]['ptr'].visited,
+            'runtime': round(self.node[node]['ptr'].runtime.timeit(), 2)
+        }
+        return rec
 
     def _switch_to_idle(self, node):
         if self.node[node]['ptr'].status != 'idle':
             self.node[node]['ptr'].status = 'idle'
+
+    def _add_records(self, rec):
+        if rec not in self._records:
+            self._records.append(rec)
 
     def _add_runs(self, node):
         if node not in self._runs:
@@ -168,6 +175,9 @@ class DAGWorker(nx.DiGraph, threading.Thread):
         self._finishs[:] = []
         self._records[:] = []
 
+    #def __del__(self):
+    #    self.close()
+
     def debug(self):
         if self._debug:
             msg = {
@@ -176,13 +186,15 @@ class DAGWorker(nx.DiGraph, threading.Thread):
                 'finishs': self._finishs
             }
             print msg
-
+        
     def run(self, callback=None):
         # need gevent let ?
         while not self._find_ready_to_finish():
 
             for node in self._find_ready_to_join():
                 self._join_to_run(node)
+                rec = self._create_record(node)
+                self._add_records(rec)
                 self._add_finishs(node)
                 self._del_runs(node)
 
@@ -199,6 +211,6 @@ class DAGWorker(nx.DiGraph, threading.Thread):
 
                 if self._debug:
                     self.debug()
-                    s
-                self.clear()
+
+                self.close()
                 break

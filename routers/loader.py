@@ -11,17 +11,19 @@ from algorithm.tasks import collect_algitem
 
 class Loader(threading.Thread):
 
-    _waits = []
-    _runs = []
-    _max_tasks = 10
     _task_keys = ['kwargs', 'task', 'description']
     _graph_keys = ['Nodes', 'Edges']
-    daemon = True
-    _stop = threading.Event()
+
 
     def __init__(self, **kwargs):
-        super(Loader, self).__init__()
+        self._debug = kwargs.pop('debug', False)
+        self._max_tasks = kwargs.pop('max_tasks', 10)
+        super(Loader, self).__init__(**kwargs)
+        _runs = []
+        _waits = []
         threading.Thread.__init__(self)
+        self.daemon = True
+        self._stop = threading.Event()
 
     def stop(self):
         self._stop.set()
@@ -160,9 +162,19 @@ class Loader(threading.Thread):
     def _start_to_run(self, task):
         task['graph'].start()
    
+    def _acquire_to_run(self, task):
+        task['graph'].acquire()
+        
+    def _notify_to_run(self, task):
+        # callback to event handler
+        pass
+
+    def _release_to_run(self, task):
+        task['graph'].release()
+
     def _join_to_run(self, task):
         task['graph'].join()
-   
+        
     def _add_runs(self, task):
         if task not in self._runs:
             self._runs.append(task)
@@ -189,12 +201,24 @@ class Loader(threading.Thread):
             if not it['graph'].isAlive():
                 yield it
 
+    def close(self):
+        self._waits[:] = []
+        self._runs[:] = []
+
+    #def __del__(self):
+    #    self.close()
+
     def run(self):
         while True:
-
             for graph in self._find_ready_to_join():
-                self._join_to_run(graph)
+                #self._acqure_to_run(graph)
+                #self._notify_to_run(graph)
+                #self._release_to_run(graph)
+                #print graph
+                #print self._runs
+                #print self._waits
                 self._del_runs(graph)
+                self._join_to_run(graph)
 
             for graph in self._find_ready_to_run():
                 self._start_to_run(graph)
@@ -202,4 +226,6 @@ class Loader(threading.Thread):
                 self._del_waits(graph)
 
     def is_ready_to_stop(self):
+        print self._runs
+        print self._waits
         return sum([len(self._runs),  len(self._waits)]) == 0
