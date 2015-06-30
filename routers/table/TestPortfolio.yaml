@@ -9,7 +9,7 @@ Edges:
 
 Nodes:
     [
-        'Manager.parse_task(
+        'Loader.parse_task(
             "./routers/tasks/HisStock.yaml", 
             kwargs = {
                 "opt": "twse",
@@ -24,7 +24,7 @@ Nodes:
             }
         )',
         # 1
-        'Manager.parse_task(
+        'Loader.parse_task(
             "./routers/tasks/AlgDualema.yaml",
             kwargs = {
                 "opt": "twse",
@@ -37,7 +37,7 @@ Nodes:
             }
         )',
         # 2
-        'Manager.parse_task(
+        'Loader.parse_task(
             "./routers/tasks/AlgBTrader.yaml",
             kwargs = {
                 "opt": "twse",
@@ -50,7 +50,7 @@ Nodes:
             }
         )',
         # 3
-        'Manager.parse_task(
+        'Loader.parse_task(
             "./routers/tasks/AlgBBands.yaml",
             kwargs = {
                 "opt": "twse",

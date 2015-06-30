@@ -11,7 +11,7 @@ Edges:
 Nodes:
     [
         # 0
-        'Manager.parse_task(
+        'Loader.parse_task(
             "./routers/tasks/HisStock.yaml", 
             kwargs = {
                 "opt": "twse",
@@ -26,7 +26,7 @@ Nodes:
             }
         )',
         # 1
-        'Manager.parse_task(
+        'Loader.parse_task(
             "./routers/tasks/HisCredit.yaml",
             kwargs = {
                 "opt": "twse",
@@ -41,7 +41,7 @@ Nodes:
             }
         )',
         # 2
-        'Manager.parse_task(
+        'Loader.parse_task(
             "./routers/tasks/HisFuture.yaml",
             kwargs = {
                 "opt": "twse",
@@ -56,7 +56,7 @@ Nodes:
             }
         )',
         # 3
-        'Manager.parse_task(
+        'Loader.parse_task(
             "./routers/tasks/HisTrader.yaml",
             kwargs = {
                 "opt": "twse",
@@ -72,7 +72,7 @@ Nodes:
             }
         )',
         # 4
-        'Manager.parse_task(
+        'Loader.parse_task(
             "./routers/tasks/HisTrader.yaml",
             kwargs = {
                 "opt": "twse",

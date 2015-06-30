@@ -6,23 +6,32 @@
 
 import networkx as nx
 import timeit 
+import threading
 
-class DAGWorker(nx.DiGraph):
+class DAGWorker(nx.DiGraph, threading.Thread):
     
     def __init__(self, **kwargs):
         self._debug = kwargs.pop('debug', False)
         self._maxloop = kwargs.pop('maxloop', -1)
         super(DAGWorker, self).__init__()
+        threading.Thread.__init__(self)
         self._run_queue = []
         self._wait_queue = []
         self._finish_queue = []
         self._record_queue = []
         self._debug_queue = []
         self._maxloop_count = 0
+        self._stop = threading.Event()
 
     @property
     def record(self):
         return self._record_queue
+
+    def stop(self):
+        self._stop.set()
+
+    def stopped(cls):
+        return self._stop.isSet()
 
     def set_start_to_run(self, node):
         if self.node[node]['ptr'].status != 'start':
@@ -91,7 +100,7 @@ class DAGWorker(nx.DiGraph):
                 'node': node,
                 'retval': self.node[node]['ptr'].retval,
                 'visited': self.node[node]['ptr'].visited,
-                'runtime': "%.2f" %(self.node[node]['ptr'].runtime.timeit())
+                'runtime': round(self.node[node]['ptr'].runtime.timeit(), 2)
             }
             self._record_queue.append(rec)
 
@@ -135,30 +144,27 @@ class DAGWorker(nx.DiGraph):
     def _dump_finish_queue(self):
         return map(lambda x: (x, self.node[x]['ptr'].status), self._finish_queue)
 
-    def pre_check(self):
-        # check the graph is no violation
-        pass
+    @property
+    def cover(self):
+        try:
+            cover = len(self._finish_queue) / self.number_of_nodes()
+            return round(cover, 2)
+        except:
+            return 0
 
-    def post_check(self):
-        pass
-
-    def coverage(self):
-        # find how many nodes/edges has visited
-        pass
-
-    def uncoverage_nodes(self):
-        # unvisited nodes 
-        pass
-
-    def uncoverage_edges(self):
-    	# unvisited edges
-        pass
+    @property
+    def uncover(self):
+        try:
+            uncover = (self.number_of_nodes() - len(self._finish_queue)) / self.number_of_nodes()
+            return round(uncover, 2)
+        except:
+            return 0
 
     def _collect_debug_msg(self):
         item = {
-            'run_q': self._dump_run_queue(),
-            'wait_q': self._dump_wait_queue(),
-            'finish_q': self._dump_finish_queue()
+            'run': self._dump_run_queue(),
+            'wait': self._dump_wait_queue(),
+            'finish': self._dump_finish_queue()
         }
         if self._debug_queue:
             if self._debug_queue[-1] == item:
@@ -189,7 +195,7 @@ class DAGWorker(nx.DiGraph):
                 print node
 
     def run(self, callback=None):
-        # need gevent ?
+        # need gevent let ?
         while not self._find_ready_to_finish():
 
             for node in self._find_ready_to_join():

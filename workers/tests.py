@@ -14,8 +14,6 @@ skip_tests = {
     'TestDAGChain': False,
     'TestDAGParallel': False,
     'TestDAGNoCycle': False,
-    # dynamic graph
-    'TestDAGDymUpdate': False
 }
 
 class TestDAGWorker(DAGWorker):
@@ -77,7 +75,8 @@ class TestDAGChain(NoSQLTestCase):
         self.assertTrue(nx.ancestors(self.G,0) == set([]))
         self.assertTrue(nx.descendants(self.G,0) == set([1,2]))
         self.G.set_start_to_run(0)
-        self.G.run(self.G.debug)
+        self.G.start()
+        self.G.join()
 
     def test_on_run(self):
         nodes = sorted(self.G.record, key=lambda x: x['node'])
@@ -86,6 +85,7 @@ class TestDAGChain(NoSQLTestCase):
         for i in range(3):
             self.assertTrue(nodes[i]['visited'] == 1)
             self.assertTrue(nodes[i]['retval'] == expect[i])
+            self.assertTrue(nodes[i]['runtime'] <= 0.1)
 
     def tearDown(self):
         self.G.clear()
@@ -111,7 +111,8 @@ class TestDAGParallel(NoSQLTestCase):
         self.assertTrue(nx.ancestors(self.G,0) == set([]))
         self.assertTrue(nx.descendants(self.G,0) == set([1,2,3]))
         self.G.set_start_to_run(0)
-        self.G.run(self.G.debug)
+        self.G.start()
+        self.G.join()
 
     def test_on_run(self):
         nodes = sorted(self.G.record, key=lambda x: x['node'])
@@ -120,6 +121,7 @@ class TestDAGParallel(NoSQLTestCase):
         for i in range(4):
             self.assertTrue(nodes[i]['visited'] == 1)
             self.assertTrue(nodes[i]['retval'] == expect[i])
+            self.assertTrue(nodes[i]['runtime'] <= 0.1)
 
     def tearDown(self):
         self.G.clear()
@@ -143,10 +145,11 @@ class TestDAGNoCycle(NoSQLTestCase):
         for i in range(0,4):
             n = Node(func=nsum, args=(1,2))
             self.G.add_node(i, {'ptr': n})
-        # no cycle, loop
+        # no cycle, loop 
         self.assertTrue(nx.is_directed_acyclic_graph(self.G))
         self.G.set_start_to_run(0)
-        self.G.run(self.G.debug)
+        self.G.start()
+        self.G.join()
 
     def test_on_run(self):
         nodes = sorted(self.G.record, key=lambda x: x['node'])  
@@ -155,6 +158,7 @@ class TestDAGNoCycle(NoSQLTestCase):
         for i in range(4):
             self.assertTrue(nodes[i]['visited'] == 1)
             self.assertTrue(nodes[i]['retval'] == expect[i])
+            self.assertTrue(nodes[i]['runtime'] <= 0.1)
 
     def tearDown(self):
         #with open("test.adjlist",'wb') as fh:

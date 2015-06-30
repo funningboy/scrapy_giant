@@ -1,16 +1,16 @@
 
 from workers.worker import DAGWorker
 
-class GiantWorker(DAGWorker):
+class GWorker(DAGWorker):
 
-    _hisitemtb = [
+    _hisitems = [
         'stcokitem',
         'traderitem',
         'credititem',
         'futureitem'
     ]
 
-    _algitemtb = [
+    _algitems = [
         'dualemaitem', 
         'btraderitem', 
         'bbanditem', 
@@ -18,26 +18,27 @@ class GiantWorker(DAGWorker):
     ]
     
     def __init__(self, **kwargs):
-        super(GiantWorker, self).__init__()
+        super(GWorker, self).__init__()
+
+    def _populate_items(self):
+        methods = [
+            self._populate_hisitem,
+            self._populate_algitem
+        ]
+        return methods
 
     def _collect_incoming_kwargs(self, node):
         kwargs = dict(self.node[node]['ptr']._kwargs)
-
         for pre, cur in self.in_edges(node):
             if self.node[pre]['ptr'].status == 'finish':
                 item = self.node[pre]['ptr'].retval
-
-                populate_items = [
-                    self._populate_hisitem,
-                    self._populate_algitem
-                ]
-                for it in populate_items:
+                for it in self._populate_items():
                     it(item, kwargs)
 
         self.node[node]['ptr']._kwargs = kwargs
 
     def _populate_hisitem(self, item, kwargs):
-        for name in self._hisitemtb:
+        for name in self._hisitems:
             if name in item:
                 if isinstance(item[name], list):
                     stockids = [i['stockid'] for i in item[name] if i['stockid']]
@@ -50,7 +51,7 @@ class GiantWorker(DAGWorker):
                         kwargs['traderids'] = list(set(kwargs['traderids']))
          
     def _populate_algitem(self, item, kwargs):
-        for name in self._algitemtb:
+        for name in self._algitems:
             if name in item:
                 if isinstance(item[name], list):
                     stockids = [i['stockid'] for i in item[name] if i['stockid']]

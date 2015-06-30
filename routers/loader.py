@@ -2,31 +2,32 @@
 
 import yaml
 import threading
-import json
 import networkx as nx
-from bson import json_util
 from datetime import datetime, timedelta
-from workers.gworker import GiantWorker
+from workers.gworker import GWorker
 from workers.nodes import Node
 from handler.tasks import collect_hisitem
 from algorithm.tasks import collect_algitem
-#from algorithm.tasks import collect_algitem
 
-class GiantManager(threading.Thread):
+class Loader(threading.Thread):
 
-    _task_queue = []
+    _wait_queue = []
+    _run_queue = []
+    _max_tasks = 10
     _task_keys = ['kwargs', 'task', 'description']
     _graph_keys = ['Nodes', 'Edges']
     daemon = True
     _stop = threading.Event()
 
-    @classmethod
-    def stop(cls):
-        cls._stop.set()
+    def __init__(self):
+        super(Loader, self).__init__()
+        threading.Thread.__init__(self)
 
-    @classmethod
+    def stop(self):
+        self._stop.set()
+
     def stopped(cls):
-        return cls._stop.isSet()
+        return self._stop.isSet()
 
     @classmethod
     def _parse_kwargs_all(cls):
@@ -80,44 +81,33 @@ class GiantManager(threading.Thread):
             print "parse %s fail" %(token)
             raise
 
-    @classmethod
-    def _create_methods(cls):
-        """ static create """
+    def _create_graph_methods(self):
         methods = [
-            cls._create_edges,
-            cls._create_nodes,
-            cls._valid_graph,
-            cls._start_to_run
+            self._create_edges,
+            self._create_nodes,
+            self._valid_graph,
+            self._set_start_to_run
         ]
         return methods
 
-    @classmethod
-    def _update_method(cls):
-        """ dynamic update """
-        pass
-
-    @classmethod
-    def create_graph(cls, path):
+    def create_graph(self, path):
         with open(path, 'r') as stream:
             stream = yaml.load(stream)
-            assert(set(stream.keys()) == set(cls._graph_keys))
-            G = GiantWorker()
-            for it in cls._create_methods():
-                it(stream, G)
-            return G
- 
-    @classmethod
-    def _delete_node(cls, graph, n):
-        if n in graph.nodes():
-            graph.remove_node(n)
+            assert(set(stream.keys()) == set(self._graph_keys))
+            graph = GWorker()
+            for it in self._create_graph_methods():
+                it(stream, graph)
+            return graph
 
-    @classmethod
-    def _add_node(cls, graph, n, attr={'ptr': None}):
-        if n not in graph.nodes():
-            graph.add_node(n, attr)
+    def _delete_node(self, graph, node):
+        if node in graph.nodes():
+            graph.remove_node(node)
 
-    @classmethod
-    def _create_nodes(cls, stream, graph):
+    def _add_node(self, graph, node, attr={'ptr': None}):
+        if node not in graph.nodes():
+            graph.add_node(node, attr)
+
+    def _create_nodes(self, stream, graph):
         assert(isinstance(stream['Nodes'], list))
         for i, node in enumerate(stream['Nodes']):
             try:
@@ -130,8 +120,7 @@ class GiantManager(threading.Thread):
                 print "create graph.node %d fail" %(i)
                 raise
 
-    @classmethod
-    def _create_edges(cls, stream, graph):
+    def _create_edges(self, stream, graph):
         assert(isinstance(stream['Edges'], list))
         for i, edge in enumerate(stream['Edges']):
             try:
@@ -141,64 +130,76 @@ class GiantManager(threading.Thread):
                 print "create graph.edge %d fail" %(i)
                 raise
 
-    @classmethod
-    def _add_edge(graph, u, v, weight=1):
+    def _add_edge(self, graph, u, v, weight=1):
         if (u,v) not in graph.edges():
             graph.add_edge(u, v, weight)
 
-    @classmethod
-    def _delete_edge(cls, graph, u, v):
+    def _delete_edge(self, graph, u, v):
         if (u,v) in graph.edges():
             graph.remove_edge(u, v)
-
-    @classmethod
-    def _valid_graph(cls, stream, graph):
+    
+    def _valid_graph(self, stream, graph):
         if not nx.is_directed_acyclic_graph(graph):
             print "cycles:"
             print list(nx.simple_cycles(graph))
             raise
-
-    @classmethod
-    def _start_to_run(cls, stream, graph):
+  
+    def _set_start_to_run(self, stream, graph):
         starts = nx.topological_sort(graph)
         for i in starts:
             if not nx.ancestors(graph, i):
                 graph.set_start_to_run(i)
-
-    @classmethod
-    def _create_task(cls, graph, priority=1):
+   
+    def _create_task(self, graph, priority=1):
         task = {
             'priority': priority,
             'graph': graph,
         }
         return task
+    
+    def _start_to_run(self, task):
+        task['graph'].start()
+   
+    def _join_to_run(self, task):
+        task['graph'].join()
+   
+    def _add_run_queue(self, task):
+        if task not in self._run_queue:
+            self._run_queue.append(task)
+    
+    def _del_run_queue(self, task):
+        if task in self._run_queue:
+            self._run_queue.remove(task)
+ 
+    def _add_wait_queue(self, task):
+        if task not in self._wait_queue:
+            self._wait_queue.append(task)
 
-    @classmethod
-    def _on_run(cls, task):
-        task['graph'].run()
+    def _del_wait_queue(self, task):
+        if task in self._wait_queue:
+            self._wait_queue.remove(task)
 
-    @classmethod
-    def _add_task_queue(cls, task):
-        if task not in cls._task_queue:
-            cls._task_queue.append(task)
-
-    @classmethod
-    def _del_task_queue(cls, task):
-        if task in cls._task_queue:
-            cls._task_queue.remove(task)
-
-    @classmethod
-    def _find_ready_to_run(cls):
-        for it in sorted(cls._task_queue, key=lambda x: x['priority']):
+    def _find_ready_to_run(self):
+        end = self._max_tasks - len(self._run_queue)
+        for it in sorted(self._wait_queue, key=lambda x: x['priority'])[:end]:
             yield it
 
-    @classmethod
-    def run(cls):
-        while True:
-            for it in cls._find_ready_to_run():
-                cls._on_run(it)
-                cls._del_task_queue(it)
+    def _find_ready_to_join(self):
+        for it in self._run_queue:
+            if not it['graph'].isAlive():
+                yield it
 
-    @classmethod
-    def is_ready_to_stop(cls):
-        return len(cls._task_queue) == 0
+    def run(self):
+        while True:
+
+            for graph in self._find_ready_to_join():
+                self._join_to_run(graph)
+                self._del_run_queue(graph)
+
+            for graph in self._find_ready_to_run():
+                self._start_to_run(graph)
+                self._add_run_queue(graph)
+                self._del_wait_queue(graph)
+
+    def is_ready_to_stop(self):
+        return sum([len(self._run_queue),  len(self._wait_queue)]) == 0
