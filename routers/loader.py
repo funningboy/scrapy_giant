@@ -21,7 +21,6 @@ class Loader(object):
     def __init__(self, **kwargs):
         self._debug = kwargs.pop('debug', False)
 
-
     @classmethod
     def _parse_kwargs_all(cls):
         methods = [

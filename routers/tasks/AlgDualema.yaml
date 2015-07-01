@@ -8,7 +8,7 @@
         endtime: datetime.utcnow(),
         stockids: [],
         traderids: [],
-        order: ['-buy', '-sell', '-portfolio_value'],
+        order: ['-buy', '-sell', '-portfolio_value', '+buy', '+sell', '+portfolio_value'],
         limit: 100,
         debug: False,
         cfg: {
@@ -19,5 +19,5 @@
             sell_amount: 100
         }
     },
-    description: 'dualema algorithm'
+    description: DualEMAAlgorithm.__class__.__doc__
 }

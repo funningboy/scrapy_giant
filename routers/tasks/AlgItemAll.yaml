@@ -1,0 +1,17 @@
+{
+    task: collect_algitem,
+    kwargs: {
+        opt: null,
+        targets: ['dualema', 'btrader', 'bbands'],
+        starttime: null,
+        endtime: null,
+        stockids: [],
+        traderids: [],
+        base: 'stock',
+        order: [],
+        callback: null,
+        limit: 50,
+        debug: False
+    },
+    description: 'collect all algitem based on each leaf items'
+}

@@ -7,12 +7,12 @@
         endtime: datetime.utcnow(),
         stockids: [],
         traderids: [],
-        order: ['-buy', '-sell', '-portfolio_value'],
+        order: ['-buy', '-sell', '-portfolio_value', '+buy', '+sell', '+portfolio_value'],
         limit: 100,
         debug: False,
         cfg: {
             buf_win: 30
         }
     },
-    description: 'dualema algorithm # DualemaAlgorithm.__class.__.__doc__'
+    description: DualemaAlgorithm.__class.__.__doc__
 }

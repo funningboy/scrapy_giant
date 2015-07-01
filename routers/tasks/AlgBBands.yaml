@@ -7,7 +7,7 @@
         endtime: datetime.utcnow(),
         stockids: [],
         traderids: [],
-        order: ['-buy', '-sell', '-portfolio_value'],
+        order: ['-buy', '-sell', '-portfolio_value', '+buy', '+sell', '+portfolio_value'],
         limit: 100,
         debug: False,
         #atlast: ['buy>2', 'sell>3', 'portfolio_value']
@@ -15,5 +15,5 @@
             buf_win: 30
         }
     },
-    description: 'bbands algorithm'
+    description: BBandsAlgorithm.__class__.__doc__
 }
