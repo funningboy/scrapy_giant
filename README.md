@@ -80,7 +80,7 @@ export C_FORCE_ROOT=true
 export ROOTPATH=./data
 # for test mode
 export ROOTPATH=./tmp
-celery -A giant worker -B -l info
+celery -A giant worker -B -l info -c 4 -P gevent
 python manage.py syncdb
 python manage.py shell
 celery scheduler

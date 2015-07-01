@@ -1,35 +1,26 @@
 # -*- coding: utf-8 -*-
 
 import yaml
+#from gevent import monkey, sleep
+#monkey.patch_all()
 import threading
+import gevent
 import networkx as nx
+import time
 from datetime import datetime, timedelta
 from workers.gworker import GWorker
 from workers.nodes import Node
 from handler.tasks import collect_hisitem
 from algorithm.tasks import collect_algitem
 
-class Loader(threading.Thread):
+class Loader(object):
 
     _task_keys = ['kwargs', 'task', 'description']
     _graph_keys = ['Nodes', 'Edges']
 
-
     def __init__(self, **kwargs):
         self._debug = kwargs.pop('debug', False)
-        self._max_tasks = kwargs.pop('max_tasks', 10)
-        super(Loader, self).__init__(**kwargs)
-        _runs = []
-        _waits = []
-        threading.Thread.__init__(self)
-        self.daemon = True
-        self._stop = threading.Event()
 
-    def stop(self):
-        self._stop.set()
-
-    def stopped(cls):
-        return self._stop.isSet()
 
     @classmethod
     def _parse_kwargs_all(cls):
@@ -92,11 +83,11 @@ class Loader(threading.Thread):
         ]
         return methods
 
-    def create_graph(self, path):
+    def create_graph(self, path, **kwargs):
         with open(path, 'r') as stream:
             stream = yaml.load(stream)
             assert(set(stream.keys()) == set(self._graph_keys))
-            graph = GWorker()
+            graph = GWorker(**kwargs)
             for it in self._create_graph_methods():
                 it(stream, graph)
             return graph
@@ -151,81 +142,3 @@ class Loader(threading.Thread):
         for i in starts:
             if not nx.ancestors(graph, i):
                 graph.set_start_to_run(i)
-   
-    def _create_task(self, graph, priority=1):
-        task = {
-            'priority': priority,
-            'graph': graph,
-        }
-        return task
-    
-    def _start_to_run(self, task):
-        task['graph'].start()
-   
-    def _acquire_to_run(self, task):
-        task['graph'].acquire()
-        
-    def _notify_to_run(self, task):
-        # callback to event handler
-        pass
-
-    def _release_to_run(self, task):
-        task['graph'].release()
-
-    def _join_to_run(self, task):
-        task['graph'].join()
-        
-    def _add_runs(self, task):
-        if task not in self._runs:
-            self._runs.append(task)
-    
-    def _del_runs(self, task):
-        if task in self._runs:
-            self._runs.remove(task)
- 
-    def _add_waits(self, task):
-        if task not in self._waits:
-            self._waits.append(task)
-
-    def _del_waits(self, task):
-        if task in self._waits:
-            self._waits.remove(task)
-
-    def _find_ready_to_run(self):
-        end = self._max_tasks - len(self._runs)
-        for it in sorted(self._waits, key=lambda x: x['priority'])[:end]:
-            yield it
-
-    def _find_ready_to_join(self):
-        for it in self._runs:
-            if not it['graph'].isAlive():
-                yield it
-
-    def close(self):
-        self._waits[:] = []
-        self._runs[:] = []
-
-    #def __del__(self):
-    #    self.close()
-
-    def run(self):
-        while True:
-            for graph in self._find_ready_to_join():
-                #self._acqure_to_run(graph)
-                #self._notify_to_run(graph)
-                #self._release_to_run(graph)
-                #print graph
-                #print self._runs
-                #print self._waits
-                self._del_runs(graph)
-                self._join_to_run(graph)
-
-            for graph in self._find_ready_to_run():
-                self._start_to_run(graph)
-                self._add_runs(graph)
-                self._del_waits(graph)
-
-    def is_ready_to_stop(self):
-        print self._runs
-        print self._waits
-        return sum([len(self._runs),  len(self._waits)]) == 0

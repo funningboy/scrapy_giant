@@ -23,21 +23,29 @@ class TestLoaderStrategy(NoSQLTestCase):
 
     def setUp(self):
         self._loader = Loader()
-        self._loader.start()
+        self._graphs = []
 
     def test_on_work(self):
         for path in self._paths:
             # add as event listener/sumbit
-            graph = self._loader.create_graph(path)
-            if graph:
-                task = self._loader._create_task(graph, priority=1)
-                self._loader._add_waits(task)
+            G = self._loader.create_graph(path, priority=1)
+            self.assertTrue(G)
+            G.start()
+            self._graphs.append(G)
+
+        for G in self._graphs:
+            while True:
+                if not G.isAlive():
+                    break
+            G.join()
+            nodes = sorted(G.record, key=lambda x: x['node'])
+            for node in nodes:
+                self.assertTrue(node['visited'] == 1)
+                # how to handle None
+                self.assertTrue(node['retval'])
+                self.assertTrue(node['runtime'] <= 10)
+            del G
 
     def tearDown(self):
-        # unnormal stop
-        while True:
-            if self._loader.is_ready_to_stop():
-                break
-        self._loader.join()
         del self._loader
  

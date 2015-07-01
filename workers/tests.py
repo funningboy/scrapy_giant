@@ -46,8 +46,9 @@ class TestTaskPtr(NoSQLTestCase):
 
     def test_on_run(self):
         self.G.node[0]['ptr'].run()
-        while not self.G.node[0]['ptr'].is_ready():
-            time.sleep(1)
+        while True:
+            if self.G.node[0]['ptr'].is_ready():
+                break
         self.G.node[0]['ptr'].finish()
         retval = self.G.node[0]['ptr'].retval
         self.assertTrue(retval == 3)
@@ -78,9 +79,7 @@ class TestDAGChain(NoSQLTestCase):
         self.G.start()
 
     def test_on_run(self):
-        while True:
-            if not self.G.isAlive():
-                break
+        self.G.join()
         nodes = sorted(self.G.record, key=lambda x: x['node'])
         self.assertTrue(len(nodes) == 3)
         expect = [3,6,9]
@@ -90,7 +89,6 @@ class TestDAGChain(NoSQLTestCase):
             self.assertTrue(nodes[i]['runtime'] <= 10)
 
     def tearDown(self):
-        self.G.join()
         del self.G
 
 @unittest.skipIf(skip_tests['TestDAGParallel'], "skip")
@@ -116,9 +114,7 @@ class TestDAGParallel(NoSQLTestCase):
         self.G.start()
 
     def test_on_run(self):
-        while True:
-            if not self.G.isAlive():
-                break
+        self.G.join()
         nodes = sorted(self.G.record, key=lambda x: x['node'])
         self.assertTrue(len(nodes) == 4)
         expect = [3,6,6,9]
@@ -128,7 +124,6 @@ class TestDAGParallel(NoSQLTestCase):
             self.assertTrue(nodes[i]['runtime'] <= 10)
 
     def tearDown(self):
-        self.G.join()
         del self.G
 
 @unittest.skipIf(skip_tests['TestDAGNoCycle'], "skip")
@@ -155,9 +150,7 @@ class TestDAGNoCycle(NoSQLTestCase):
         self.G.start()
 
     def test_on_run(self):
-        while True:
-            if not self.G.isAlive():
-                break
+        self.G.join()
         nodes = sorted(self.G.record, key=lambda x: x['node'])  
         self.assertTrue(len(nodes) == 4)
         expect = [3, 6, 18, 6]
@@ -169,5 +162,4 @@ class TestDAGNoCycle(NoSQLTestCase):
     def tearDown(self):
         #with open("test.adjlist",'wb') as fh:
         #    nx.write_adjlist(self.G, fh)
-        self.G.join()
         del self.G

@@ -6,13 +6,18 @@
 
 import networkx as nx
 import timeit 
+#from gevent import monkey, sleep
+#monkey.patch_all()
 import threading
+import time
 
 class DAGWorker(nx.DiGraph, threading.Thread):
     
     def __init__(self, **kwargs):
         self._debug = kwargs.pop('debug', False)
         self._maxloop = kwargs.pop('maxloop', -1)
+        self._sleep = kwargs.pop('sleep', 0.1)
+        self._priority = kwargs.pop('priority', 1)
         super(DAGWorker, self).__init__(**kwargs)
         self._runs = []
         self._waits = []
@@ -30,7 +35,7 @@ class DAGWorker(nx.DiGraph, threading.Thread):
     def stop(self):
         self._stop.set()
 
-    def stopped(cls):
+    def stopped(self):
         return self._stop.isSet()
 
     def set_start_to_run(self, node):
@@ -175,8 +180,8 @@ class DAGWorker(nx.DiGraph, threading.Thread):
         self._finishs[:] = []
         self._records[:] = []
 
-    #def __del__(self):
-    #    self.close()
+    def __del__(self):
+        self.close()
 
     def debug(self):
         if self._debug:
@@ -188,8 +193,18 @@ class DAGWorker(nx.DiGraph, threading.Thread):
             print msg
         
     def run(self, callback=None):
-        # need gevent let ?
-        while not self._find_ready_to_finish():
+
+        while True:
+
+            if self._find_ready_to_finish():
+                break
+
+            if self._is_maxloop_out() or self.stopped():
+                print 'find maxloop out, please check DAG has cycles/unreachable nodes'
+                if self._debug:
+                    self.debug()
+                self.close()
+                break
 
             for node in self._find_ready_to_join():
                 self._join_to_run(node)
@@ -206,11 +221,4 @@ class DAGWorker(nx.DiGraph, threading.Thread):
                 self._add_runs(node)
                 self._del_waits(node)
 
-            if self._is_maxloop_out():
-                print 'find maxloop out, please check DAG has cycles/unreachable nodes'
-
-                if self._debug:
-                    self.debug()
-
-                self.close()
-                break
+            time.sleep(self._sleep)
