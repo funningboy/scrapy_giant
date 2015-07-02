@@ -45,6 +45,7 @@ class TwseAlgDBHandler(object):
     def __init__(self, **kwargs):
         self._order = kwargs.pop('order', [])
         self._cfg = kwargs.pop('cfg', {})
+        self._cont = kwargs.pop('constraint', None)
         self._debug = kwargs.pop('debug', False)
         self._kwargs = {
             'opt': kwargs.pop('opt', None),
@@ -75,14 +76,17 @@ class TwseAlgDBHandler(object):
             df, handler = collect_hisframe(**copy.deepcopy(self._kwargs))
             yield stockid, df, handler
 
-    def run(self, callback=None):
+    def run(self):
         for stockid, df, dbhandler in self.iter_hisframe():
             if not df.empty and dbhandler:
                 alg = self._alg(dbhandler, **self._cfg)
                 results = alg.run(df).fillna(0)
                 self._report.collect("%s" %(stockid), results)
 
+    def finalize(self, callback=None):
         df = self._report.summary()
+        if self._cont:
+            df = df.query(self._cont)
         if callback == self.to_detail:
             return callback(df)
         if callback == self.to_summary:

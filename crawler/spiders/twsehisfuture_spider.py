@@ -22,8 +22,9 @@ from handler.iddb_handler import TwseIdDBHandler
 __all__ = ['TwseHisFutureSpider']
 
 class TwseHisFutureSpider(CrawlSpider):
+    """ 59.120.135.101  www.taifex.com.tw """
     name = 'twsehisfuture'
-    allowed_domains = ['www.taifex.com.tw']
+    allowed_domains = ['59.120.135.101']
     download_delay = 2
     _headers = [
         (u'交易日期', u'date'),
@@ -61,7 +62,7 @@ class TwseHisFutureSpider(CrawlSpider):
         [fmon, smon] = [timestamp.month] * 2 
         [fdd, sdd] = [1, calendar.monthrange(timestamp.year, timestamp.month)[1]]
         URL = (
-            'http://www.taifex.com.tw/chinese/3/3_1_1_getcontract.asp?' +
+            'http://59.120.135.101/chinese/3/3_1_1_getcontract.asp?' +
             'date1=%(fyear)d/%(fmon)02d/%(fdd)02d&' +
             'date2=%(syear)d/%(smon)02d/%(sdd)02d' ) % {
                 'fyear': fyear, 
@@ -101,7 +102,7 @@ class TwseHisFutureSpider(CrawlSpider):
         log.msg("table: %s" % table, level=log.DEBUG)
         
         # request after contract find
-        URL = 'http://www.taifex.com.tw/chinese/3/3_1_2dl.asp'
+        URL = 'http://59.120.135.101/chinese/3/3_1_2dl.asp'
         sdate = datetime.utcnow() - timedelta(days=0)
         edate = datetime.utcnow()
         datestart = "%d/%02d/%02d" %(sdate.year, sdate.month, sdate.day)

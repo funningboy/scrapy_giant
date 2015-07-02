@@ -31,30 +31,34 @@ class TestTwseDualemaAlg(NoSQLTestCase):
             'stockids': ['2317', '2330', '1314'],
             'traderids': [],
             'limit': 3,
+            'order': ['-portfolio_value', '-buys', '-sells'],
+            'constraint': 'buys>=0 and sells>=0',
             'cfg': {},
             'debug': True
         }   
 
     def test_on_run(self):
         alg = TwseDualemaAlg(**copy.deepcopy(self._kwargs))
-        df = alg.run()
+        alg.run()
+        df = alg.finalize()
         self.assertTrue(df is not None)
         self.assertFalse(df.empty)
         self.assertTrue(set(sorted(list(df.index))) == set(sorted(['2317', '2330', '1314'])))
-        self.assertTrue(set(sorted(list(df.columns))) >= set(sorted(['portfolio_value', 'buys', 'date', 'bufwin'])))
-        df = df.query('buys >=0 and sells >=0 and portfolio_value >=0')  
+        self.assertTrue(set(sorted(list(df.columns))) >= set(sorted(['portfolio_value', 'buys', 'date', 'bufwin']))) 
         self.assertFalse(df.empty)
 
     def test_on_detail(self):
         alg = TwseDualemaAlg(**copy.deepcopy(self._kwargs))
-        item = alg.run(alg.to_detail)
+        alg.run()
+        item = alg.finalize(alg.to_detail)
         self.assertTrue(len(item)>0)
         self.assertTrue(set(sorted(list(item[0].keys()))) >= set(sorted(['date', 'portfolio_value', 'buy', 'open'])))
     
     def test_on_summary(self):
         alg = TwseDualemaAlg(**copy.deepcopy(self._kwargs))
         alg.sumycoll.drop_collection()
-        alg.run(alg.to_summary)
+        alg.run()
+        alg.finalize(alg.to_summary)
         starttime, endtime = datetime.utcnow() - timedelta(days=1), datetime.utcnow()
         if endtime.isoweekday() in [6, 7]:
             starttime -= timedelta(days=2)

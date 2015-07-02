@@ -30,7 +30,7 @@ def run_algorithm_service(opt, alg, starttime, endtime, debug=False):
     pass
 
 @shared_task
-def collect_algitem(opt, targets, starttime, endtime, base='stock', order=[], stockids=[], traderids=[], limit=10, cfg={}, callback=None, debug=False):
+def collect_algitem(opt, targets, starttime, endtime, base='stock', order=[], constraint=None, stockids=[], traderids=[], limit=10, cfg={}, callback=None, debug=False):
     item = {}
 
     for target in targets:
@@ -42,6 +42,8 @@ def collect_algitem(opt, targets, starttime, endtime, base='stock', order=[], st
             'order': order,
             'stockids': stockids,
             'traderids': traderids,
+            'order': order,
+            'constraint': constraint,
             'limit': limit,
             'cfg': cfg,
             'debug': debug

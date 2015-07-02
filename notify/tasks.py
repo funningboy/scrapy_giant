@@ -16,5 +16,5 @@ def collect_notitem(opt, targets, starttime, endtime, base='stock', order=[], st
             'cfg': cfg,
             'debug': debug
         }
-        if target in ['gmail', 'line']
+        if target in ['gmail', 'line']:
             pass
