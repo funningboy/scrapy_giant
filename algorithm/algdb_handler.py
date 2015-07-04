@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import pandas as pd
-import pytz
 import copy
 from collections import OrderedDict
 from datetime import datetime, timedelta
@@ -10,7 +8,7 @@ from mongoengine import *
 from bin.start import switch
 from bin.mongodb_driver import MongoDBDriver
 from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
-from handler.tasks import collect_hisframe
+from handler.tasks import *
 from algorithm.models import *
 from algorithm.report import Report
 from algorithm.dualema import DualEMAAlgorithm
@@ -45,13 +43,12 @@ class TwseAlgDBHandler(object):
     def __init__(self, **kwargs):
         self._order = kwargs.pop('order', [])
         self._cfg = kwargs.pop('cfg', {})
-        self._cont = kwargs.pop('constraint', None)
         self._debug = kwargs.pop('debug', False)
         self._kwargs = {
             'opt': kwargs.pop('opt', None),
             'starttime': kwargs.pop('starttime', datetime.utcnow() - timedelta(days=30)),
             'endtime': kwargs.pop('endtime', datetime.utcnow()),
-            'base': 'stock',
+            'base': kwargs.pop('base', 'stock'),
             'stockids': kwargs.pop('stockids', []),
             'traderids': kwargs.pop('traderids', []),
             'limit': kwargs.pop('limit', 10),
@@ -85,18 +82,16 @@ class TwseAlgDBHandler(object):
 
     def finalize(self, callback=None):
         df = self._report.summary()
-        if self._cont:
-            df = df.query(self._cont)
         if callback == self.to_detail:
             return callback(df)
-        if callback == self.to_summary:
+        if callback == self.insert_summary:
             return callback(df)
         return df
 
     def delete_summary(self, item):
         pass
 
-    def to_summary(self, df):
+    def insert_summary(self, df):
         keys = [k for k,v in AlgSummaryColl._fields.iteritems() if k not in ['id']]
         names = df.columns.values.tolist()
         for ix, cols in df.iterrows():
@@ -122,7 +117,7 @@ class TwseAlgDBHandler(object):
                 retval.append(coll)
         return retval
 
-    def query_summary(self, starttime, endtime, order=['-totalportfolio'], limit=10, callback=None):
+    def query_summary(self, starttime, endtime, cfg, order=['-totalportfolio'], limit=10, callback=None):
         """ return orm
         <algorithm>
         <watchtime> |<bufwin> | <stockid> | <traderid> | buys | sells ...
@@ -202,6 +197,9 @@ class TwseAlgDBHandler(object):
             }
             retval.append(coll)
         return callback(retval) if callback else retval
+
+    def to_pandas(self):
+        pass
 
 
 class TwseDualemaAlg(TwseAlgDBHandler):

@@ -6,13 +6,9 @@
 #from celery import chain, group
 import timeit
 import unittest
-import json
-from bson import json_util
 from datetime import datetime, timedelta
 from main.tests import NoSQLTestCase
 from handler.tasks import *
-from handler.collects import create_hiscollect
-from django.template import Context, Template
 
 skip_tests = {
     'TestTwseHisItemQuery': False,

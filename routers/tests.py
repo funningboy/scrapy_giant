@@ -17,7 +17,8 @@ class TestLoaderStrategy(NoSQLTestCase):
     _paths = [
         'routers/table/TestStockProfile.yaml',
         'routers/table/TestTraderProfile.yaml',
-        'routers/table/TestPortfolio.yaml',
+        'routers/table/TestExcAlgDualema.yaml',
+        'routers/table/TestExcRptDualema.yaml'
         #'routers/table/TestNotify.yaml'
     ]
 

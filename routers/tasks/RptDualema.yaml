@@ -8,7 +8,7 @@
         endtime: datetime.utcnow(),
         stockids: [],
         traderids: [],
-        order: ['-totalbuys', '-sell', '-portfolio_value'],
+        order: ['-totalbuys', '-totalsells', '-totalportfolio'],
         callback: null,
         limit: 100,
         debug: False

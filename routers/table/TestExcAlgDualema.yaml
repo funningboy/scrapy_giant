@@ -34,7 +34,7 @@ Nodes:
                 "stockids": ["2317", "2330", "1314"],
                 "base": "stock",
                 "order": ["+bearishused", "+financeused"],
-                "limit": 1,
+                "limit": 3,
                 "debug": True
             }
         )',
@@ -49,7 +49,7 @@ Nodes:
                 "stockids": ["2317", "2330", "1314"],
                 "base": "stock",
                 "order": ["-totalvolume"],
-                "limit": 1,
+                "limit": 3,
                 "debug": True
             }
         )',

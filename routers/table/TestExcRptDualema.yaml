@@ -6,7 +6,7 @@ Edges:
 
 Nodes:
     [
-    	# 0
+        # 0
         'Loader.parse_task(
             "./routers/tasks/RptDualema.yaml",
             kwargs = {
@@ -16,7 +16,7 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": ["2317", "2330", "1314"],
                 "order": ["-totalbuys", "-totalsells", "-totalportfolio"],
-                "limit": 1,
+                "limit": 3,
                 "debug": True,
                 "cfg": {
                     "buf_win": 30,
@@ -26,7 +26,7 @@ Nodes:
             }
         )',
 
-		# 1
+        # 1
         'Loader.parse_task(
             "./routers/tasks/AlgDualema.yaml",
             kwargs = {
@@ -37,7 +37,7 @@ Nodes:
                 "stockids": [],
                 "order": ["-buys", "-sells", "-portfolio_value"],
                 "callback": "to_detail",
-                "limit": 1,
+                "limit": 3,
                 "debug": True,
                 "cfg": {
                     "buf_win": 30,
@@ -46,4 +46,4 @@ Nodes:
                 }
             }
         )'
-	]
+    ]

@@ -10,8 +10,8 @@ import time
 from datetime import datetime, timedelta
 from workers.gworker import GWorker
 from workers.nodes import Node
-from handler.tasks import collect_hisitem
-from algorithm.tasks import collect_algitem
+from handler.tasks import *
+from algorithm.tasks import *
 
 class Loader(object):
 
