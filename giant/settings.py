@@ -334,6 +334,17 @@ CELERYBEAT_SCHEDULE = {
             _debug
         )
     },
+    'run_scrapy_service_twsehisfuture': {
+        'task': 'bin.tasks.run_scrapy_service',
+        'schedule': crontab(minute=30, hour='*/3'),
+        'args': (
+            'twsehisfuture',
+            'INFO',
+            "./log/%s_%s.log" %('twsehisfuture', datetime.today().strftime("%Y%m%d_%H%M")),
+            True,
+            _debug
+            )
+    },
     'run_scrapy_service_otchistrader': {
         'task': 'bin.tasks.run_scrapy_service',
         'schedule': crontab(minute=30, hour='*/3'),
@@ -378,40 +389,18 @@ CELERYBEAT_SCHEDULE = {
             _debug
         )
     },
-    # register run all feature collection
-
-    # register run all algorithms
-    'run_algorithm_service_twsedulema': {
-        'task': 'algorithm.tasks.run_algorithm_service',
-        'schedule': crontab(minute=30, hour='*/3'),
-        'args':(
-            'twsedualem',
-            datetime.utcnow() - timedelta(days=300),
-            datetime.utcnow(),
-            50,
-            _debug
-        )
-    },
-    'run_algorithm_service_otcdulema': {
-        'task': 'algorithm.tasks.run_algorithm_service',
+    'run_scrapy_service_otchisfuture': {
+        'task': 'bin.tasks.run_scrapy_service',
         'schedule': crontab(minute=30, hour='*/3'),
         'args': (
-            'otcdualem',
-            datetime.utcnow() - timedelta(days=300),
-            datetime.utcnow(),
-            50,
+            'otchisfuture',
+            'INFO',
+            "./log/%s_%s.log" %('otchisfuture', datetime.today().strftime("%Y%m%d_%H%M")),
+            True,
             _debug
-        )
-    },
-    'run_algorithm_serivce_twsebesttrader': {
-        'task': 'algorithm.tasks.run_algorithm_service',
-        'schedule': crontab(minute=30, hour='*/3'),
-        'args':(
-            'twsebtrader',
-            datetime.utcnow() - timedelta(days=300),
-            datetime.utcnow(),
-            50,
-            _debug
-        )
+            )
     }
+    # register run all feature collection
+
+    # register run all portfolios
 }

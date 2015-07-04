@@ -1,6 +1,6 @@
 {
     #algorithm/tasks.py
-    task: run_algitem,
+    task: collect_algitem,
     kwargs: {
         opt: null,
         targets: ['dualema'],
@@ -8,17 +8,10 @@
         endtime: datetime.utcnow(),
         stockids: [],
         traderids: [],
-        order: ['-buys', '-sells', '-portfolio_value'],
+        order: ['-totalbuys', '-sell', '-portfolio_value'],
         callback: null,
         limit: 100,
-        debug: False,
-        cfg: {
-            buf_win: 30,
-            short_ema_win: 20,
-            long_ema_win: 40,
-            buy_amount: 100,
-            sell_amount: 100
-        }
+        debug: False
     },
     description: DualEMAAlgorithm.__class__.__doc__
 }

@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
 
 class GLine(LineAPI):
-	pass
+	
+	def __init__(self, **kwargs):
+		pass
+
+	def send(self, msg):
+		pass

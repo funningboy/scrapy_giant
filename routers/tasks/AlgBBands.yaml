@@ -1,5 +1,5 @@
 {
-    task: collect_algitem,
+    task: run_algitem,
     kwargs: {
         opt: null,
         targets: ['bbands'],
@@ -10,10 +10,9 @@
         order: ['-buys', '-sells', '-portfolio_value'],
         limit: 100,
         debug: False,
-        constraint: 'buys>=0 and sells >=0'
         cfg: {
             buf_win: 30
         }
     },
-    description: BBandsAlgorithm.__class__.__doc__
+    description: BBandsAlgorithm.__class__.__doc__ 
 }

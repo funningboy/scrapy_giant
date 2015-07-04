@@ -1,5 +1,6 @@
 {
-    task: collect_algitem,
+    # algorithm/task.py
+    task: run_algitem,
     kwargs: {
         opt: null,
         targets: ['btrader'],
@@ -7,7 +8,8 @@
         endtime: datetime.utcnow(),
         stockids: [],
         traderids: [],
-        order: ['-buy', '-sell', '-portfolio_value', '+buy', '+sell', '+portfolio_value'],
+        order: ['-buy', '-sell', '-portfolio_value'],
+        callback: null,
         limit: 100,
         debug: False,
         cfg: {

@@ -1,0 +1,49 @@
+
+Edges:
+    [
+        [0,1,1]
+    ]
+
+Nodes:
+    [
+    	# 0
+        'Loader.parse_task(
+            "./routers/tasks/RptDualema.yaml",
+            kwargs = {
+                "opt": "twse",
+                "targets": ["dualema"],
+                "starttime": "datetime.utcnow() - timedelta(days=150)",
+                "endtime": "datetime.utcnow()",
+                "stockids": ["2317", "2330", "1314"],
+                "order": ["-totalbuys", "-totalsells", "-totalportfolio"],
+                "limit": 1,
+                "debug": True,
+                "cfg": {
+                    "buf_win": 30,
+                    "short_ema_win": 20,
+                    "long_ema_win": 40
+                }
+            }
+        )',
+
+		# 1
+        'Loader.parse_task(
+            "./routers/tasks/AlgDualema.yaml",
+            kwargs = {
+                "opt": "twse",
+                "targets": ["dualema"],
+                "starttime": "datetime.utcnow() - timedelta(days=150)",
+                "endtime": "datetime.utcnow()",
+                "stockids": [],
+                "order": ["-buys", "-sells", "-portfolio_value"],
+                "callback": "to_detail",
+                "limit": 1,
+                "debug": True,
+                "cfg": {
+                    "buf_win": 30,
+                    "short_ema_win": 20,
+                    "long_ema_win": 40
+                }
+            }
+        )'
+	]

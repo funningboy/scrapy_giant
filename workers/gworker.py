@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+# need rank table to filter incoming data?
 
 from workers.worker import DAGWorker
 
