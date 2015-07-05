@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 #from main.celery import app
 from celery import shared_task
-from notify.gmail import GGmail
+from notify.ggmail import GGMail
 
 notitems = ['gmail', 'line']
 
@@ -24,7 +24,7 @@ def collect_notitem(opt, targets, starttime, endtime, base='stock', order=[], st
                 'cfg': cfg,
                 'debug': debug
             }
-        gmail = GGmail(**kwargs)
+        gmail = GGMail(**kwargs)
         msg = gmail.create_msg()
         gmail.send(msg)
 

@@ -11,8 +11,8 @@
         limit: 100,
         debug: False,
         cfg: {
-            'GMAIL_ACCOUNT': os.environ.get('GMAIL_ACCOUNT', 'null')
-            'GMAIL_PASSWD': os.environ.get('GMAIL_PASSWD', 'null')
+            'GMAIL_ACCOUNT': os.environ.get('GMAIL_ACCOUNT', 'null'),
+            'GMAIL_PASSWD': os.environ.get('GMAIL_PASSWD', 'null'),
             'GMAIL_RCPT': [
                 'funningboy@gmail.com'
             ]
