@@ -12,8 +12,8 @@
         limit: 100,
         debug: False,
         cfg: {
-            'LINE_ACCOUNT': 'funningboy2'
-            'LINE_PASSWD': 'xxxx'
+            'LINE_ACCOUNT':  os.environ.get('LINE_ACCOUNT', 'null'),
+            'LINE_PASSWD':  os.environ.get('LINE_PASSWD', 'null'),
             'LINE_GROUP': [
                 '股票'
             ]

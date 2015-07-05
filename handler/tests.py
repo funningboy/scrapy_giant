@@ -9,6 +9,8 @@ import unittest
 from datetime import datetime, timedelta
 from main.tests import NoSQLTestCase
 from handler.tasks import *
+from bson import json_util
+import json
 
 skip_tests = {
     'TestTwseHisItemQuery': False,

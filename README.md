@@ -1,6 +1,7 @@
 https://github.com/terryh/autotrader
 https://www.quantopian.com/help#api-doco
 http://docs.mongodb.org/manual/tutorial/write-a-tumblelog-application-with-django-mongodb-engine/
+https://hshah19.wordpress.com/2013/08/23/setting-up-celery-for-django-using-django-celery-rabbitmq-supervisor-and-monit/
 ii
 Mac OS setup flow
 0.1 #install anaconda python
@@ -65,6 +66,9 @@ pip install django_compressor
 broker=rabbitmq
 backend=mongodb
 ```
+echo_supervisord_conf > supervisord.con
+sudo  /usr/lib/rabbitmq/lib/rabbitmq_server-3.2.4/sbin/rabbitmq-plugins enable rabbitmq_management
+
 rabbitmqctl cluster MASTER SLAVE
 rabbitmqctl start_app
 rabbitmq-server
@@ -72,6 +76,10 @@ rabbitmq-server
 # rabbitmqctl stop
 #sudo netstat -tulpn | grep :27017
 # kill -9 <pid> if proc has running the same port
+ps aux | grep celery | awk '{print $2}' | xargs kill -9
+celeryctl purge
+>>> from celery.task.control import discard_all
+>>> discard_all()
 mongod --dbpath ./tmp --journal
 export DJANGO_SETTINGS_MODULE=giant.settings 
 export DJANGO_PROJECT_DIR=`pwd`
