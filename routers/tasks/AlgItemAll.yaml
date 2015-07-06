@@ -1,5 +1,5 @@
 {
-    task: collect_algitem,
+    task: "collect_algitem",
     kwargs: {
         opt: null,
         targets: ['dualema', 'btrader', 'bbands'],

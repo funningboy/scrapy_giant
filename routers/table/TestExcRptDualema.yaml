@@ -1,7 +1,8 @@
 
 Edges:
     [
-        [0,1,1]
+        [0,1,1],
+        [1,2,1]
     ]
 
 Nodes:
@@ -44,6 +45,20 @@ Nodes:
                     "short_ema_win": 20,
                     "long_ema_win": 40
                 }
+            }
+        )',
+
+        # 2
+        'Loader.parse_task(
+            "./routers/tasks/NtyLine.yaml",
+            kwargs = {
+                "opt": "twse",
+                "targets": ["line"],
+                "starttime": "datetime.utcnow() - timedelta(days=150)",
+                "endtime": "datetime.utcnow()",
+                "stockids": [],
+                "limit": 3,
+                "debug": True
             }
         )'
     ]

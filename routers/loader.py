@@ -7,11 +7,13 @@ import threading
 import gevent
 import networkx as nx
 import time
+import os
 from datetime import datetime, timedelta
 from workers.gworker import GWorker
 from workers.nodes import Node
 from handler.tasks import *
 from algorithm.tasks import *
+from notify.tasks import *
 
 class Loader(object):
 
@@ -55,15 +57,25 @@ class Loader(object):
 
     @classmethod
     def _parse_kwargs(cls, token, okwargs, nkwargs={}):
+        """ only two deep search space """
         try:
             if token in okwargs:
                 if token in nkwargs:
                     try:
+                        if token == 'cfg':
+                            nokwargs = nkwargs[token]
+                            for it in nokwargs:
+                                cls._parse_kwargs(it, nokwargs)
+
                         okwargs.update({token: eval(nkwargs[token])})
                     except:
                         okwargs.update({token: nkwargs[token]})
                         pass
                 else:
+                    if token == 'cfg':
+                        nokwargs = okwargs[token]
+                        for it in nokwargs:
+                            cls._parse_kwargs(it, nokwargs)
                     try:
                         okwargs.update({token: eval(okwargs[token])})
                     except:

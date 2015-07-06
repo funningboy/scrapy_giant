@@ -1,11 +1,11 @@
 {
     # algorithm/task.py
-    task: run_algitem,
+    task: "run_algitem",
     kwargs: {
         opt: null,
         targets: ['btrader'],
-        starttime: datetime.utcnow() - timedelta(days=10),
-        endtime: datetime.utcnow(),
+        starttime: "datetime.utcnow() - timedelta(days=10)",
+        endtime: "datetime.utcnow()",
         stockids: [],
         traderids: [],
         order: ['-buy', '-sell', '-portfolio_value'],
@@ -16,5 +16,5 @@
             buf_win: 30
         }
     },
-    description: DualemaAlgorithm.__class.__.__doc__
+    description: "DualemaAlgorithm.__class.__.__doc__"
 }

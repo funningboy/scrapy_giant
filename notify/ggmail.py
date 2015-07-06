@@ -20,7 +20,7 @@ class GGMail(GMail):
         super(GGMail, self).__init__(self._account, self._passwd)
 
     def create_msg(self):
-        subject = "best list"
+        subject = "best list ..."
         to = ";".join(self._to)
         payload = {
             'starttime': self._starttime.strftime("%Y-%m-%d"),
@@ -31,3 +31,6 @@ class GGMail(GMail):
         text = json.dumps(OrderedDict(payload), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
         msg = Message(subject, to=to, text=text)
         return msg
+
+    def send(self, msg):
+        super(GGMail, self).send(msg)

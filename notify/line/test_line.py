@@ -1,7 +1,7 @@
 from client import LineClient, LineGroup, LineContact
 import os
 import time
-from threding.Thread
+import threading
 
 try:
     client = LineClient(os.environ['LINE_ACCOUNT'],
@@ -10,24 +10,32 @@ try:
 except:
     print "Login Failed"
 
-def receive_msg(sleep=1):
-while True:
-    op_list = []
+STOP = False
 
-    for op in client.longPoll():
-        op_list.append(op)
+def receive_and_send_back_msg(sleep=1):
+    while True:
+        op_list = []
 
-    for op in op_list:
-        # receive msg from LINE server
-        sender   = op[0]
-        receiver = op[1]
-        message  = op[2]
+        for op in client.longPoll():
+            op_list.append(op)
+
+        for op in op_list:
+            # loopback msg  
+            sender   = op[0]
+            receiver = op[1]
+            message  = op[2]
         
-        msg = message.text
-        receiver.sendMessage("[%s] %s" % (sender.name, msg))
+            msg = message.text
+            # stop at msg received 'stop'
+            if msg == 'stop' or STOP:
+                break
+            receiver.sendMessage("[%s] %s" % (sender.name, msg))
 
-    time.sleep(sleep)
+        time.sleep(sleep)
 
-def send_msg(sleep=1):
-while True:
-    client.get
+
+threads = [
+    threading.Thread(target=receive_and_send_back_msg, args=(1,))
+]
+[it.start() for it in threads]
+[it.join() for it in threads]

@@ -4,8 +4,8 @@
     kwargs: {
         opt: null,
         targets: ['trader'],
-        starttime: datetime.utcnow() - timedelta(days=5),
-        endtime: datetime.utcnow(),
+        starttime: "datetime.utcnow() - timedelta(days=5)",
+        endtime: "datetime.utcnow()",
         stockids: [],
         traderids: ['9658', '9216', '9255', '1260', '585b'],
         base: 'trader',

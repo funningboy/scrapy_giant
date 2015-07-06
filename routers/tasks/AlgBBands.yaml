@@ -1,10 +1,10 @@
 {
-    task: run_algitem,
+    task: "run_algitem",
     kwargs: {
         opt: null,
         targets: ['bbands'],
-        starttime: datetime.utcnow() - timedelta(days=10),
-        endtime: datetime.utcnow(),
+        starttime: "datetime.utcnow() - timedelta(days=10)",
+        endtime: "datetime.utcnow()",
         stockids: [],
         traderids: [],
         order: ['-buys', '-sells', '-portfolio_value'],
@@ -14,5 +14,5 @@
             buf_win: 30
         }
     },
-    description: BBandsAlgorithm.__class__.__doc__ 
+    description: "BBandsAlgorithm.__class__.__doc__" 
 }
