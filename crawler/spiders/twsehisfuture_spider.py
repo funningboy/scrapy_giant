@@ -56,6 +56,19 @@ class TwseHisFutureSpider(CrawlSpider):
         self._table = {}
 
     def start_requests(self):
+        URL = 'http://59.120.135.101/chinese/index.asp'
+        item = TwseHisFutureItem()
+        request = Request(
+            URL,
+            meta={
+                'item': item,
+                'cookiejar': 0
+            },
+            callback=self.redirect_contract_table,
+            dont_filter=True)
+        yield request
+
+    def redirect_contract_table(self, response):
         """ get contract """
         timestamp = datetime.utcnow()
         [fyear, syear] = [timestamp.year] * 2
@@ -72,12 +85,11 @@ class TwseHisFutureSpider(CrawlSpider):
                 'smon': smon,
                 'sdd': sdd
         }
-        item = TwseHisFutureItem()
         request = Request(
             URL,
             meta={
-                'item': item,
-                'cookiejar': 0
+                'item': response.meta['item'],
+                'cookiejar': response.meta['cookiejar']
             },
             callback=self.parse_contract_table,
             dont_filter=True)
