@@ -30,10 +30,9 @@ def collect_hisitem(opt, targets, starttime, endtime, base='stock', order=[], st
 
     #asssert ...
     item = {}
-
+    dbhandler = hisdb_tasks[opt](debug=debug)
     for target in targets:
         if target in hisitems:
-            dbhandler = hisdb_tasks[opt](debug=debug)
             ptr = getattr(dbhandler, target)
             if target in ['trader']:
                 args = (starttime, endtime, stockids, traderids, base, order, limit)
@@ -56,10 +55,9 @@ def collect_hisframe(opt, targets, starttime, endtime, base='stock', order=[], s
 
     #assert ...
     group = []
-
+    dbhandler = hisdb_tasks[opt](debug=debug)
     for target in targets:
         if target in hisitems:
-            dbhandler = hisdb_tasks[opt](debug=debug)
             ptr = getattr(dbhandler, target)
             cb = ptr.to_pandas
             if target in ['trader']:
@@ -72,7 +70,7 @@ def collect_hisframe(opt, targets, starttime, endtime, base='stock', order=[], s
             df = ptr.query_raw(*args)
             if not df.empty:
                 group.append(df)
-
+                
     if group:
         panel = pd.concat(group, axis=2).fillna(0)
         return panel, dbhandler

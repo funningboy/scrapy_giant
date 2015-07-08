@@ -2,6 +2,8 @@
 
 import pytz
 import matplotlib.pyplot as plt
+import numpy as np
+import talib
 import traceback
 
 from zipline.algorithm import TradingAlgorithm
@@ -9,14 +11,15 @@ from zipline.utils.factory import *
 
 # Import exponential moving average from talib wrapper
 # ref: http://mrjbq7.github.io/ta-lib/doc_index.html
-from zipline.transforms.ta import EMA, OBV
 
 from datetime import datetime, timedelta
+from collections import deque
 
 from bin.mongodb_driver import *
 from bin.start import *
-from handler.hisdb_handler import TwseHisDBHandler, OtcHisDBHandler
+from handler.tasks import collect_hisframe
 from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
+
 from algorithm.report import Report
 
 
@@ -29,55 +32,85 @@ class DualEMAAlgorithm(TradingAlgorithm):
     def __init__(self, dbhandler, **kwargs):
         self._debug = kwargs.pop('debug', False)
         self._buf_win = kwargs.pop('buf_win', 30)
-        self._short_ema_win = kwargs.pop('short_ema_win', 20)
-        self._long_ema_win = kwargs.pop('long_ema_win', 40)
+        self._buy_hold = kwargs.pop('buy_hold', 5)
+        self._sell_hold = kwargs.pop('sell_hold', 5)
         self._buy_amount = kwargs.pop('buy_amount', 1000)
         self._sell_amount = kwargs.pop('sell_amount', 1000)
+        self._short_ema_win = kwargs.pop('short_ema_win', 7)
+        self._long_ema_win = kwargs.pop('long_ema_win', 20)
+        self._trend_up = kwargs.pop('trend_up', True)
+        self._trend_down = kwargs.pop('trend_down', True)
         super(DualEMAAlgorithm, self).__init__(**kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
 
     def initialize(self):
-        self.short_ema_trans = EMA(timeperiod=self._short_ema_win)
-        self.long_ema_trans = EMA(timeperiod=self._long_ema_win)
-        self.real_obv_trans = OBV()
-        self.invested = False
+        self.window = deque(maxlen=self._buf_win)
+        self.invested_buy = False
+        self.invested_sell = False
         self.buy = False
         self.sell = False
+        self.buy_hold = 0
+        self.sell_hold = 0
 
     def handle_data(self, data):
-        self.short_ema = self.short_ema_trans.handle_data(data)
-        self.long_ema = self.long_ema_trans.handle_data(data)
-        self.real_obv = self.real_obv_trans.handle_data(data)
-        if self.short_ema is None or self.long_ema is None or self.real_obv is None:
-            return
+        self.window.append((
+            data[self.sids[0]].open,
+            data[self.sids[0]].high,
+            data[self.sids[0]].low,
+            data[self.sids[0]].close,
+            data[self.sids[0]].volume
+        ))
 
-        self.buy = False
-        self.sell = False
+        if len(self.window) == self._buf_win:
+            open, high, low, close, volume = [np.array(i) for i in zip(*self.window)]
+            short_ema = talib.EMA(close, timeperiod=self._short_ema_win)
+            long_ema = talib.EMA(close, timeperiod=self._long_ema_win)
+            real_obv = talib.OBV(close, np.asarray(volume, dtype='float'))
 
-        # buy/sell rule
-        if (self.short_ema > self.long_ema).all() and not self.invested:
-            self.order(self.sids[0], self._buy_amount)
-            self.invested = True
-            self.buy = True
-        elif (self.short_ema < self.long_ema).all() and self.invested:
-            self.order(self.sids[0], -self._sell_amount)
-            self.invested = False
-            self.sell = True
+            self.buy_hold = self.buy_hold - 1 if self.buy_hold > 0 else self.buy_hold
+            self.sell_hold = self.sell_hold - 1 if self.sell_hold > 0 else self.sell_hold
+            self.buy = False
+            self.sell = False
+    
+            # sell after buy
+            if self._trend_up:
+                if (short_ema > long_ema).all() and not self.invested_buy:
+                    self.order(self.sids[0], self._buy_amount)
+                    self.invested_buy = True
+                    self.buy = True
+                    self.buy_hold = self._buy_hold
+                elif self.invested_buy == True and self.buy_hold == 0:
+                    self.order(self.sids[0], -self._buy_amount)
+                    self.invested_buy = False
+                    self.sell = True
 
-        # save to recorder
-        signals = {
-            'open': data[self.sids[0]].open,
-            'high': data[self.sids[0]].high,
-            'low': data[self.sids[0]].low,
-            'close': data[self.sids[0]].close,
-            'volume': data[self.sids[0]].volume,
-            'short_ema': self.short_ema[self.sids[0]],
-            'long_ema': self.long_ema[self.sids[0]],
-            'buy': self.buy,
-            'sell': self.sell
-        }
-        self.record(**signals)
+            # buy after sell
+            if self._trend_down:
+                if (short_ema < long_ema).all() and not self.invested_sell:
+                    self.order(self.sids[0], -self._sell_amount)
+                    self.invested_sell = True
+                    self.sell = True
+                    self.sell_hold = self._sell_hold
+                elif self.invested_sell == True  and self.sell_hold == 0:
+                    self.order(self.sids[0], self._sell_amount)
+                    self.invested_sell = False
+                    self.buy = True
+
+            # save to recorder
+            signals = {
+                'open': open[-1],
+                'high': high[-1],
+                'low': low[-1],
+                'close': close[-1],
+                'volume': volume[-1],
+                'short_ema': short_ema[-1],
+                'long_ema': long_ema[-1],
+                'buy': self.buy,
+                'sell': self.sell
+            }
+            self.record(**signals)
+
 
 def run(opt='twse', debug=False, limit=0):
     """ as doctest run """
@@ -97,18 +130,23 @@ def run(opt='twse', debug=False, limit=0):
     for stockid in idhandler.stock.get_ids():
         try:
             kwargs = {
-                'debug': debug,
-                'opt': opt
+                'opt': opt,
+                'targets': ['stock', 'future', 'credit'],
+                'starttime': starttime,
+                'endtime': endtime,
+                'stockids': [stockid],
+                'traderids': [],
+                'base': 'stock',
+                'order': [],
+                'callback': None,
+                'limit': 1,
+                'debug': True
             }
-            dbhandler = TwseHisDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcHisDBHandler(**kwargs)
-            dbhandler.stock.ids = [stockid]
-            args = (starttime, endtime, [stockid], 'stock', ['-totalvolume'], 10)
-            cursor = dbhandler.stock.query_raw(*args)
-            data = dbhandler.stock.to_pandas(cursor)
-            if len(data[stockid].index) < maxlen:
+            panel, dbhandler = collect_hisframe(**kwargs)
+            if len(panel[stockid].index) < maxlen:
                 continue
             dualema = DualEMAAlgorithm(dbhandler=dbhandler, debug=debug)
-            results = dualema.run(data).fillna(0)
+            results = dualema.run(panel).fillna(0)
             report.collect(stockid, results)
             print "%s pass" %(stockid)
         except:

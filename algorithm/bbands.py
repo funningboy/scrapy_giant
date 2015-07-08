@@ -23,6 +23,7 @@ from bin.mongodb_driver import *
 from bin.start import *
 from handler.hisdb_handler import TwseHisDBHandler, OtcHisDBHandler
 from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
+from handler.tasks import collect_hisframe
 
 from algorithm.report import Report
 
@@ -35,19 +36,21 @@ class BBandsAlgorithm(TradingAlgorithm):
 
     def __init__(self, dbhandler, **kwargs):
         self._debug = kwargs.pop('debug', False)
-        self._buf_win = kwargs.pop('buf_win', 70)
+        self._buf_win = kwargs.pop('buf_win', 30)
         self._buy_hold = kwargs.pop('buy_hold', 5)
         self._sell_hold = kwargs.pop('sell_hold', 5)
         self._buy_amount = kwargs.pop('buy_amount', 1000)
         self._sell_amount = kwargs.pop('sell_amount', 1000)
+        self._trend_up = kwargs.pop('trend_up', True)
+        self._trend_down = kwargs.pop('_trend_down', True)
         super(BBandsAlgorithm, self).__init__(**kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
-        self.tids = self.dbhandler.trader.ids
 
     def initialize(self):
         self.window = deque(maxlen=self._buf_win)
-        self.invested = False
+        self.invested_buy = False
+        self.invested_sell = False
         self.buy = False
         self.sell = False
         self.buy_hold = 0
@@ -70,21 +73,28 @@ class BBandsAlgorithm(TradingAlgorithm):
             h_idx, l_idx = np.argmax(upper_bb), np.argmin(lower_bb)
             rule_idx = h_idx + self._buf_win//3 <= l_idx and l_idx + 15 <= self._buf_win
             rule_inbb = close[-1] >= middle[-1] * 0.8 and close[-1] <= middle[-1] * 1.2
-            rule_hidd = close[-1] == open[-1]
+            rule_hidd = close[-1] >= open[-1] * 1.01
 
             self.buy_hold = self.buy_hold - 1 if self.buy_hold > 0 else self.buy_hold
+            self.sell_hold = self.sell_hold -1 if self.sell_hold > 0 else self.sell_hold
             self.buy = False
             self.sell = False
 
-            if rule_idx and rule_inbb and rule_hidd and self.invested == False:
-                self.order(self.sids[0], self._buy_amount)
-                self.invested = True
-                self.buy = True
-                self.buy_hold = self._buy_hold
-            elif self.invested == True and self.buy_hold == 0:
-                self.order(self.sids[0], -self._sell_amount)
-                self.invested = False
-                self.sell = True
+            # sell after buy
+            if self._trend_up:
+                if rule_idx and rule_inbb and rule_hidd and self.invested_buy == False:
+                    self.order(self.sids[0], self._buy_amount)
+                    self.invested_buy = True
+                    self.buy = True
+                    self.buy_hold = self._buy_hold
+                elif self.invested_buy == True and self.buy_hold == 0:
+                    self.order(self.sids[0], -self._buy_amount)
+                    self.invested_buy = False
+                    self.sell = True
+
+            # buy after sell
+            if self._trend_down:
+                pass
 
             # save to recorder
             signals = {
@@ -117,18 +127,23 @@ def run(opt='twse', debug=False, limit=0):
     for stockid in idhandler.stock.get_ids():
         try:
             kwargs = {
-                'debug': True,
-                'opt': opt
+                'opt': opt,
+                'targets': ['stock', 'trader', 'future', 'credit'],
+                'starttime': starttime,
+                'endtime': endtime,
+                'stockids': [stockid],
+                'traderids': [],
+                'base': 'stock',
+                'order': [],
+                'callback': None,
+                'limit': 10,
+                'debug': True
             }
-            dbhandler = TwseHisDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcHisDBHandler(**kwargs)
-            dbhandler.stock.ids = [stockid]
-            args = (starttime, endtime, [stockid], 'stock', ['-totalvolume'], 10)
-            cursor = dbhandler.stock.query_raw(*args)
-            data = dbhandler.stock.to_pandas(cursor)
-            if len(data[stockid].index) < maxlen:
+            panel, dbhandler = collect_hisframe(**kwargs)
+            if len(panel[stockid].index) < maxlen:
                 continue
-            bbands = BBandsAlgorithm(dbhandler=dbhandler, buf_win=maxlen, debug=True)
-            results = bbands.run(data).fillna(0)
+            bbands = BBandsAlgorithm(dbhandler=dbhandler, debug=debug)
+            results = bbands.run(panel).fillna(0)
             report.collect(stockid, results)
             print "%s pass" %(stockid)
         except:

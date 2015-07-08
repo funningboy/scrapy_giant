@@ -3,6 +3,7 @@
 # https://www.quantopian.com/posts/working-with-history-dataframes
 
 import pandas as pd
+import numpy as np
 import pytz
 import matplotlib.pyplot as plt
 import traceback
@@ -21,6 +22,8 @@ from bin.mongodb_driver import *
 from bin.start import *
 from handler.hisdb_handler import TwseHisDBHandler, OtcHisDBHandler
 from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
+from handler.tasks import collect_hisframe
+
 from algorithm.report import Report
 
 
@@ -32,7 +35,13 @@ class BestTraderAlgorithm(TradingAlgorithm):
 
     def __init__(self, dbhandler, **kwargs):
         self._debug = kwargs.pop('debug', False)
-        self._buf_win = kwargs.pop('buf_win', 10)
+        self._buf_win = kwargs.pop('buf_win', 2)
+        self._buy_hold = kwargs.pop('buy_hold', 3)
+        self._sell_hold = kwargs.pop('sell_hold', 3)
+        self._buy_amount = kwargs.pop('buy_amount', 1000)
+        self._sell_amount = kwargs.pop('sell_amount', 1000)
+        self._trend_up = kwargs.pop('trend_up', True)
+        self._trend_down = kwargs.pop('trend_down', True)
         super(BestTraderAlgorithm, self).__init__(**kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
@@ -44,49 +53,68 @@ class BestTraderAlgorithm(TradingAlgorithm):
 
     def initialize(self):
         self.window = deque(maxlen=self._buf_win)
+        self.invested_buy = False
+        self.invested_sell = False
+        self.buy = False
+        self.sell = False
+        self.buy_hold = 0
+        self.sell_hold = 0
 
     def handle_data(self, data):
-        buyvolume, sellvolume = 0,0
-        sideband = {}
-        date = data[self.sids[0]].datetime
+        sid, toptid, tid = self.sids[0], self.tops[self.tids[0]], self.tids[0]
+        date = data[sid].datetime
 
         try:
-            buyvolume = getattr(data[self.sids[0]], "top%d_buyvolume" %(self.tops[self.tids[0]]))
-            sellvolume = getattr(data[self.sids[0]], "top%d_sellvolume" %(self.tops[self.tids[0]]))
-            avgbuyprice = getattr(data[self.sids[0]], "top%d_avgbuyprice" %(self.tops[self.tids[0]]))
-            avgsellprice = getattr(data[self.sids[0]], "top%d_avgsellprice" %(self.tops[self.tids[0]]))
-            ratio = getattr(data[self.sids[0]], "top%d_ratio" %(self.tops[self.tids[0]]))
-
-            if buyvolume:
-                self.order_target_percent(self.sids[0], buyvolume, style=LimitOrder(avgbuyprice))
-            if sellvolume:
-                self.order_target_percent(self.sids[0], -sellvolume, style=LimitOrder(avgsellprice))
-
-            sideband = {
-                "top%d_%s_buyvolume" % (self.tops[self.tids[0]], self.tids[0]): buyvolume,
-                "top%d_%s_sellvolume" % (self.tops[self.tids[0]], self.tids[0]): sellvolume,
-                "top%d_%s_avgbuyprice" % (self.tops[self.tids[0]], self.tids[0]): avgbuyprice,
-                "top%d_%s_avgsellprice" % (self.tops[self.tids[0]], self.tids[0]): avgsellprice
-            }
+            self.window.append((
+                getattr(data[sid], "top%d_buyvolume" %(toptid)),
+                getattr(data[sid], "top%d_sellvolume" %(toptid)),
+                getattr(data[sid], "top%d_avgbuyprice" %(toptid)),
+                getattr(data[sid], "top%d_avgsellprice" %(toptid)),
+                getattr(data[sid], "top%d_ratio" %(toptid)),
+                data[sid].open,
+                data[sid].high,
+                data[sid].low,
+                data[sid].close,
+                data[sid].volume
+            ))
         except:
             if self._debug:
-                print "%s: traderid(%s) not found in stockid(%s)" %(date, self.tids[0], self.sids[0])
-        pass
+                print "%s: traderid(%s) not found in stockid(%s)" %(date, tid, sid)
+            pass    
 
-        # save to recorder
-        signals = {
-            'open': data[self.sids[0]].open,
-            'high': data[self.sids[0]].high,
-            'low': data[self.sids[0]].low,
-            'close': data[self.sids[0]].close,
-            'volume': data[self.sids[0]].volume,
-            'buy': True if buyvolume else False,
-            'sell': True if sellvolume else False
-        }
+        if len(self.window) == self._buf_win:
+            buyvolume, sellvolume, avgbuyprice, avgsellprice, ratio, open, high, low, close, volume = [np.array(i) for i in zip(*self.window)]
+ 
+            self.buy = False
+            self.sell = False
 
-        # map sideband as signal
-        signals.update(sideband)
-        self.record(**signals)
+            if buyvolume[-1]:
+                self.order_target_percent(sid, buyvolume[-1], style=LimitOrder(avgbuyprice[-1]))
+                self.buy = True
+            if sellvolume[-1]:
+                self.order_target_percent(sid, -sellvolume[-1], style=LimitOrder(avgsellprice[-1]))
+                self.sell = True
+
+            sideband = {
+                "top%d_%s_buyvolume" % (toptid, tid): buyvolume[-1],
+                "top%d_%s_sellvolume" % (toptid, tid): sellvolume[-1],
+                "top%d_%s_avgbuyprice" % (toptid, tid): avgbuyprice[-1],
+                "top%d_%s_avgsellprice" % (toptid, tid): avgsellprice[-1]
+            }
+  
+            # save to recorder
+            signals = {
+                'open': open[-1],
+                'high': high[-1],
+                'low':  low[-1],
+                'close': close[-1],
+                'volume': volume[-1],
+                'buy': self.buy,
+                'sell': self.sell,
+            }
+
+            signals.update(sideband)
+            self.record(**signals)
 
 
 def run(opt='twse', debug=False, limit=0):
@@ -109,33 +137,41 @@ def run(opt='twse', debug=False, limit=0):
         try:
             # pre find traderid as top0
             kwargs = {
-                'debug': debug,
-                'opt': opt
+                'opt': opt,
+                'targets': ['trader'],
+                'starttime': starttime,
+                'endtime': endtime,
+                'stockids': [stockid],
+                'traderids': [],
+                'base': 'stock',
+                'order': [],
+                'callback': None,
+                'limit': 10,
+                'debug': True
             }
-            dbhandler = TwseHisDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcHisDBHandler(**kwargs)
-            args = (starttime, endtime, [stockid], [], 'stock', ['-totalvolume'], 10)
-            dbhandler.trader.query_raw(*args)
+            panel, dbhandler = collect_hisframe(**kwargs)
             tops = list(dbhandler.trader.get_alias([stockid], 'trader', ["top%d" %i for i in range(10)]))
             print "prefound:%s" %(tops)
             traderid = tops[0] if traderid not in tops else traderid
             # run
             kwargs = {
-                'debug': debug,
-                'opt': opt
+                'opt': opt,
+                'targets': ['stock', 'trader', 'future', 'credit'],
+                'starttime': starttime,
+                'endtime': endtime,
+                'stockids': [stockid],
+                'traderids': [traderid],
+                'base': 'trader',
+                'order': [],
+                'callback': None,
+                'limit': 10,
+                'debug': True
             }
-            dbhandler = TwseHisDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcHisDBHandler(**kwargs)
-            dbhandler.stock.ids = [stockid]
-            dbhandler.trader.ids = [traderid]
-            # group sub df to main df
-            args = (starttime, endtime, [stockid], [traderid], 'stock', ['-totalvolume'], 10, dbhandler.trader.to_pandas)
-            traderdt = dbhandler.trader.query_raw(*args)
-            args = (starttime, endtime, [stockid], 'stock', ['-totalvolume'], 10, dbhandler.stock.to_pandas)
-            stockdt = dbhandler.stock.query_raw(*args)
-            data = pd.concat([stockdt, traderdt], axis=2).fillna(0)
-            if len(data[stockid].index) < maxlen:
+            panel, dbhandler = collect_hisframe(**kwargs)
+            if len(panel[stockid].index) < maxlen:
                 continue
             besttrader = BestTraderAlgorithm(dbhandler=dbhandler, debug=debug)
-            results = besttrader.run(data).fillna(0)
+            results = besttrader.run(panel).fillna(0)
             report.collect(stockid, results)
             print "%s pass" %(stockid)
         except:
