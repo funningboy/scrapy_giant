@@ -7,7 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import time
 from datetime import datetime, timedelta
-from collections import deque
+from collections import deque, Counter
 
 from zipline.algorithm import TradingAlgorithm
 from zipline.utils.factory import *
@@ -29,10 +29,17 @@ class KmeansAlgorithm(TradingAlgorithm):
 
     def __init__(self, dbhandler, **kwargs):
         self._debug = kwargs.pop('debug', False)
-        self._buf_win = kwargs.pop('buf_win', 30)
-        self._samples = kwargs.pop('samples', 10)
-        self._trains =  kwargs('trains', 100)
+        self._buf_win = kwargs.pop('buf_win', 15)
+        self._buy_hold = kwargs.pop('buy_hold', 5)
+        self._sell_hold = kwargs.pop('sell_hold', 5)
+        self._buy_amount = kwargs.pop('buy_amount', 1000)
+        self._sell_amount = kwargs.pop('sell_amount', 1000)        
+        self._samples = kwargs.pop('samples', 500)
+        self._trains = kwargs.pop('trains', 10)
         self._tests = kwargs.pop('tests', 10)
+        self._trend_up = kwargs.pop('trend_up', True)
+        self._trend_down = kwargs.pop('trend_down', True)
+        self._score = kwargs.pop('score', 0.99)
         super(KmeansAlgorithm, self).__init__(**kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
@@ -41,7 +48,15 @@ class KmeansAlgorithm(TradingAlgorithm):
         self.window = deque(maxlen=self._buf_win)
         self.X = deque(maxlen=self._samples)
         self.Y = deque(maxlen=self._samples)
-        self.invested = False
+        self.trained = False
+        self.tested = False
+        self.match = False
+        self.invested_buy = False
+        self.invested_sell = False
+        self.buy = False
+        self.sell = False
+        self.buy_hold = 0
+        self.sell_hold = 0
 
     def _bench_k_means(self, estimator, name, data, labels):
         t0 = time.time()
@@ -59,16 +74,16 @@ class KmeansAlgorithm(TradingAlgorithm):
 
     def _classifier(self, data, labels):
         # cluster: 
-        self._bench_k_means(KMeans(init='k-means++', n_clusters=5, n_init=10),
+        self._bench_k_means(KMeans(init='k-means++', n_clusters=2, n_init=10),
                           name="k-means++", data=data, labels=labels)
 
-        self._bench_k_means(KMeans(init='random', n_clusters=5, n_init=10),
+        self._bench_k_means(KMeans(init='random', n_clusters=2, n_init=10),
                           name="random", data=data, labels=labels)
 
         # in this case the seeding of the centers is deterministic, hence we run the
         # kmeans algorithm only once with n_init=1
-        pca = PCA(n_components=5).fit(data)
-        self._bench_k_means(KMeans(init=pca.components_, n_clusters=5, n_init=1),
+        pca = PCA(n_components=2).fit(data)
+        self._bench_k_means(KMeans(init=pca.components_, n_clusters=2, n_init=1),
                       name="PCA-based", data=data, labels=labels)
         print(79 * '_')
 
@@ -76,7 +91,7 @@ class KmeansAlgorithm(TradingAlgorithm):
         # Visualize the results on PCA-reduced data
 
         reduced_data = PCA(n_components=2).fit_transform(data)
-        kmeans = KMeans(init='k-means++', n_clusters=5, n_init=10)
+        kmeans = KMeans(init='k-means++', n_clusters=2, n_init=10)
         kmeans.fit(reduced_data)
 
         # Step size of the mesh. Decrease to increase the quality of the VQ.
@@ -89,47 +104,75 @@ class KmeansAlgorithm(TradingAlgorithm):
 
         # Obtain labels for each point in mesh. Use last dataed model.
         Z = kmeans.predict(np.c_[xx.ravel(), yy.ravel()])
+        c = Counter(Z)
 
-        # Put the result into a color plot
-        Z = Z.reshape(xx.shape)
-        plt.figure(1)
-        plt.clf()
-        plt.imshow(Z, interpolation='nearest',
-                   extent=(xx.min(), xx.max(), yy.min(), yy.max()),
-                   cmap=plt.cm.Paired,
-                   aspect='auto', origin='lower')
+        if self._debug:
+            # Put the result into a color plot
+            Z = Z.reshape(xx.shape)
 
-        plt.plot(reduced_data[:, 0], reduced_data[:, 1], 'k.', markersize=2)
-        # Plot the centroids as a white X
-        centroids = kmeans.cluster_centers_
-        plt.scatter(centroids[:, 0], centroids[:, 1],
+            plt.figure(1)
+            plt.clf()
+            plt.imshow(Z, interpolation='nearest',
+                    extent=(xx.min(), xx.max(), yy.min(), yy.max()),
+                    cmap=plt.cm.Paired,
+                    aspect='auto', origin='lower')
+
+            plt.plot(reduced_data[:, 0], reduced_data[:, 1], 'k.', markersize=2)
+            # Plot the centroids as a white X
+            centroids = kmeans.cluster_centers_
+            plt.scatter(centroids[:, 0], centroids[:, 1],
                     marker='x', s=169, linewidths=3,
                     color='w', zorder=10)
-        plt.title('K-means clustering on the stock  dataset (PCA-reduced data)\n'
-                  'Centroids are marked with white cross')
-        plt.xlim(x_min, x_max)
-        plt.ylim(y_min, y_max)
-        plt.xticks(())
-        plt.yticks(())
-        plt.savefig("kmeans_%s.png" %(self.sids[0]))
-        #plt.show()
+            plt.title('K-means clustering on the stock  dataset (PCA-reduced data)\n'
+                    'Centroids are marked with white cross')
+            plt.xlim(x_min, x_max)
+            plt.ylim(y_min, y_max)
+            plt.xticks(())
+            plt.yticks(())
+            plt.savefig("kmeans_%s.png" %(self.sids[0]))
+            #plt.show()
+
+        if c[1] > c[0] * 1.5:
+            print "is too hot"
+            return 0
+        elif c[1] <= c[0] * 1.5 and c[1] > c[0] * 1.1:
+            print "trend up"
+            return 1
+        elif c[1] <= c[0] * 1.1 and c[1] >= c[0] * 0.9:
+            print "balance"
+        elif c[1] <= c[0] * 0.9 and c[1] >= c[0] * 0.5:
+            print "trend down"
+            return 0
+        elif c[1] < c[0] * 0.5:
+            print "is too cold"
+            return 1
 
     def handle_data(self, data):
-
         self.window.append((
+            data[self.sids[0]].open,
+            data[self.sids[0]].high,
+            data[self.sids[0]].low,
             data[self.sids[0]].close,
             data[self.sids[0]].volume
         ))
 
         if len(self.window) == self._buf_win:
-            close, volume = [np.array(i) for i in zip(*self.window)]
+            open, high, low, close, volume = [np.array(i) for i in zip(*self.window)]
             changes = np.diff(close) / close[1:]
+
+            # as train & target seqs
+            # ex up(1): [0, 0 , 0, ...1, 1], down(0): [1, 1, 1, .. 0, 0]
             self.X.append(changes[:-1])
             self.Y.append(changes[-1] > 0)
 
-        if len(self.X) == self._samples and len(self.Y) == self._samples:
-            self._classifier(data=np.array(list(self.X)), labels=np.array(list(self.Y)))
-            self.invested = True
+            # train
+            if not self.trained and not self.tested:
+                if len(self.Y) == self._trains and len(self.X) == self._trains:
+                    X, y = np.array(list(self.X)), np.array(list(self.Y))
+                    retval = self._classifier(X, y)
+            # test??
+
+  
 
 
 def run(opt='twse', debug=False, limit=0):

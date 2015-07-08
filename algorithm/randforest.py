@@ -12,11 +12,7 @@ from collections import deque
 
 from zipline.algorithm import TradingAlgorithm
 from zipline.utils.factory import *
-from zipline.transforms.ta import EMA
-from zipline.transforms.stddev import MovingStandardDev
-from zipline.transforms.mavg import MovingAverage
 
-from scipy.stats import randint as sp_randint
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.grid_search import GridSearchCV, RandomizedSearchCV
 
@@ -37,25 +33,23 @@ class RandForestAlgorithm(TradingAlgorithm):
 
     def __init__(self, dbhandler, *args, **kwargs):
         self._debug = kwargs.pop('debug', False)
-        self._buf_win = kwargs.pop('buf_win', 30)
+        self._buf_win = kwargs.pop('buf_win', 15)
         self._buy_hold = kwargs.pop('buy_hold', 5)
         self._sell_hold = kwargs.pop('sell_hold', 5)
         self._buy_amount = kwargs.pop('buy_amount', 1000)
         self._sell_amount = kwargs.pop('sell_amount', 1000)        
         self._samples = kwargs.pop('samples', 500)
-        self._trains = kwargs.pop('trains', 20)
-        self._tests = kwargs.pop('tests', 2)
+        self._trains = kwargs.pop('trains', 100)
+        self._tests = kwargs.pop('tests', 10)
         self._trend_up = kwargs.pop('trend_up', True)
         self._trend_down = kwargs.pop('trend_down', True)
-        self._score = kwargs.pop('score', 0.2)
+        self._score = kwargs.pop('score', 0.99)
         super(RandForestAlgorithm, self).__init__(*args, **kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
 
     def initialize(self):
         self.clf = RandomForestClassifier(n_estimators=20)
-        self.add_transform(MovingAverage, 'mavg', ['price', 'volume'], window_length=7)
-        self.add_transform(MovingStandardDev, 'stddev', window_length=7)
         self.window = deque(maxlen=self._buf_win)
         self.X = deque(maxlen=self._samples)
         self.Y = deque(maxlen=self._samples)
@@ -68,12 +62,8 @@ class RandForestAlgorithm(TradingAlgorithm):
         self.sell = False
         self.buy_hold = 0
         self.sell_hold = 0
-        self.finish = False
  
     def handle_data(self, data):
-        if self.finish:
-            return 
-
         self.window.append((
             data[self.sids[0]].open,
             data[self.sids[0]].high,
@@ -104,8 +94,8 @@ class RandForestAlgorithm(TradingAlgorithm):
             if self.trained and not self.tested:    
                 if len(self.Y) == self._tests and len(self.Y) == self._tests:
                     X, y = np.array(list(self.X)), np.array(list(self.Y))
-                    score = self.clf.score(X, y)
-                    print "predict score %.2f" %(score)
+                    score = self.clf.score(X, y).mean()
+                    print "predict score mean %.2f" %(score)
                     if score > self._score:
                         self.match = True
                     self.tested = True
@@ -125,12 +115,10 @@ class RandForestAlgorithm(TradingAlgorithm):
                             self.invested_buy = True
                             self.buy = True
                             self.buy_hold = self._buy_hold
-                            print i, "ddd"
                         elif self.invested_buy == True and self.buy_hold == 0:
                             self.order(self.sids[0], -self._buy_amount)
                             self.invested_buy = False
                             self.sell = True
-                            print i, "ccc"
 
                     # buy after sell
                     if self._trend_down:
@@ -144,6 +132,7 @@ class RandForestAlgorithm(TradingAlgorithm):
                             self.invested_sell = False
                             self.buy = True
 
+ 
                     # save to recorder
                     signals = {
                         'open': open[i],
@@ -155,31 +144,7 @@ class RandForestAlgorithm(TradingAlgorithm):
                         'sell': self.sell
                     }
                     self.record(**signals)
-                self.finish = True
-
-
-class RandForestAlgorithm2(TradingAlgorithm):
-    """
-    label samples : -2:(T(-1)>=1.03*T(0)), -1:(T(-1)<1.03*T(0)&&T(-1)>T(0)), 0:(T(-1)==T(0)), 1, 2
-    features : 1:T(1)>T(0) 0:T(1)=T(0) -1:
-    """
-
-    def __init__(self, dbhandler, **kwargs):
-        self._debug = kwargs.pop('debug', False)
-        self._buf_win = kwargs.pop('buf_win', 70)
-        super(RandForestAlgorithm, self).__init__(**kwargs)
-        self.dbhandler = dbhandler
-        self.sids = self.dbhandler.stock.ids
-
-    def _enocde(self, pre, cur):
-         ratio = pre.close/cur.close
-         if ratio >= 1.03: return -2
-         elif ratio < 1.03 and ratio >= 1.01: return -1
-         elif ratio <= 0.99 and ratio > 0.97: return 1
-         elif ratio < 0.97: return 2
-         else: return 0
-
-
+                return
 
 
 def run(opt='twse', debug=False, limit=0):

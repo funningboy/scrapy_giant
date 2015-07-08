@@ -92,7 +92,7 @@ class TwseAlgDBHandler(object):
         pass
 
     def insert_summary(self, df):
-        keys = [k for k,v in AlgSummaryColl._fields.iteritems() if k not in ['id']]
+        keys = [k for k,v in AlgSummaryColl._fields.iteritems() if k not in ['id', '_cls']]
         names = df.columns.values.tolist()
         for ix, cols in df.iterrows():
             cursor = self._sumycoll.objects(Q(date=cols['date']) &Q(bufwin=cols['bufwin']) & Q(stockid=ix))
@@ -104,7 +104,7 @@ class TwseAlgDBHandler(object):
     def to_detail(self, df):
         retval = []
         stockids = df.T.to_dict().keys()
-        keys = [k for k,v in AlgDetailColl._fields.iteritems() if k not in ['id']]
+        keys = [k for k,v in AlgDetailColl._fields.iteritems() if k not in ['id', '_cls']]
         for stockid in stockids:
             df = self._report.iter_report(stockid)    
             names = df.columns.values.tolist()

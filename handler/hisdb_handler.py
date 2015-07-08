@@ -150,7 +150,7 @@ class TwseStockHisDBHandler(object):
 
     def insert_raw(self, item):
         """ bulk update stock part """
-        keys = [k for k,v in StockData._fields.iteritems() if k not in ['id']]
+        keys = [k for k,v in StockData._fields.iteritems() if k not in ['id', '_cls']]
         for it in item:
             data = {k:v for k, v in it.items() if k in keys}
             data = StockData(**data)
@@ -292,7 +292,7 @@ class TwseTraderHisDBHandler(object):
 
     def insert_raw(self, item):
         """ bulk update trader part """
-        keys = [k for k,v in TraderData._fields.iteritems() if k not in ['id']]
+        keys = [k for k,v in TraderData._fields.iteritems() if k not in ['id', '_cls']]
         toplist = []
         for it in item['toplist']:
             data = {k:v for k, v in it['data'].items() if k in keys}
@@ -526,7 +526,7 @@ class TwseCreditHisDBHandler(object):
 
     def insert_raw(self, item):
         """ bulk update credit part """
-        keys = [k for k,v in CreditData._fields.iteritems() if k not in ['id']]
+        keys = [k for k,v in CreditData._fields.iteritems() if k not in ['id', '_cls']]
         for it in item:
             data = {k:v for k, v in it.items() if k in keys}
             data = CreditData(**data)
@@ -691,7 +691,7 @@ class TwseFutureHisDBHandler(object):
 
     def insert_raw(self, item):
         """ bulk update credit part """
-        keys = [k for k,v in FutureData._fields.iteritems() if k not in ['id']]
+        keys = [k for k,v in FutureData._fields.iteritems() if k not in ['id', '_cls']]
         for it in item:
             data = {k:v for k, v in it.items() if k in keys}
             data = FutureData(**data)

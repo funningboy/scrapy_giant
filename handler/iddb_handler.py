@@ -149,7 +149,7 @@ class StockIdDBHandler(object):
         pass
 
     def insert_raw(self, item):
-        keys = [k for k,v in StockIdColl._fields.iteritems() if k not in ['id']]
+        keys = [k for k,v in StockIdColl._fields.iteritems() if k not in ['id', '_cls']]
         for it in item:
             cursor = self._coll.objects(Q(stockid=it['stockid']))
             cursor = list(cursor)
@@ -220,7 +220,7 @@ class TraderIdDBHandler(object):
         pass
 
     def insert_raw(self, item):
-        keys = [k for k,v in TraderIdColl._fields.iteritems() if k not in ['id']]
+        keys = [k for k,v in TraderIdColl._fields.iteritems() if k not in ['id', '_cls']]
         for it in item:
             cursor = self._coll.objects(Q(traderid=it['traderid']))
             cursor = list(cursor)
