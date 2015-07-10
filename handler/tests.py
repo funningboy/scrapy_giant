@@ -12,6 +12,13 @@ from handler.tasks import *
 from bson import json_util
 import json
 
+# scrapy crawl twseid -s LOG_FILE=twseid.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG
+# scrapy crawl traderid -s LOG_FILE=traderid.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG
+# scrapy crawl twsehistrader2 -s LOG_FILE=twsehistrader2.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG
+# scrapy crawl twsehisstock -s LOG_FILE=twsehisstock.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG
+# scrapy crawl twsehiscredit -s LOG_FILE=twsehiscredit.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG
+# scrapy crawl twsehisfuture -s LOG_FILE=twsehisfuture.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG
+
 skip_tests = {
     'TestTwseHisItemQuery': False,
     'TestTwseHisFrameQuery': False
@@ -57,11 +64,41 @@ class TestTwseHisItemQuery(NoSQLTestCase):
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
 
     def test_on_credit(self):
-        pass
-
+        kwargs = {
+            'opt': 'twse',
+            'targets': ['credit'],
+            'starttime': datetime.utcnow() - timedelta(days=5),
+            'endtime': datetime.utcnow(),
+            'stockids': ['2317', '2330'],
+            'base': 'stock',
+            'order': ['+bearishused', '+financeused'],
+            'callback': None,
+            'limit': 1,
+            'debug': True
+        }
+        item = collect_hisitem.delay(**kwargs).get()
+        self.assertTrue(item)
+        self.assertTrue(item['credititem'])
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+    
     def test_on_future(self):
-        pass
-
+        kwargs = {
+            'opt': 'twse',
+            'targets': ['future'],
+            'starttime': datetime.utcnow() - timedelta(days=5),
+            'endtime': datetime.utcnow(),
+            'stockids': ['2317', '2330'],
+            'base': 'stock',
+            'order': ['-totalvolume', '-totaldiff'],
+            'callback': None,
+            'limit': 1,
+            'debug': True
+        }
+        item = collect_hisitem.delay(**kwargs).get()
+        self.assertTrue(item)
+        self.assertTrue(item['futureitem'])
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+    
     def test_on_all(self):
         kwargs = {
             'opt': 'twse',

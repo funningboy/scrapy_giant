@@ -58,5 +58,5 @@ class TwseHisFuturePipeline(BasePipeline):
         return item
 
     def _write_item(self, item):
-        pass
+        self._db.future.insert_raw(item)
  

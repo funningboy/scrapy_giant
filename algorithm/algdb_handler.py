@@ -95,7 +95,7 @@ class TwseAlgDBHandler(object):
         keys = [k for k,v in AlgSummaryColl._fields.iteritems() if k not in ['id', '_cls']]
         names = df.columns.values.tolist()
         for ix, cols in df.iterrows():
-            cursor = self._sumycoll.objects(Q(date=cols['date']) &Q(bufwin=cols['bufwin']) & Q(stockid=ix))
+            cursor = self._sumycoll.objects(Q(date=cols['date']) & Q(stockid=ix))
             coll = self._sumycoll() if len(cursor) == 0 else cursor[0]
             [setattr(coll, k, cols[k]) for k in names if k in keys]
             coll.stockid = ix

@@ -24,7 +24,7 @@ _mongod = os.environ.get('MONGOD', 'mongod')
 _debug = os.environ.get('DEBUG', False)
 _siteid = os.environ.get('SITE_ID', 1)
 
-#CELERY_IGNORE_RESULT = True
+CELERY_IGNORE_RESULT = True
 CELERY_DISABLE_RATE_LIMITS = True
 CELERY_TASK_RESULT_EXPIRES = 30 * 60
 CELERY_TIMEZONE = 'UTC'
@@ -39,9 +39,9 @@ CELERY_MONGODB_BACKEND_SETTINGS = {
 BROKER_URL = "amqp://guest:guest@%s:%d" % (_host, _amqport)
 BACKEND_URL = "mongodb://%s:%d" % (_host, _dbport)
 
-#CELERY_ACCEPT_CONTENT = ['json']
-#CELERY_TASK_SERIALIZER = 'json'
-#CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -291,17 +291,17 @@ CELERYBEAT_SCHEDULE = {
             _debug
         )
     },
-    'run_scrapy_service_twsehistrader': {
-        'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=0, hour='17,1'),
-        'args': (
-            'twsehistrader',
-            'INFO',
-            "./log/%s_%s.log" % ('twsehistrader', datetime.today().strftime("%Y%m%d_%H%M")),
-            True,
-            _debug
-        )
-    },
+    #'run_scrapy_service_twsehistrader': {
+    #    'task': 'bin.tasks.run_scrapy_service',
+    #    'schedule': crontab(minute=0, hour='17,1'),
+    #    'args': (
+    #        'twsehistrader',
+    #        'INFO',
+    #        "./log/%s_%s.log" % ('twsehistrader', datetime.today().strftime("%Y%m%d_%H%M")),
+    #        True,
+    #        _debug
+    #    )
+    #},
     'run_scrapy_service_twsehistrader2': {
         'task': 'bin.tasks.run_scrapy_service',
         'schedule': crontab(minute=0, hour='17,1'),
@@ -330,7 +330,7 @@ CELERYBEAT_SCHEDULE = {
         'args': (
             'twsehiscredit',
             'INFO',
-            "./log/%s_%s.log" % ('twsehisstock', datetime.today().strftime("%Y%m%d_%H%M")),
+            "./log/%s_%s.log" % ('twsehiscredit', datetime.today().strftime("%Y%m%d_%H%M")),
             True,
             _debug
         )
@@ -346,17 +346,17 @@ CELERYBEAT_SCHEDULE = {
             _debug
             )
     },
-    'run_scrapy_service_otchistrader': {
-        'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=0, hour='17,1'),
-        'args': (
-            'otchistrader',
-            'INFO',
-            "./log/%s_%s.log" % ('otchistrader', datetime.today().strftime("%Y%m%d_%H%M")),
-            True,
-            _debug
-        )
-    },
+    #'run_scrapy_service_otchistrader': {
+    #    'task': 'bin.tasks.run_scrapy_service',
+    #    'schedule': crontab(minute=0, hour='17,1'),
+    #    'args': (
+    #        'otchistrader',
+    #        'INFO',
+    #        "./log/%s_%s.log" % ('otchistrader', datetime.today().strftime("%Y%m%d_%H%M")),
+    #        True,
+    #        _debug
+    #    )
+    #},
     'run_scrapy_service_otchistrader2': {
         'task': 'bin.tasks.run_scrapy_service',
         'schedule': crontab(minute=0, hour='17,1'),

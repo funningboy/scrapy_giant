@@ -105,6 +105,7 @@ class DAGWorker(nx.DiGraph, threading.Thread):
     def _create_record(self, node):
         rec = {
             'node': node,
+            'kwargs': self.node[node]['ptr']._kwargs,
             'retval': self.node[node]['ptr'].retval,
             'visited': self.node[node]['ptr'].visited,
             'runtime': round(self.node[node]['ptr'].runtime.timeit(), 2)

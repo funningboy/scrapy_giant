@@ -1,10 +1,10 @@
 {
     #notify/tasks.py
-    tasks: "collect_ntyitem",
+    task: "collect_ntyitem",
     kwargs: {
         opt: null,
         targets: ['gmail'],
-        starttime: "datetime.utcnow() - timedelta(days=15)",
+        starttime: "datetime.utcnow() - timedelta(days=1)",
         endtime: "datetime.utcnow()",
         stockids: [],
         traderids: [],

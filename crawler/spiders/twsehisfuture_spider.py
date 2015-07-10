@@ -25,7 +25,7 @@ class TwseHisFutureSpider(CrawlSpider):
     """ 59.120.135.101  www.taifex.com.tw """
     name = 'twsehisfuture'
     allowed_domains = ['59.120.135.101']
-    download_delay = 2
+    download_delay = 6
     _headers = [
         (u'交易日期', u'date'),
         (u'契約', u'contract'),
@@ -99,13 +99,14 @@ class TwseHisFutureSpider(CrawlSpider):
         log.msg("URL: %s" % (response.url), level=log.DEBUG)
         sel = Selector(response)
         elems = sel.xpath('.//*[@id="commodity_id2t"]/option')
+
         # skip 請選擇, 全部
         for elem in elems[2:]:
             contract = elem.xpath('./text()').extract()[0].replace(u'\u3000', u'').replace(u' ', u'')
             identify = elem.xpath('./@value').extract()[0]
             m = re.search(r'([0-9a-zA-Z]{4,6})(\W+)\((\w+)\)', contract)
             if m:
-                stockid = m.groups()[0]
+                stockid = m.group(1)
                 if self._id.stock.has_id(stockid):
                     # skip DU1, DHS first contract token
                     self._table.update({ stockid: identify.split(',')[-1]})

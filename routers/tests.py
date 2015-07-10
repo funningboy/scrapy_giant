@@ -15,7 +15,10 @@ skip_tests = {
 class TestLoaderStrategy(NoSQLTestCase):
 
     _paths = [
-        'routers/table/TestStockProfile.yaml',
+        # chain profile test
+        'routers/table/TestStockProfile0.yaml',
+        # parallel profile test
+        #'routers/table/TestStockProfile1.yaml',
         'routers/table/TestTraderProfile.yaml',
         'routers/table/TestExcAlgDualema.yaml',
         'routers/table/TestExcRptDualema.yaml'
@@ -43,7 +46,7 @@ class TestLoaderStrategy(NoSQLTestCase):
             for node in nodes:
                 self.assertTrue(node['visited'] == 1)
                 # how to handle None
-                #self.assertTrue(node['retval'])
+                self.assertTrue(node['retval'])
                 self.assertTrue(node['runtime'] <= 10)
             del G
 

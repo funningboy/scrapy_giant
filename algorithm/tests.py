@@ -69,7 +69,7 @@ class TestTwseDualemaAlg(NoSQLTestCase):
             'targets': ['dualema'],
             'starttime': starttime,
             'endtime': endtime,
-            'base': 'stcok',
+            'base': 'stock',
             'stockids': ['2317', '2330', '1314'],
             'order': ['-totalportfolio', '-totalbuys', '-totalsells'],
             'limit': 1,

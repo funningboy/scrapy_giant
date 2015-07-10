@@ -1,6 +1,6 @@
 {
     #notify/tasks.py
-    tasks: "collect_ntyitem",
+    task: "collect_ntyitem",
     kwargs: {
         opt: null,
         targets: ['gmail', 'line'],

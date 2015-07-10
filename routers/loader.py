@@ -119,6 +119,7 @@ class Loader(object):
                 task = eval(node['task'])
                 n = Node(func=task, kwargs=node['kwargs'])
                 graph.add_node(i, {'ptr': n})
+                #??? why
                 graph.node[i]['ptr'].run()
             except:
                 print "create graph.node %d fail" %(i)

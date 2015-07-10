@@ -7,7 +7,7 @@ from workers.worker import DAGWorker
 class GWorker(DAGWorker):
 
     _hisitems = [
-        'stcokitem',
+        'stockitem',
         'traderitem',
         'credititem',
         'futureitem'
@@ -38,21 +38,21 @@ class GWorker(DAGWorker):
                 for it in self._populate_items():
                     it(item, kwargs)
 
-        self.node[node]['ptr']._kwargs = kwargs
+        self.node[node]['ptr'].update_kwargs(kwargs=kwargs)
 
-    def _populate_hisitem(self, item, kwargs):
+    def _populate_hisitem(self, item, kwargs):  
         for name in self._hisitems:
             if name in item:
                 if isinstance(item[name], list):
-                    stockids = [i['stockid'] for i in item[name] if i['stockid']]
+                    stockids = [i['stockid'].encode('utf-8') for i in item[name] if i['stockid']]
                     kwargs['stockids'] += stockids
                     kwargs['stockids'] = list(set(kwargs['stockids']))
 
                     if name in ['traderitem']:
-                        traderids = [i['traderid'] for i in item[name] if i['traderid']]
+                        traderids = [i['traderid'].encode('utf-8') for i in item[name] if i['traderid']]
                         kwargs['traderids'] += traderids
                         kwargs['traderids'] = list(set(kwargs['traderids']))
-         
+ 
     def _populate_algitem(self, item, kwargs):
         for name in self._algitems:
             if name in item:

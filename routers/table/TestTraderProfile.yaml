@@ -12,7 +12,7 @@ Nodes:
             kwargs = {
                 "opt": "twse",
                 "targets": ["trader"],
-                "starttime": "datetime.utcnow() - timedelta(days=15)",
+                "starttime": "datetime.utcnow() - timedelta(days=5)",
                 "endtime": "datetime.utcnow()",
                 "stockids": ["2317", "2330", "1314"],
                 "traderids": [],
@@ -27,7 +27,7 @@ Nodes:
             kwargs = {
                 "opt": "twse",
                 "targets": ["trader"],
-                "starttime": "datetime.utcnow() - timedelta(days=15)",
+                "starttime": "datetime.utcnow() - timedelta(days=5)",
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
                 "traderids": [],
@@ -42,7 +42,7 @@ Nodes:
             kwargs = {
                 "opt": "twse",
                 "targets": ["stock", "credit", "futute", "trader"],
-                "starttime": "datetime.utcnow() - timedelta(days=15)",
+                "starttime": "datetime.utcnow() - timedelta(days=5)",
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
                 "traderids": [],

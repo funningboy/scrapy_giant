@@ -18,7 +18,7 @@ class Node(object):
         if not isinstance(self._func, celery.local.Proxy):
             print "func ptr should been registered at celery tasks list"
 
-    def update_kargs(args=(), kwargs={}):
+    def update_kwargs(self, args=(), kwargs={}):
         self._args = args
         self._kwargs = kwargs
 

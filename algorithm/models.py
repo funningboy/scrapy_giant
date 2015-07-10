@@ -4,7 +4,6 @@ from datetime import datetime
 from mongoengine import *
 
 class AlgSummaryColl(Document):
-    bufwin = IntField(min_value=2, max_value=150)
     date = DateTimeField(default=datetime.utcnow())
     stockid = StringField()
     traderid = StringField()
