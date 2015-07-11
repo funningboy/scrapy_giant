@@ -86,7 +86,7 @@ class TwseHisCreditSpider(CrawlSpider):
         yield item
 
     def parse_after_csv_find(self, response):
-        """
+        """ not utf-8 format...
         data struct
         [
             {

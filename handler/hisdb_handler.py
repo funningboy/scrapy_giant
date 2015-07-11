@@ -712,7 +712,7 @@ class TwseFutureHisDBHandler(object):
         """
         map_f = """
             function () {
-                try {
+                try {    
                     var key =  { stockid : this.stockid };
                     var diff = this.future.high - this.future.low;
                     var value = {

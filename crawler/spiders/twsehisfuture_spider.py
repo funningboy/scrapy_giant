@@ -116,7 +116,7 @@ class TwseHisFutureSpider(CrawlSpider):
         
         # request after contract find
         URL = 'http://59.120.135.101/chinese/3/3_1_2dl.asp'
-        sdate = datetime.utcnow() - timedelta(days=0)
+        sdate = datetime.utcnow() - timedelta(days=5)
         edate = datetime.utcnow()
         datestart = "%d/%02d/%02d" %(sdate.year, sdate.month, sdate.day)
         dateend = "%d/%02d/%02d" %(edate.year, edate.month, edate.day)
@@ -174,7 +174,7 @@ class TwseHisFutureSpider(CrawlSpider):
         item['url'] = response.url
         item['data'] = []
         edate = datetime.utcnow()
-        # 期貨結算日 ?
+        # todo 期貨結算日 ?
         c = calendar.monthcalendar(edate.year, edate.month)
         edate0 = "%d%02d" %(edate.year, edate.month)
         eyear = edate.year + 1 if edate.year == 12 else edate.year
@@ -187,34 +187,38 @@ class TwseHisFutureSpider(CrawlSpider):
             if frame.empty:
                 log.msg("fetch %s empty" %('all'), log.INFO)
                 return
+            frame.to_csv("ee.csv")
         except:
             log.msg("fetch %s fail" %('all'), log.INFO)
             return
         for k, v in self._table.items():
-            # 1:契約,2:到期月份(週別)
-            pool = frame[frame[1] == v]
-            if not pool.empty:
-                for ix, cols in pool.iterrows():
-                    sub = {
-                        'date': cols[0].replace('/', '-'),
-                        'stockid': k,
-                        'open': cols[3],
-                        'high': cols[4], 
-                        'low': cols[5],
-                        'close': cols[6],
-                        'volume': cols[9],
-                        'setprice': cols[10],
-                        'untrdcount': cols[11],
-                        'bestbuy': cols[12],
-                        'bestsell': cols[13]
-                    }
-                    item['data'].append(sub)
-                    break
+            # skip 1:契約,2:到期月份(週別)
+            try:
+                pool = frame[frame[1] == v]
+                visit = []
+                if not pool.empty:
+                    for ix, cols in pool.iterrows():
+                        date = cols[0].replace('/', '-')
+                        if date in visit:
+                            continue
+                        else:
+                            visit.append(date)
+                        sub = {
+                            'date': date,
+                            'stockid': k,
+                            'open': cols[3],
+                            'high': cols[4], 
+                            'low': cols[5],
+                            'close': cols[6],
+                            'volume': cols[9],
+                            'setprice': cols[10],
+                            'untrdcount': cols[11],
+                            'bestbuy': cols[12],
+                            'bestsell': cols[13]
+                        }
+                        item['data'].append(sub)
+            except:
+                print "skip %s/%s contract" %(k, v)
+                pass
         log.msg("item[0] %s ..." % (item['data'][0]), level=log.DEBUG)
         yield item
-
-
-
-
-  
-  

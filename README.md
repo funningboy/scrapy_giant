@@ -2,6 +2,13 @@ https://github.com/terryh/autotrader
 https://www.quantopian.com/help#api-doco
 http://docs.mongodb.org/manual/tutorial/write-a-tumblelog-application-with-django-mongodb-engine/
 https://hshah19.wordpress.com/2013/08/23/setting-up-celery-for-django-using-django-celery-rabbitmq-supervisor-and-monit/
+
+vnc
+https://www.howtoforge.com/how-to-install-vnc-server-on-ubuntu-14.04
+
+openvpn
+https://www.digitalocean.com/community/tutorials/how-to-set-up-an-openvpn-server-on-ubuntu-14-04
+
 ii
 Mac OS setup flow
 0.1 #install anaconda python
