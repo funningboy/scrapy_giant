@@ -17,6 +17,7 @@ https://store.continuum.io/cshop/anaconda/
 0.2 install external conda libs
 ```
 conda install opencv
+conda install gunicorn
 ```
 0.3 install external python pkgs
 ```
@@ -38,6 +39,7 @@ conda install -c Quantopian zipline
 0.3 install drive libs
 ```
 apt-get install rabbitmq-server
+apt-get install nginx
 ```
 0.3.1 install 3path libs
 ```
@@ -87,6 +89,7 @@ ps aux | grep celery | awk '{print $2}' | xargs kill -9
 celeryctl purge
 >>> from celery.task.control import discard_all
 >>> discard_all()
+lsof -i tcp | grep LISTEN
 mongod --dbpath ./tmp --journal
 export DJANGO_SETTINGS_MODULE=giant.settings 
 export DJANGO_PROJECT_DIR=`pwd`
@@ -100,6 +103,11 @@ python manage.py syncdb
 python manage.py shell
 celery scheduler
 scrapy crawl twsehisstock -s LOG_FILE=twsehisstock.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG
+sudo ln -s /etc/nginx/sites-available/lunch /etc/nginx/sites-enabled
+sudo rm /etc/nginx/sites-enabled/default
+sudo service nginx restart
+sudo nginx -t
+sudo fuser -k 80/tcp
 ```
 
 0.6 as django unittest run
@@ -109,6 +117,10 @@ nosetests --nocapture test/test_start.py
 nosetests --nocapture test/test_... 
 python manage.py test bin --traceback
 python manage.py test handler algorithm --traceback
+
+sudo service supervisor start
+sudo /root/anaconda/bin/supervisorctl -c /etc/supervisor/supervisord.conf
+sudo service supervisor stop
 ```
 
 ref:

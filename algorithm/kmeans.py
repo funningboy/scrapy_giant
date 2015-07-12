@@ -133,18 +133,18 @@ class KmeansAlgorithm(TradingAlgorithm):
             #plt.show()
 
         if c[1] > c[0] * 1.5:
-            print "is too hot"
+            print "market is too hot"
             return 0
         elif c[1] <= c[0] * 1.5 and c[1] > c[0] * 1.1:
-            print "trend up"
+            print "maket trend is up"
             return 1
         elif c[1] <= c[0] * 1.1 and c[1] >= c[0] * 0.9:
-            print "balance"
+            print "market is in balance"
         elif c[1] <= c[0] * 0.9 and c[1] >= c[0] * 0.5:
-            print "trend down"
+            print "market trend is down"
             return 0
         elif c[1] < c[0] * 0.5:
-            print "is too cold"
+            print "market is too cold"
             return 1
 
     def handle_data(self, data):
@@ -170,9 +170,43 @@ class KmeansAlgorithm(TradingAlgorithm):
                 if len(self.Y) == self._trains and len(self.X) == self._trains:
                     X, y = np.array(list(self.X)), np.array(list(self.Y))
                     retval = self._classifier(X, y)
-            # test??
 
-  
+                    if retval == 1:
+                        if self.invested_buy:
+                            self.order(self.sids[0], sell._buy_amount)
+                            self.invested_buy = True
+                            self.buy = True
+                            self.buy_hold = self._buy_hold 
+                        elif self.invested_buy == True and self.buy_hold == 0:
+                            self.order(self.sids[0], -self._buy_amount)
+                            self.invested_buy = False
+                            self.sell = True
+
+                    # buy after sell
+                    if retval == 0:
+                        if self.invested_sell:
+                            self.order(self.sids[0], -self._sell_amount)
+                            self.invested_sell = True
+                            self.sell = True
+                            self.sell_hold = self._sell_hold
+                        elif self.invested_sell == True  and self.sell_hold == 0:
+                            self.order(self.sids[0], self._sell_amount)
+                            self.invested_sell = False
+                            self.buy = True
+
+                    # save to recorder
+                    signals = {
+                        'open': open[-1],
+                        'high': high[-1],
+                        'low': low[-1],
+                        'close': close[-1],
+                        'volume': volume[-1],
+                        'buy': self.buy,
+                        'sell': self.sell
+                    }
+                    self.record(**signals)
+
+            # test??
 
 
 def run(opt='twse', debug=False, limit=0):

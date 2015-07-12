@@ -29,7 +29,7 @@ def create_search(request):
     if 'method' in request.GET and request.GET['method']:
         method = request.GET['method']
 
-    kwargs = {
+    collect = {
         'starttime': starttime,
         'endtime': endtime,
         'stockids': stockids,
@@ -40,8 +40,7 @@ def create_search(request):
         'debug': settings.DEBUG
     }
     
-    return create_hiscollect(**kwargs)
+    return collect
 
 def create_portfolio(request):
-    kwargs = {}
-    return create_hiscollect(**kwargs)
+    pass

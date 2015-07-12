@@ -24,12 +24,12 @@ class kdtKnnAlgorithm(TradingAlgorithm):
          https://github.com/QuantSoftware/QuantSoftwareToolkit/blob/master/QSTK/qstklearn/kdtknn.py
     """
 
-    def __init__(self, dbhandler, *args, **kwargs):
+    def __init__(self, dbhandler, **kwargs):
         super(KdtKnnAlgorithm, self).__init__(*args, **kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
-        self.leafsize = int(kwargs.pop('leafsize')) or 10
-        self.k = int(kwargs.pop('k')) or 3
+        self.dbhandler.credit.ids
+        self.dbhandler.future.ids
 
     def initialize(self):
 
