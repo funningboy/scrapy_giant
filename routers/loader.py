@@ -9,6 +9,7 @@ import gevent
 import networkx as nx
 import time
 import os
+import random
 from datetime import datetime, timedelta
 from workers.gworker import GWorker
 from workers.nodes import Node
@@ -135,11 +136,13 @@ class Loader(object):
                 raise
 
     def _add_edge(self, graph, u, v, weight=1):
-        if (u,v) not in graph.edges():
+        if edge not in graph.edges():
+            u, v = edge
             graph.add_edge(u, v, weight)
 
     def _delete_edge(self, graph, u, v):
-        if (u,v) in graph.edges():
+        if edge in graph.edges():
+            u, v = edge
             graph.remove_edge(u, v)
     
     def _valid_graph(self, stream, graph):
@@ -149,7 +152,6 @@ class Loader(object):
             raise
   
     def _set_start_to_run(self, stream, graph):
-        starts = nx.topological_sort(graph)
-        for i in starts:
-            if not nx.ancestors(graph, i):
-                graph.set_start_to_run(i)
+        for node in nx.topological_sort(graph):
+            if not nx.ancestors(graph, node):
+                graph.set_start_to_run(node)

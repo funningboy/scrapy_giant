@@ -1,5 +1,5 @@
 {
-    # handler/taks.py
+    # handler/taks.py hisfuture rand
     task: "collect_hisitem",
     kwargs: {
         opt: null,
@@ -8,9 +8,9 @@
         endtime: "datetime.utcnow()",
         stockids: [],
         base: 'stock',
-        order: ['-totalvolume', '-totaldiff'],
+        order: "random.sample(['-totalvolume', '-totaldiff', '+totalvolume', '+totaldiff'], random.randint(1,4))",
         callback: null,
-        limit: 100,
+        limit: "random.randint(100, 500)",
         debug: False
     },
     description: 'find best buy stockids based on future collected constraint during this time period set'
