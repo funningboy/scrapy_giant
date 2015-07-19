@@ -1,5 +1,5 @@
 {
-    # handler/tasks.py
+    # handler/tasks.py hisstock rand
     task: "collect_hisitem",
     kwargs: {
         opt: null,
@@ -8,9 +8,9 @@
         endtime: "datetime.utcnow()",
         stockids: [],
         base: 'stock',
-        order: ['-totalvolume', '-totaldiff'],
+        order: "random.sample([''.join(i) for i in list(itertools.product(['+','-'],['totalvolume','totaldiff']))], random.randint(1,4))",
         callback: null,
-        limit: 100,
+        limit: "random.randint(100, 200)",
         debug: False
     },
     description: 'find best buy stockids based on stock collected constraint during this time period set'

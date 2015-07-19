@@ -8,16 +8,14 @@
         endtime: datetime.utcnow(),
         stockids: [],
         traderids: [],
-        order: "['-buys', '-sells', '-portfolio_value']",
+        order: "random.sample([''.join(i) for i in list(itertools.product(['+','-'],['buy','sell','portfolio_value']))], random.randint(1,6))",
         callback: null,
-        limit: 100,
+        limit: "random.randint(100, 200)",
         debug: False,
         cfg: {
             buf_win: 30,
             short_ema_win: 20,
-            long_ema_win: 40,
-            buy_amount: 100,
-            sell_amount: 100
+            long_ema_win: 40
         }
     },
     description: "DualEMAAlgorithm.__class__.__doc__"

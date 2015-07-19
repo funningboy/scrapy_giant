@@ -187,7 +187,6 @@ class TwseHisFutureSpider(CrawlSpider):
             if frame.empty:
                 log.msg("fetch %s empty" %('all'), log.INFO)
                 return
-            frame.to_csv("ee.csv")
         except:
             log.msg("fetch %s fail" %('all'), log.INFO)
             return

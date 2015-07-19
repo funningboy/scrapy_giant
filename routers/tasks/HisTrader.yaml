@@ -1,5 +1,5 @@
 {
-    # handler/tasks.py
+    # handler/tasks.py histrader rand
     task: "collect_hisitem",
     kwargs: {
         opt: null,
@@ -9,9 +9,9 @@
         stockids: [],
         traderids: [],
         base: 'stock',
-        order: ['-totalvolume', '-totalbuyvolume', '+totalsellvolume'],
+        order: "random.sample([''.join(i) for i in list(itertools.product(['+','-'],['totalvolume','totalbuyvolume', 'totalsellvolume']))], random.randint(1,6))",
         callback: null,
-        limit: 100,
+        limit: "random.randint(100, 200)",
         debug: False
         },
     description: 'find best buy stockids based on trader collected constraint during this time period set'

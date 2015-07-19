@@ -10,6 +10,7 @@ import networkx as nx
 import time
 import os
 import random
+import itertools
 from datetime import datetime, timedelta
 from workers.gworker import GWorker
 from workers.nodes import Node

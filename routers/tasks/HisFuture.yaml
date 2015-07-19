@@ -1,16 +1,16 @@
 {
-    # handler/taks.py hisfuture rand
+    # handler/tasks.py hisfuture rand
     task: "collect_hisitem",
     kwargs: {
         opt: null,
         targets: ['future'],
-        starttime: "datetime.utcnow() - timedelta(days=10)",
+        starttime: "datetime.utcnow() - timedelta(days=random.randint(2,10))",
         endtime: "datetime.utcnow()",
         stockids: [],
         base: 'stock',
-        order: "random.sample(['-totalvolume', '-totaldiff', '+totalvolume', '+totaldiff'], random.randint(1,4))",
+        order: "random.sample([''.join(i) for i in list(itertools.product(['+','-'],['totalvolume','totaldiff']))], random.randint(1,4))",
         callback: null,
-        limit: "random.randint(100, 500)",
+        limit: "random.randint(100, 200)",
         debug: False
     },
     description: 'find best buy stockids based on future collected constraint during this time period set'

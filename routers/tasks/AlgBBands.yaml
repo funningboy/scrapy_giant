@@ -1,4 +1,5 @@
 {
+    # algorithm/tasks.py algbbands rand
     task: "run_algitem",
     kwargs: {
         opt: null,
@@ -7,8 +8,8 @@
         endtime: "datetime.utcnow()",
         stockids: [],
         traderids: [],
-        order: ['-buys', '-sells', '-portfolio_value'],
-        limit: 100,
+        order: "random.sample([''.join(i) for i in list(itertools.product(['+','-'],['buy','sell','portfolio_value']))], random.randint(1,6))",
+        limit: "random.randint(100, 200)",
         debug: False,
         cfg: {
             buf_win: 30

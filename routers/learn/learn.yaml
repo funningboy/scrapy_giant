@@ -1,0 +1,52 @@
+#[learn]
+opt: 'twse'
+Nodes: "random.randint(5,8)"
+Edges: "random.randint(4,5)"
+fromtime: "datetime.date(2014,1,1)"
+totime: "datetime.date(2015,6,1)"
+sample: 1
+
+# at start Node(task) constraint 
+start_tasks: 
+	[
+        'Loader.parse_task(
+            "./routers/tasks/HisStock.yaml", 
+            kwargs = {
+                "opt": "twse",
+                "targets": ["stock"],
+                "starttime": "datetime.",
+                "endtime": "datetime.",
+                "stockids": "[i for i in iddb_tasks[\"twse\"]().stock.get_ids()]",
+                "base": "stock",
+                "order": ["-totalvolume"],
+                "limit": 1000
+            }
+        )'
+	]
+
+middle_tasks: 
+	[]
+
+end_tasks:
+	[
+        'Loader.parse_task(
+            "./routers/tasks/AlgDualema.yaml",
+            kwargs = {
+                "opt": "twse",
+                "targets": ["dualema"],
+                "starttime": "datetime.utcnow() - timedelta(days=150)",
+                "endtime": "datetime.utcnow()",
+                "stockids": [],
+                "order": ["-buys", "-sells", "-portfolio_value"],
+                "callback": "insert_summary",
+                "limit": 3,
+                "debug": True,
+                "cfg": {
+                    "buf_win": 30,
+                    "short_ema_win": 20,
+                    "long_ema_win": 40
+                }
+            }
+        )'
+	]
+

@@ -17,13 +17,13 @@ class TestLoaderStrategy(NoSQLTestCase):
 
     _paths = [
         'routers/table/TestStockProfile0.yaml',
-        #'routers/table/TestStockProfile1.yaml',
-        #'routers/table/TestTraderProfile0.yaml',
-        #'routers/table/TestTraderProfile1.yaml',
-        #'routers/table/TestExcAlgDualema.yaml',
-        #'routers/table/TestExcRptDualema.yaml',
-        #'routers/table/ExcAlgDualema.yaml',
-        #'routers/table/ExcRptDualema.yaml',
+        'routers/table/TestStockProfile1.yaml',
+        'routers/table/TestTraderProfile0.yaml',
+        'routers/table/TestTraderProfile1.yaml',
+        'routers/table/TestExcAlgDualema.yaml',
+        'routers/table/TestExcRptDualema.yaml',
+        'routers/table/ExcAlgDualema.yaml',
+        'routers/table/ExcRptDualema.yaml',
         #'routers/table/TestNtyAll.yaml'
     ]
 
@@ -50,6 +50,7 @@ class TestLoaderStrategy(NoSQLTestCase):
             for node in nodes:
                 self.assertTrue(node['visited'] == 1)
                 # how to handle None
+                print node['kwargs']
                 self.assertTrue(node['kwargs'])
                 self.assertTrue(node['retval'])
                 self.assertTrue(node['runtime'] <= 100)

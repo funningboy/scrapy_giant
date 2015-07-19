@@ -27,7 +27,7 @@ _siteid = os.environ.get('SITE_ID', 1)
 #CELERY_IGNORE_RESULT = True
 #CELERY_DISABLE_RATE_LIMITS = True
 #CELERY_TASK_RESULT_EXPIRES = 30 * 60
-CELERY_TIMEZONE = 'UTC'
+CELERY_TIMEZONE = 'Asia/Taipei'
 CELERY_RESULT_BACKEND = 'mongodb'
 CELERY_MONGODB_BACKEND_SETTINGS = {
     'host': _host,
@@ -275,7 +275,7 @@ CELERYBEAT_SCHEDULE = {
         'args': (
             'twseid',
             'INFO',
-            "./log/%s_%s.log" % ('twseid', datetime.today().strftime("%Y%m%d_%H%M")),
+            "./log/twseid.log",
             True,
             _debug
         )
@@ -286,7 +286,18 @@ CELERYBEAT_SCHEDULE = {
         'args': (
             'otcid',
             'INFO',
-            "./log/%s_%s.log" % ('otcid', datetime.today().strftime("%Y%m%d_%H%M")),
+            "./log/otcid.log",
+            True,
+            _debug
+        )
+    },
+    'run_scrapy_service_traderid': {
+        'task': 'bin.tasks.run_scrapy_service',
+        'schedule': crontab(minute=0, hour='8,14'),
+        'args': (
+            'traderid',
+            'INFO',
+            "./log/traderid.log",
             True,
             _debug
         )
@@ -297,7 +308,7 @@ CELERYBEAT_SCHEDULE = {
     #    'args': (
     #        'twsehistrader',
     #        'INFO',
-    #        "./log/%s_%s.log" % ('twsehistrader', datetime.today().strftime("%Y%m%d_%H%M")),
+    #        "./log/twsehistrader.log",
     #        True,
     #        _debug
     #    )
@@ -308,7 +319,7 @@ CELERYBEAT_SCHEDULE = {
         'args': (
             'twsehistrader2',
             'INFO',
-            "./log/%s_%s.log" % ('twsehistrader2', datetime.today().strftime("%Y%m%d_%H%M")),
+            "./log/twsehistrader2.log",
             True,
             _debug
         )
@@ -319,7 +330,7 @@ CELERYBEAT_SCHEDULE = {
         'args': (
             'twsehisstock',
             'INFO',
-            "./log/%s_%s.log" % ('twsehisstock', datetime.today().strftime("%Y%m%d_%H%M")),
+            "./log/twsehisstock.log",
             True,
             _debug
         )
@@ -330,7 +341,7 @@ CELERYBEAT_SCHEDULE = {
         'args': (
             'twsehiscredit',
             'INFO',
-            "./log/%s_%s.log" % ('twsehiscredit', datetime.today().strftime("%Y%m%d_%H%M")),
+            "./log/twsehiscredit.log",
             True,
             _debug
         )
@@ -341,7 +352,7 @@ CELERYBEAT_SCHEDULE = {
         'args': (
             'twsehisfuture',
             'INFO',
-            "./log/%s_%s.log" %('twsehisfuture', datetime.today().strftime("%Y%m%d_%H%M")),
+            "./log/twsehisfuture.log",
             True,
             _debug
             )
@@ -352,7 +363,7 @@ CELERYBEAT_SCHEDULE = {
     #    'args': (
     #        'otchistrader',
     #        'INFO',
-    #        "./log/%s_%s.log" % ('otchistrader', datetime.today().strftime("%Y%m%d_%H%M")),
+    #        "./log/otchistrader.log",
     #        True,
     #        _debug
     #    )
@@ -363,7 +374,7 @@ CELERYBEAT_SCHEDULE = {
         'args': (
             'otchistrader2',
             'INFO',
-            "./log/%s_%s.log" % ('otchistrader2', datetime.today().strftime("%Y%m%d_%H%M")),
+            "./log/otchistrader2.log",
             True,
             _debug
         )
@@ -374,7 +385,7 @@ CELERYBEAT_SCHEDULE = {
         'args': (
             'otchisstock',
             'INFO',
-            "./log/%s_%s.log" % ('otchisstock', datetime.today().strftime("%Y%m%d_%H%M")),
+            "./log/otchisstock.log",
             True,
             _debug
         )
@@ -385,7 +396,7 @@ CELERYBEAT_SCHEDULE = {
         'args': (
             'otchiscredit',
             'INFO',
-            "./log/%s_%s.log" %('otchiscredit', datetime.today().strftime("%Y%m%d_%H%M")),
+            "./log/otchiscredit.log",
             True,
             _debug
         )
@@ -396,7 +407,7 @@ CELERYBEAT_SCHEDULE = {
         'args': (
             'otchisfuture',
             'INFO',
-            "./log/%s_%s.log" %('otchisfuture', datetime.today().strftime("%Y%m%d_%H%M")),
+            "./log/otchisfuture.log",
             True,
             _debug
             )
