@@ -63,39 +63,19 @@ class TestLoaderStrategy(NoSQLTestCase):
 @unittest.skipIf(skip_tests['TestGeneratorRandom'], "skip")
 class TestGeneratorRandom(NoSQLTestCase):
 
+    _paths = [
+        'routers/learn/TestLearn0.yaml'
+    ]
+
     def setUp(self):
         self._graphs = []
 
     def test_on_run(self):
-        for i in range(3):
-            # regresion
-            #   constrain
-            #kwargs = {
-            #    ''
-            #}
-            self._gentor = Generator(**kwargs)
-            #constrain = 
-            G = self._gentor.create_random_graph(constrain)
-            self.assertTrue(G)
-            G.start()
-            self._graphs.append(G)
-
-        for G in self._graphs:
-            while True:
-                if not G.isAlive():
-                    break
-            G.join()
-            
-            self.assertTrue(G.record)
-            nodes = sorted(G.record, key=lambda x: x['node'])
-            print nodes
-            for node in nodes:
-                self.assertTrue(node['visited'] == 1)
-                # how to handle None
-                print node['node']
-                print node['kwargs']
-                print node['retval']
-            del G
-
+        for path in self._paths:
+            cst = constraint.load(path)
+            print cst
+            self._gntor = Generator(cst, debug=True)
+            self._gntor.run()
+   
     def tearDown(self):
-        del self._gentor
+        del self._gntor

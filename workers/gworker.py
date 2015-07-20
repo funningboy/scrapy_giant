@@ -38,7 +38,7 @@ class GWorker(DAGWorker):
                 for it in self._populate_items():
                     it(item, kwargs)
 
-        self.node[node]['ptr'].update_kwargs(kwargs=kwargs)
+        self.node[node]['ptr'].kwargs.update(kwargs)
 
     def _populate_hisitem(self, item, kwargs):  
         for name in self._hisitems:

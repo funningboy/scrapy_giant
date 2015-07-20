@@ -3,6 +3,7 @@
 import networkx as nx
 import random
 import itertools
+import time
 from datetime import datetime, timedelta
 from routers.loader import Loader
 from workers.nodes import Node
@@ -12,21 +13,23 @@ from algorithm.tasks import *
 
 class Constraint(object):
 
-    def __init__(self):
-        pass
-
-    def _parse_kwargs_all(self):
+    @classmethod
+    def _parse_kwargs_all(cls):
         methods = [
-            (self._parse_kwargs, 'opt'),
-            (self._parse_kwargs, 'Nodes'),
-            (self._parse_kwargs, 'Edges'),
-            (self._parse_kwargs, 'start_tasks'),
-            (self._parse_kwargs, 'middle_tasks'),
-            (self._parse_kwargs, 'end_tasks')
+            (cls._parse_kwargs, 'opt'),
+            (cls._parse_kwargs, 'fromtime'),
+            (cls._parse_kwargs, 'totime'),
+            (cls._parse_kwargs, 'period'),
+            (cls._parse_kwargs, 'Nodes'),
+            (cls._parse_kwargs, 'Edges'),
+            (cls._parse_kwargs, 'start_tasks'),
+            (cls._parse_kwargs, 'middle_tasks'),
+            (cls._parse_kwargs, 'end_tasks')
         ]
         return methods
 
-    def _parse_kwargs(self, token, kwargs={}):
+    @classmethod
+    def _parse_kwargs(cls, token, kwargs={}):
         try:
             if token in kwargs:
                 try:
@@ -38,112 +41,167 @@ class Constraint(object):
             print "parse %s fail" %(token)
             raise
 
-    def load(self, path):    
+    @classmethod
+    def load(cls, path):    
         with open(path, 'r') as stream:
             try:
                 kwargs = yaml.load(stream)
             except:
                 print "loading %s fail" %(path)
                 raise
-            for p, t in self._parse_kwargs_all()
+            for p, t in cls._parse_kwargs_all():
                 p(t, kwargs)
             return kwargs
-
-    def shit_next_timeit(kwargs={}):
-        pass
-
-    def update_start_kwargs(self, kwargs={}):
-        period = (kwargs['endtime'] - kwargs['starttime']).days
-        kwargs.update({
-            'starttime': - period
-            'endtime': self._curtime
-            'stockids':  [i for i in iddb_tasks[opt]().stock.get_ids()],
-            'traderids': [i for i in iddb_tasks[opt]().trader.get_ids()],
-            'callback': None
-        })
-
-
-    def update_end_kwargs(self, kwargs={}):
-        period = (kwargs['endtime'] - kwargs['starttime']).days
-        kwargs.update({
-            'starttime': self._curtime - period
-            'endtime': self._curtime
-            'callback': 'insert_summary'
-        })
-
-
-    def update_middle_kwargs(self, kwargs={}):
-        kwargs.update({
-            'callback': None
-        })
-
 
 
 class Generator(object):
 
-    def __init__(self, **kwargs):
+    def __init__(self, cst, **kwargs):
         self._debug = kwargs.pop('debug', False)
-        self._cst = Constraint()
-        self._cstattr = self._cst.load(kwargs.pop('path', None))
+        self._maxtry = kwargs.pop('maxtry', 100)
+        self._maxrun = kwargs.pop('maxrun', 100)
+        self._cst = cst
+        self._run = []
 
-    def _create_hisitem_tasks(self, kwargs={}):
-        methods = [
-            (Loader.parse_task, ['./routers/tasks/HisStock.yaml', kwargs]),
-            (Loader.parse_task, ['./routers/tasks/HisCredit.yaml', kwargs]),
-            (Loader.parse_task, ['./routers/tasks/HisFuture.yaml', kwargs]),
-            (Loader.parse_task, ['./routers/tasks/HisTrader.yaml', kwargs])
+    def _sample_hisitem_tasks(self, nkwargs={}):
+        samples = [
+            (Loader.parse_task, ['./routers/tasks/HisStock.yaml', nkwargs]),
+            (Loader.parse_task, ['./routers/tasks/HisCredit.yaml', nkwargs]),
+            (Loader.parse_task, ['./routers/tasks/HisFuture.yaml', nkwargs]),
+            (Loader.parse_task, ['./routers/tasks/HisTrader.yaml', nkwargs])
         ]
-        return methods
+        return samples
 
-    def _create_algitem_tasks(self, kwargs={}):
-        methods = [
-            (Loader.parse_task, ['./routers/tasks/AlgDualema.yaml', kwargs]),
-            (Loader.parse_task, ['./routers/tasks/AlgBBands.yaml', kwargs]),
-            (Loader.parse_task, ['./routers/tasks/AlgBTrader.yaml', kwargs]),
+    def _sample_algitem_tasks(self, nkwargs={}):
+        samples = [
+            (Loader.parse_task, ['./routers/tasks/AlgDualema.yaml', nkwargs]),
+            (Loader.parse_task, ['./routers/tasks/AlgBBands.yaml', nkwargs]),
+            (Loader.parse_task, ['./routers/tasks/AlgBTrader.yaml', nkwargs])
         ]
-        return methods
+        return samples
 
-    def _bind_start_task(self, kwargs={}):
-        if self._cstattr['start_tasks']:
-            stream = self._cstattr['start_tasks'].pop(0)
+    def _bind_start_task(self, graph, node, nkwargs={}, init=False, callback=None):
+        if self._cst['start_tasks']:
+            stream = self._cst['start_tasks'].pop(0)
         else:
-            tasks = self._create_hisitem_tasks(kwargs)
+            tasks = self._sample_hisitem_tasks(nkwargs)
             ptr, args = random.sample(tasks, 1)[0]
             stream = ptr(*args)
-        task, kwargs = eval(stream['task']), self._cst.update_start_kwargs(stream['kwargs'])
-        node = Node(func=task, kwargs=kwargs)
-        return node
 
-    def _bind_middle_task(self, kwargs={}):
-        if self._cstattr['middle_tasks']:
-            stream = self._cstattr['middle_tasks'].pop(0)
+        task, kwargs = eval(stream['task']), stream['kwargs']
+        graph.node[node]['ptr'] = Node(func=task, kwargs=kwargs)
+
+        if init:
+            self._update_init_task(graph, node)
+        if callback:
+            callback(graph, node)
+
+    def _update_init_task(self, graph, node):
+        ptr = graph.node[node]['ptr']
+        days = (ptr.kwargs['endtime'] - ptr.kwargs['starttime']).days
+        ptr.kwargs.update({
+           'starttime': self._cst['fromtime'] - timedelta(days=days),
+           'endtime': self._cst['fromtime']
+        })
+
+    def _update_start_task(self, graph, node):
+        ptr = graph.node[node]['ptr']
+        ptr.kwargs.update({
+            'starttime': ptr.kwargs['starttime'] - timedelta(days=self._cst['period']),
+            'endtime': ptr.kwargs['endtime'] - timedelta(days=self._cst['period']),
+            'stockids': ptr.kwargs['stockids'] if ptr.kwargs['stockids'] else [i for i in iddb_task[self._cst['opt']].stock.get_ids()],
+            'traderids': ptr.kwargs['traderids'] if ptr.kwargs['traderids'] else [i for i in iddb_task[self._cst['opt']].trader.get_ids()],
+            'callback': None,
+            'debug': self._debug
+        })
+        
+    def _bind_middle_task(self, graph, node, init=False, nkwargs={}, callback=None):
+        if self._cst['middle_tasks']:
+            stream = self._cst['middle_tasks'].pop(0)
         else:
-            tasks = self._create_hisitem_tasks(kwargs) + self._create_algitem_tasks(kwargs)
+            tasks = self._sample_hisitem_tasks(nkwargs) + self._sample_algitem_tasks(nkwargs)
             ptr, args = random.sample(tasks, 1)[0]
             stream = ptr(*args)
-        task, kwargs = eval(stream['task']), self._cst.update_middle_kwargs(stream['kwargs'])
-        node = Node(func=task, kwargs=kwargs)
-        return node
 
-    def _bind_end_task(self, kwargs={}):
-        if self._cstattr['']:
+        task, kwargs = eval(stream['task']), stream['kwargs']
+        graph.node[node]['ptr'] = Node(func=task, kwargs=kwargs)
 
+        if init:
+            self._update_init_task(graph, node)
+        if callback:
+            callback(graph, node)
+
+    def _update_middle_task(self, graph, node):
+        ptr = graph.node[node]['ptr']
+        ptr.kwargs.update({
+            'starttime': ptr.kwargs['starttime'] - timedelta(days=self._cst['period']),
+            'endtime': ptr.kwargs['endtime'] - timedelta(days=self._cst['period']),
+            'stockids': ptr.kwargs['stockids'] if ptr.kwargs['stockids'] else [],
+            'traderids': ptr.kwargs['traderids'] if ptr.kwargs['traderids'] else [],
+            'callback': None,
+            'debug': self._debug
+        }) 
+
+    def _bind_end_task(self, graph, node, init=False, nkwargs={}, callback=None):
+        if self._cst['end_tasks']:
+            stream = self._cst['end_tasks'].pop(0)
         else:
-            tasks = self._create_algitem_tasks(kwargs)
+            tasks = self._sample_algitem_tasks(nkwargs)
             ptr, args = random.sample(tasks, 1)[0]
             stream = ptr(*args)
-        task = eval(stream['task'])
-        node = Node(func=task, kwargs=stream['kwargs'])
-        return node
 
-    def _create_graph_methods(self):
-        methods = [
-            self._generate_graph,
-            self._reassign_graph,
-            self._populate_graph,
-            self._set_start_to_run
+        task, kwargs = eval(stream['task']), stream['kwargs']
+        graph.node[node]['ptr'] = Node(func=task, kwargs=kwargs)
+
+        if init:
+            self._update_init_task(graph, node)
+        if callback:
+            callback(graph, node)
+
+    def _update_end_task(self, graph, node):
+        ptr = graph.node[node]['ptr']
+        ptr.kwargs.update({
+            'starttime': ptr.kwargs['starttime'] - timedelta(days=self._cst['period']),
+            'endtime': ptr.kwargs['endtime'] - timedelta(days=self._cst['period']),
+            'stockids': ptr.kwargs['stockids'] if ptr.kwargs['stockids'] else [],
+            'traderids': ptr.kwargs['traderids'] if ptr.kwargs['traderids'] else [],
+            'callback': 'insert_summary',
+            'debug': self._debug
+        }) 
+
+    def run(self):
+        graph = self._generate_graph()
+        graph = self._populate_graph(graph, True)
+        while self._cst['fromtime'] <= self._cst['totime']:
+            if len(self._run) < self._maxrun:
+                self._cst['fromtime'] += timedelta(days=self._cst['period'])
+                graph = self._populate_graph(graph, False)
+                worker = self._transfer_graph_as_worker(graph)
+                worker.start()
+                self._run.append(worker)
+            else:
+                comp = [it for it in self._run if not it.isAlive()]
+                for it in comp:
+                    it.join()
+                    del it
+                    self._comp.remove(it)
+                time.sleep(1)
+
+            if self._debug:
+                print "run tasks %d" %(len(self._runs))
+
+    def _generate_graph(self):
+        samples = [
+            nx.gnm_random_graph(self._cstarrt['Nodes'], self._cst['Edges'], directed=True),
         ]
-        return methods
+
+        while self._maxtry:
+            self._maxtry -= 1
+            graph = random.sample(samples, 1)[0]
+            if self._is_valid_graph(graph):
+                return graph
+        print "can't generate DAG worker graph"
+        raise
 
     def _is_valid_graph(self, graph):
         rules = [
@@ -157,52 +215,23 @@ class Generator(object):
                 return False
         return True
 
-    def _generate_basic_graph(self):
-        runs = [
-            nx.gnm_random_graph(self._nodes, self._edges, directed=True),
-        ]
+    def _populate_graph(self, graph, init=False):
+        for node in nx.topological_sort(graph):
+            if not graph.predecessors(node):    
+                self._bind_start_task(graph, node, init, self._update_start_task)
+            elif not graph.successors(node): 
+                self._bind_end_task(graph, node, init, self._update_end_task)
+            else:
+                self._bind_middle_node(graph, node, init, self._update_middle_task)
+        return graph
 
-        while self._try_runs:
-            self._try_runs -= 1
-            graph = random.sample(runs, 1)[0]
-            if self._is_valid_graph(graph):
-                return graph
-        print "can't generate DAG graph at timeout"
-        raise
-
-    def _reassign_graph(self, graph):
-        # ???
-        ngraph = GWorker(debug=self._debug, priority=1)
+    def _transfer_graph_as_worker(self, graph):
+        worker = GWorker(debug=self._debug, priority=1)
         for node in graph.nodes():
-            ngraph.add_node(node, {'ptr': None})
+            worker.add_node(node, {'ptr': graph.node[node]['ptr']})
+            if not nx.ancestors(graph, node):
+                worker.set_start_to_run(node)
         for edge in graph.edges():
             u, v = edge
-            ngraph.add_edge(u, v, weight=1)
-        return ngraph
-
-    def _populate_basic_graph(self, graph):
-        for node in nx.topological_sort(graph):
-            kwargs =  #???
-
-            if not graph.predecessors(node):    
-                ptr = self._bind_start_task()
-                node, ptr['kwargs']
-
-            elif not graph.successors(node): 
-                ptr = self._bind_end_task(self._update_end_kwargs(kwargs))
-
-            else:
-                ptr = self._bind_middle_node(
-                    self._update_middle_kwargs(kwargs))
-            graph.node[node]['ptr'] = ptr
-
-
-    def _set_start_to_run(self):
-        for node in nx.topological_sort(graph):
-            if not nx.ancestors(graph, node):
-                graph.set_start_to_run(node)
-
-    def create_random_graph(self, constrain):
-        pass
-        return ngraph
-
+            worker.add_edge(u, v, weight=1)
+        return worker
