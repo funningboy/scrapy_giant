@@ -3,11 +3,12 @@
 import unittest
 from main.tests import NoSQLTestCase
 from routers.loader import Loader
-from routers.generator import Generator
+from routers.generator import Constraint, Generator
 
 skip_tests = {
     # static 
-    'TestLoaderStrategy': False,
+    'TestLoaderStrategy': True,
+    'TestAlwaysRunStrategy': False,
     'TestGeneratorRandom': True
     #
 } 
@@ -22,8 +23,6 @@ class TestLoaderStrategy(NoSQLTestCase):
         'routers/table/TestTraderProfile1.yaml',
         'routers/table/TestExcAlgDualema.yaml',
         'routers/table/TestExcRptDualema.yaml',
-        'routers/table/ExcAlgDualema.yaml',
-        'routers/table/ExcRptDualema.yaml',
         #'routers/table/TestNtyAll.yaml'
     ]
 
@@ -60,6 +59,40 @@ class TestLoaderStrategy(NoSQLTestCase):
         del self._loader
 
 
+@unittest.skipIf(skip_tests['TestAlwaysRunStrategy'], "skip")
+class TestAlwaysRunStrategy(NoSQLTestCase):
+ 
+    _paths = [
+        'routers/table/ExcAlgDualema.yaml',
+        'routers/table/ExcRptDualema.yaml',
+        'routers/table/ExcAlgBBands.yaml',
+        'routers/table/ExcRptBBands.yaml',
+        #'routers/table/ExcAlgBTrader.yaml',
+        #'routers/table/ExcRptBTrader.yaml'
+    ]
+
+    def setUp(self):
+        self._loader = Loader()
+        self._graphs = []
+
+    def test_on_run(self):
+        for path in self._paths:
+            G = self._loader.create_graph(path, priority=1, debug=False)
+            self.assertTrue(G)
+            G.start()
+            self._graphs.append(G)
+
+        for G in self._graphs:
+            while True:
+                if not G.isAlive():
+                    break
+            G.join()
+            del G
+
+    def tearDown(self):
+        del self._loader
+
+
 @unittest.skipIf(skip_tests['TestGeneratorRandom'], "skip")
 class TestGeneratorRandom(NoSQLTestCase):
 
@@ -72,10 +105,12 @@ class TestGeneratorRandom(NoSQLTestCase):
 
     def test_on_run(self):
         for path in self._paths:
-            cst = constraint.load(path)
+            cst = Constraint.load(path)
             print cst
             self._gntor = Generator(cst, debug=True)
             self._gntor.run()
+            self._gntor.report()
+            self._gntor.export()
    
     def tearDown(self):
         del self._gntor

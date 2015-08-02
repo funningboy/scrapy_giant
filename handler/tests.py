@@ -21,7 +21,9 @@ import json
 
 skip_tests = {
     'TestTwseHisItemQuery': False,
-    'TestTwseHisFrameQuery': False
+    'TestTwseHisFrameQuery': False,
+    'TestOtcHisItemQuery': False,
+    'TestOtcHisFrameQuery': False
 }
 
 @unittest.skipIf(skip_tests['TestTwseHisItemQuery'], "skip")
@@ -144,3 +146,125 @@ class TestTwseHisFrameQuery(NoSQLTestCase):
             self.assertFalse(panel['2317'][k].empty)
             self.assertTrue(panel['2317'][k].sum >= 0)
         print panel['2317']
+
+
+@unittest.skipIf(skip_tests['TestOtcHisItemQuery'], "skip")
+class TestOtcHisItemQuery(NoSQLTestCase):
+
+    def test_on_stock(self):
+        kwargs = {
+            'opt': 'otc',
+            'targets': ['stock'],
+            'starttime': datetime.utcnow() - timedelta(days=5),
+            'endtime': datetime.utcnow(),
+            'stockids': ['5371', '1565'],
+            'base': 'stock',
+            'order': ['-totalvolume', '-totaldiff'],
+            'callback': None,
+            'limit': 1,
+            'debug': True
+        }
+        item = collect_hisitem.delay(**kwargs).get()
+        self.assertTrue(item)
+        self.assertTrue(item['stockitem'])
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+
+    def test_on_trader(self):
+        kwargs = {
+            'opt': 'otc',
+            'targets': ['trader'],
+            'starttime': datetime.utcnow() - timedelta(days=5),
+            'endtime': datetime.utcnow(),
+            'stockids': ['5371', '1565'],
+            'base': 'stock',
+            'order': ['-totalvolume'],
+            'callback': None,
+            'limit': 1,
+            'debug': True
+        }
+        item = collect_hisitem.delay(**kwargs).get()
+        self.assertTrue(item)
+        self.assertTrue(item['traderitem'])
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+
+    def test_on_credit(self):
+        kwargs = {
+            'opt': 'otc',
+            'targets': ['credit'],
+            'starttime': datetime.utcnow() - timedelta(days=5),
+            'endtime': datetime.utcnow(),
+            'stockids': ['5371', '1565'],
+            'base': 'stock',
+            'order': ['+bearishused', '+financeused'],
+            'callback': None,
+            'limit': 1,
+            'debug': True
+        }
+        item = collect_hisitem.delay(**kwargs).get()
+        self.assertTrue(item)
+        self.assertTrue(item['credititem'])
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+    
+    def test_on_future(self):
+        kwargs = {
+            'opt': 'otc',
+            'targets': ['future'],
+            'starttime': datetime.utcnow() - timedelta(days=5),
+            'endtime': datetime.utcnow(),
+            'stockids': ['5371', '1565'],
+            'base': 'stock',
+            'order': ['-totalvolume', '-totaldiff'],
+            'callback': None,
+            'limit': 1,
+            'debug': True
+        }
+        item = collect_hisitem.delay(**kwargs).get()
+        self.assertTrue(item)
+        self.assertTrue(item['futureitem'])
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+    
+    def test_on_all(self):
+        kwargs = {
+            'opt': 'otc',
+            'targets': ['stock', 'trader', 'future', 'credit'],
+            'starttime': datetime.utcnow() - timedelta(days=5),
+            'endtime': datetime.utcnow(),
+            'stockids': ['5371', '1565'],
+            'traderids': [],
+            'base': 'stock',
+            'order': [],
+            'callback': None,
+            'limit': 2,
+            'debug': True
+        }
+        item = collect_hisitem.delay(**kwargs).get()
+        self.assertTrue(item)
+        [self.assertTrue(item[i]) for i in ['stockitem', 'traderitem', 'credititem', 'futureitem']] 
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+
+
+@unittest.skipIf(skip_tests['TestTwseHisFrameQuery'], "skip")
+class TestTwseHisFrameQuery(NoSQLTestCase):
+
+    def test_on_all(self):
+        kwargs = {
+            'opt': 'otc',
+            'targets': ['stock', 'trader', 'future', 'credit'],
+            'starttime': datetime.utcnow() - timedelta(days=5),
+            'endtime': datetime.utcnow(),
+            'stockids': ['5371'],
+            'traderids': [],
+            'base': 'stock',
+            'order': [],
+            'callback': None,
+            'limit': 1,
+            'debug': True
+        }
+        panel, _ = collect_hisframe(**kwargs)
+        self.assertTrue(panel is not None)
+        self.assertFalse(panel.empty)
+        self.assertFalse(panel['5371'].empty)
+        for k in ['open', 'high', 'low', 'close', 'volume', 'financeused', 'bearishused']:
+            self.assertFalse(panel['5371'][k].empty)
+            self.assertTrue(panel['5371'][k].sum >= 0)
+        print panel['5371']

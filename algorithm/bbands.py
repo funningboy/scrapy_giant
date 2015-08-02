@@ -57,12 +57,13 @@ class BBandsAlgorithm(TradingAlgorithm):
         self.sell_hold = 0
 
     def handle_data(self, data):
+        sid = self.sids[0]
         self.window.append((
-            data[self.sids[0]].open,
-            data[self.sids[0]].high,
-            data[self.sids[0]].low,
-            data[self.sids[0]].close,
-            data[self.sids[0]].volume
+            data[sid].open,
+            data[sid].high,
+            data[sid].low,
+            data[sid].close,
+            data[sid].volume
         ))
 
         if len(self.window) == self._buf_win:
@@ -83,12 +84,12 @@ class BBandsAlgorithm(TradingAlgorithm):
             # sell after buy
             if self._trend_up:
                 if rule_idx and rule_inbb and rule_hidd and self.invested_buy == False:
-                    self.order(self.sids[0], self._buy_amount)
+                    self.order(sid, self._buy_amount)
                     self.invested_buy = True
                     self.buy = True
                     self.buy_hold = self._buy_hold
                 elif self.invested_buy == True and self.buy_hold == 0:
-                    self.order(self.sids[0], -self._buy_amount)
+                    self.order(sid, -self._buy_amount)
                     self.invested_buy = False
                     self.sell = True
 

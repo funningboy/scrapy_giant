@@ -85,8 +85,8 @@ class OtcHisCreditSpider(CrawlSpider):
                 'stockid': it[0],
                 'stocknm': it[1],
                 'preremain': it[10],
-                'buyvolume': it[11],
-                'sellvolume': it[12],
+                'buyvolume': it[12],
+                'sellvolume': it[11],
                 'daytrade': it[13],
                 'curremain': it[14],
                 'limit': it[17]

@@ -38,6 +38,8 @@ class TwseHisCreditPipeline(BasePipeline):
         return self._decode_item(jstream)
 
     def _update_item(self, item):
+        # finance 單位: 交易單位
+        # bearish 單位: 股
         frame = pd.DataFrame.from_dict(item['data']).dropna()
         if frame.empty:
             return
@@ -47,12 +49,12 @@ class TwseHisCreditPipeline(BasePipeline):
         frame['date'] = [_encode_datetime(it) for it in frame['date']]
         frame['stockid'] = frame['stockid']
         frame['stocknm'] = frame['stocknm']
-        frame['preremain'] = frame['preremain'].astype(int) // 1000
-        frame['buyvolume'] = frame['buyvolume'].astype(int) // 1000
-        frame['sellvolume'] = frame['sellvolume'].astype(int) // 1000
-        frame['daytrade'] = frame['daytrade'].astype(int) // 1000
-        frame['curremain'] = frame['curremain'].astype(int) // 1000
-        frame['limit'] = frame['limit'].astype(long) // 1000
+        frame['preremain'] = frame['preremain'].astype(int)  
+        frame['buyvolume'] = frame['buyvolume'].astype(int) 
+        frame['sellvolume'] = frame['sellvolume'].astype(int) 
+        frame['daytrade'] = frame['daytrade'].astype(int) 
+        frame['curremain'] = frame['curremain'].astype(int) 
+        frame['limit'] = frame['limit'].astype(long) 
         item = frame.T.to_dict().values()
         log.msg("item: %s" % (item), level=log.DEBUG)
         return item

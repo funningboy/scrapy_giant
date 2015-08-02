@@ -54,12 +54,13 @@ class DualEMAAlgorithm(TradingAlgorithm):
         self.sell_hold = 0
 
     def handle_data(self, data):
+        sid = self.sids[0]
         self.window.append((
-            data[self.sids[0]].open,
-            data[self.sids[0]].high,
-            data[self.sids[0]].low,
-            data[self.sids[0]].close,
-            data[self.sids[0]].volume
+            data[sid].open,
+            data[sid].high,
+            data[sid].low,
+            data[sid].close,
+            data[sid].volume
         ))
 
         if len(self.window) == self._buf_win:
@@ -76,24 +77,24 @@ class DualEMAAlgorithm(TradingAlgorithm):
             # sell after buy
             if self._trend_up:
                 if (short_ema > long_ema).all() and not self.invested_buy:
-                    self.order(self.sids[0], self._buy_amount)
+                    self.order(sid, self._buy_amount)
                     self.invested_buy = True
                     self.buy = True
                     self.buy_hold = self._buy_hold
                 elif self.invested_buy == True and self.buy_hold == 0:
-                    self.order(self.sids[0], -self._buy_amount)
+                    self.order(sid, -self._buy_amount)
                     self.invested_buy = False
                     self.sell = True
 
             # buy after sell
             if self._trend_down:
                 if (short_ema < long_ema).all() and not self.invested_sell:
-                    self.order(self.sids[0], -self._sell_amount)
+                    self.order(sid, -self._sell_amount)
                     self.invested_sell = True
                     self.sell = True
                     self.sell_hold = self._sell_hold
                 elif self.invested_sell == True  and self.sell_hold == 0:
-                    self.order(self.sids[0], self._sell_amount)
+                    self.order(sid, self._sell_amount)
                     self.invested_sell = False
                     self.buy = True
 

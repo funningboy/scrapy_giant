@@ -41,6 +41,7 @@ conda install -c Quantopian zipline
 ```
 apt-get install rabbitmq-server
 apt-get install nginx
+apt-get install tesseract-ocr
 ```
 0.3.1 install 3path libs
 ```
@@ -61,6 +62,7 @@ pip install celery-with-mongodb
 pip install supervisor
 pip install mongodb-cache
 pip install pytesseract  
+
 #pip install mongengineform
 pip install django-rest-framework-mongoengine
 # for django mongodb engine used

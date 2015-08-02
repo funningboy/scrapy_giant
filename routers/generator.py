@@ -1,6 +1,7 @@
 # https://networkx.github.io/documentation/latest/reference/generators.html
 
 import networkx as nx
+import matplotlib.pyplot as plt
 import random
 import itertools
 import time
@@ -61,6 +62,7 @@ class Generator(object):
         self._maxtry = kwargs.pop('maxtry', 100)
         self._maxrun = kwargs.pop('maxrun', 100)
         self._cst = cst
+        self._graph = None
         self._run = []
 
     def _sample_hisitem_tasks(self, nkwargs={}):
@@ -76,9 +78,21 @@ class Generator(object):
         samples = [
             (Loader.parse_task, ['./routers/tasks/AlgDualema.yaml', nkwargs]),
             (Loader.parse_task, ['./routers/tasks/AlgBBands.yaml', nkwargs]),
-            (Loader.parse_task, ['./routers/tasks/AlgBTrader.yaml', nkwargs])
+            (Loader.parse_task, ['./routers/tasks/AlgBTrader.yaml', nkwargs]),
+            #(Loader.parse_task, ['./routers/tasks/AlgRForest.yaml', nkwargs]),
+            #(Loader.parse_task, ['./routers/tasks/AlgKmeans.yaml', nkwargs])
         ]
         return samples
+
+    def _report_algitem_tasks(self, nkwargs={}):
+        reports = {
+            'dualema': (Loader.parse_task, ['./routers/tasks/RptDualema.yaml', nkwargs]),
+            'bbands':  (Loader.parse_task, ['./routers/tasks/RptBBands.yaml', nkwargs]),
+            'btrader': (Loader.parse_task, ['./routers/tasks/RptBTrader.yaml', nkwargs]),
+            #'rforest': (Loader.parse_task, ['./routers/tasks/RptRForest.yaml', nkwargs]),
+            #'kmeans':  (Loader.parse_task, ['./routers/tasks/RptKmeans.yaml', nkwargs])
+        }
+        return reports
 
     def _bind_start_task(self, graph, node, nkwargs={}, init=False, callback=None):
         if self._cst['start_tasks']:
@@ -169,9 +183,20 @@ class Generator(object):
             'debug': self._debug
         }) 
 
+    def _bind_report_task(self, graph, node, init=False, nkwargs={}, callback=None):
+        ptr = graph.node[node]['ptr']
+        _report_algitem_tasks
+
+    def _update_report_task(self):
+        pass
+
     def run(self):
         graph = self._generate_graph()
         graph = self._populate_graph(graph, True)
+        if self._debug:
+            nx.draw(graph)
+            plt.savefig("generator.png")
+
         while self._cst['fromtime'] <= self._cst['totime']:
             if len(self._run) < self._maxrun:
                 self._cst['fromtime'] += timedelta(days=self._cst['period'])
@@ -184,11 +209,19 @@ class Generator(object):
                 for it in comp:
                     it.join()
                     del it
-                    self._comp.remove(it)
+                    self._run.remove(it)
                 time.sleep(1)
 
             if self._debug:
                 print "run tasks %d" %(len(self._runs))
+
+        self._graph = graph
+
+    def report(self):
+        pass
+
+    def export(self):
+        pass
 
     def _generate_graph(self):
         samples = [

@@ -13,8 +13,8 @@ __all__ = ['TwseHisCreditSpider']
 #
 # 融券/融券 { 前日餘額, 賣出, 買進, 現券/現償, 今日餘額, 限額 }
 
-# 融資: http://www.twse.com.tw/ch/trading/exchange/TWTA1U/TWTA1U.php
-# 融券: http://www.twse.com.tw/ch/trading/exchange/TWT93U/TWT93U.php
+# 融資: http://www.twse.com.tw/ch/trading/exchange/TWTA1U/TWTA1U.php 單位: 交易單位
+# 融券: http://www.twse.com.tw/ch/trading/exchange/TWT93U/TWT93U.php 單位: 股
 
 class TwseHisCreditSpider(CrawlSpider):
     name = 'twsehiscredit'
@@ -74,12 +74,12 @@ class TwseHisCreditSpider(CrawlSpider):
                 'type': 'finance' if index == 0 else 'bearish',
                 'stockid': its[0],
                 'stocknm': its[1],
-                'preremain': its[2],
-                'buyvolume': its[3],
-                'sellvolume': its[4],
-                'daytrade': its[5],
-                'curremain': its[6],
-                'limit': its[7]
+                'preremain': int(its[2]) if index == 0 else int(its[2]) // 1000,
+                'buyvolume': int(its[3]) if index == 0 else int(its[4]) // 1000,
+                'sellvolume': int(its[4]) if index == 0 else int(its[3]) // 1000,
+                'daytrade': int(its[5]) if index == 0 else int(its[5]) // 1000,
+                'curremain': int(its[6]) if index == 0 else int(its[6]) // 1000,
+                'limit': int(its[7]) if index == 0 else int(its[7]) // 1000
             }
             item['data'].append(sub)
         log.msg("item[0] %s ..." % (item['data'][0]), level=log.DEBUG)

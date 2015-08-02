@@ -1,0 +1,17 @@
+{
+    #algorithm/tasks.py
+    task: "collect_algitem",
+    kwargs: {
+        opt: null,
+        targets: ['bbands'],
+        starttime: "datetime.utcnow() - timedelta(days=60)",
+        endtime: "datetime.utcnow()",
+        stockids: [],
+        traderids: [],
+        order: ['-totalbuys', '-totalsells', '-totalportfolio'],
+        callback: null,
+        limit: 100,
+        debug: False
+    },
+    description: "BBandsAlgorithm.__class__.__doc__"
+}

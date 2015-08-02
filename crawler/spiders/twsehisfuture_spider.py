@@ -70,10 +70,11 @@ class TwseHisFutureSpider(CrawlSpider):
 
     def redirect_contract_table(self, response):
         """ get contract """
-        timestamp = datetime.utcnow()
-        [fyear, syear] = [timestamp.year] * 2
-        [fmon, smon] = [timestamp.month] * 2 
-        [fdd, sdd] = [1, calendar.monthrange(timestamp.year, timestamp.month)[1]]
+        stime = datetime.utcnow()
+        ftime = stime - timedelta(days=10)
+        [fyear, syear] = [ftime.year, stime.year] 
+        [fmon, smon] = [ftime.month, stime.month] 
+        [fdd, sdd] = [1, calendar.monthrange(stime.year, stime.month)[1]]
         URL = (
             'http://59.120.135.101/chinese/3/3_1_1_getcontract.asp?' +
             'date1=%(fyear)d/%(fmon)02d/%(fdd)02d&' +
