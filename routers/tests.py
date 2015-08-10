@@ -7,8 +7,8 @@ from routers.generator import Constraint, Generator
 
 skip_tests = {
     # static 
-    'TestLoaderStrategy': True,
-    'TestAlwaysRunStrategy': False,
+    'TestLoaderStrategy': False,
+    'TestAlwaysRunStrategy': True,
     'TestGeneratorRandom': True
     #
 } 
@@ -21,8 +21,8 @@ class TestLoaderStrategy(NoSQLTestCase):
         'routers/table/TestStockProfile1.yaml',
         'routers/table/TestTraderProfile0.yaml',
         'routers/table/TestTraderProfile1.yaml',
-        'routers/table/TestExcAlgDualema.yaml',
-        'routers/table/TestExcRptDualema.yaml',
+        #'routers/table/TestExcAlgDualema.yaml',
+        #'routers/table/TestExcRptDualema.yaml',
         #'routers/table/TestNtyAll.yaml'
     ]
 
@@ -48,8 +48,6 @@ class TestLoaderStrategy(NoSQLTestCase):
             nodes = sorted(G.record, key=lambda x: x['node'])
             for node in nodes:
                 self.assertTrue(node['visited'] == 1)
-                # how to handle None
-                print node['kwargs']
                 self.assertTrue(node['kwargs'])
                 self.assertTrue(node['retval'])
                 self.assertTrue(node['runtime'] <= 100)
@@ -67,8 +65,8 @@ class TestAlwaysRunStrategy(NoSQLTestCase):
         'routers/table/ExcRptDualema.yaml',
         'routers/table/ExcAlgBBands.yaml',
         'routers/table/ExcRptBBands.yaml',
-        #'routers/table/ExcAlgBTrader.yaml',
-        #'routers/table/ExcRptBTrader.yaml'
+        'routers/table/ExcAlgBTrader.yaml',
+        'routers/table/ExcRptBTrader.yaml'
     ]
 
     def setUp(self):

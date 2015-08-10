@@ -9,10 +9,12 @@
 
 Edges:
     [
+        # twse
         [0,1,1],
         [1,2,1],
-        [2,3,1],
-        [2,4,1]
+        # otc
+        [3,4,1],
+        [4,5,1],
     ]
 
 Nodes:
@@ -65,31 +67,53 @@ Nodes:
                 "debug": True
             })',
 
-        # 3
+        # 0
         'Loader.parse_task(
-            "./routers/tasks/NtyLine.yaml",
+            "./routers/tasks/HisTrader.yaml",
             kwargs = {
-                "opt": "twse",
-                "targets": ["line"],
-                "starttime": "datetime.utcnow() - timedelta(days=1)",
+                "opt": "otc",
+                "targets": ["trader"],
+                "starttime": "datetime.utcnow() - timedelta(days=5)",
                 "endtime": "datetime.utcnow()",
-                "stockids": [],
+                "stockids": "[i for i in iddb_tasks[\"otc\"](debug=True).stock.get_ids()]",
+                "traderids": [],
+                "base": "stock",
+                "order": ["-totalvolume"],
                 "limit": 3,
                 "debug": True
-            }
-        )',
+            })',
 
-        # 4
+        # 1
         'Loader.parse_task(
-            "./routers/tasks/NtyGmail.yaml",
+            "./routers/tasks/HisTrader.yaml",
             kwargs = {
-                "opt": "twse",
-                "targets": ["gmail"],
-                "starttime": "datetime.utcnow() - timedelta(days=1)",
+                "opt": "otc",
+                "targets": ["trader"],
+                "starttime": "datetime.utcnow() - timedelta(days=5)",
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
+                "traderids": [],
+                "base": "trader",
+                "order": ["-totalvolume"],
                 "limit": 3,
                 "debug": True
-            }
-        )'
+            })',
+
+        # 2
+        'Loader.parse_task(
+            "./routers/tasks/HisItemAll.yaml",
+            kwargs = {
+                "opt": "otc",
+                "targets": ["stock", "credit", "futute", "trader"],
+                "starttime": "datetime.utcnow() - timedelta(days=5)",
+                "endtime": "datetime.utcnow()",
+                "stockids": [],
+                "traderids": [],
+                "base": "stock",
+                "order": [],
+                "limit": 3,
+                "debug": True
+            })',
+
+
     ]

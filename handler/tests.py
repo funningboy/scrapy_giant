@@ -45,7 +45,7 @@ class TestTwseHisItemQuery(NoSQLTestCase):
         item = collect_hisitem.delay(**kwargs).get()
         self.assertTrue(item)
         self.assertTrue(item['stockitem'])
-        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
 
     def test_on_trader(self):
         kwargs = {
@@ -63,7 +63,7 @@ class TestTwseHisItemQuery(NoSQLTestCase):
         item = collect_hisitem.delay(**kwargs).get()
         self.assertTrue(item)
         self.assertTrue(item['traderitem'])
-        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
 
     def test_on_credit(self):
         kwargs = {
@@ -81,7 +81,7 @@ class TestTwseHisItemQuery(NoSQLTestCase):
         item = collect_hisitem.delay(**kwargs).get()
         self.assertTrue(item)
         self.assertTrue(item['credititem'])
-        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
     
     def test_on_future(self):
         kwargs = {
@@ -99,7 +99,7 @@ class TestTwseHisItemQuery(NoSQLTestCase):
         item = collect_hisitem.delay(**kwargs).get()
         self.assertTrue(item)
         self.assertTrue(item['futureitem'])
-        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
     
     def test_on_all(self):
         kwargs = {
@@ -118,7 +118,7 @@ class TestTwseHisItemQuery(NoSQLTestCase):
         item = collect_hisitem.delay(**kwargs).get()
         self.assertTrue(item)
         [self.assertTrue(item[i]) for i in ['stockitem', 'traderitem', 'credititem', 'futureitem']] 
-        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
 
 
 @unittest.skipIf(skip_tests['TestTwseHisFrameQuery'], "skip")
@@ -167,7 +167,7 @@ class TestOtcHisItemQuery(NoSQLTestCase):
         item = collect_hisitem.delay(**kwargs).get()
         self.assertTrue(item)
         self.assertTrue(item['stockitem'])
-        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
 
     def test_on_trader(self):
         kwargs = {
@@ -185,7 +185,7 @@ class TestOtcHisItemQuery(NoSQLTestCase):
         item = collect_hisitem.delay(**kwargs).get()
         self.assertTrue(item)
         self.assertTrue(item['traderitem'])
-        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
 
     def test_on_credit(self):
         kwargs = {
@@ -203,7 +203,7 @@ class TestOtcHisItemQuery(NoSQLTestCase):
         item = collect_hisitem.delay(**kwargs).get()
         self.assertTrue(item)
         self.assertTrue(item['credititem'])
-        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
     
     def test_on_future(self):
         kwargs = {
@@ -221,7 +221,7 @@ class TestOtcHisItemQuery(NoSQLTestCase):
         item = collect_hisitem.delay(**kwargs).get()
         self.assertTrue(item)
         self.assertTrue(item['futureitem'])
-        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
     
     def test_on_all(self):
         kwargs = {
@@ -240,7 +240,7 @@ class TestOtcHisItemQuery(NoSQLTestCase):
         item = collect_hisitem.delay(**kwargs).get()
         self.assertTrue(item)
         [self.assertTrue(item[i]) for i in ['stockitem', 'traderitem', 'credititem', 'futureitem']] 
-        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
 
 
 @unittest.skipIf(skip_tests['TestTwseHisFrameQuery'], "skip")

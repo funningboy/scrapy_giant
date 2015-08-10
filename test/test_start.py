@@ -125,7 +125,7 @@ class TestTwseHisTrader2(TestBase):
         self._db = TwseHisDBHandler(**kwargs)
         self._db.trader.coll.drop_collection()
         # call scrapy
-        cmd = 'scrapy crawl twsehistrader2 -s LOG_FILE=twsehistrader.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG'
+        cmd = 'scrapy crawl twsehistrader2 -s LOG_FILE=twsehistrader2.log -s GIANT_DEBUG=1 -s GIANT_LIMIT=1 -s LOG_LEVEL=DEBUG'
         subprocess.check_call(cmd, shell=True)
 
     def test_on_run(self):

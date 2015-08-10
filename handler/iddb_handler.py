@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import os
 import copy
+import difflib
 
 from mongoengine import *
 from bin.start import switch
@@ -122,6 +123,12 @@ class StockIdDBHandler(object):
         cursor = list(cursor)
         if cursor:
             return cursor[0].stockid
+        else:
+            stocknms = map(lambda x: x.stocknm, self._coll.objects.all())
+            cursor = difflib.get_close_matches(stocknm, stocknms)
+            if cursor:
+                return cursor[0] 
+
 
     def get_name(self, stockid):
         cursor = self._coll.objects(Q(stockid=stockid)).limit(1)
@@ -196,6 +203,11 @@ class TraderIdDBHandler(object):
         cursor = list(cursor)
         if cursor:
             return cursor[0].traderid
+        else:
+            tradernms = map(lambda x: x.tradernm, self._coll.objects.all())
+            cursor = difflib.get_close_matches(tradernm, tradernms)
+            if cursor:
+                return cursor[0] 
 
     def get_name(self, traderid):
         cursor = self._coll.objects(Q(traderid=traderid)).limit(1)

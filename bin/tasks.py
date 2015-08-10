@@ -47,7 +47,6 @@ def navg(*args, **kwargs):
     print "test celey navg %d" %(r)
     return r
 
-# as background service
 @shared_task
 def run_scrapy_service(spider, loglevel, logfile, logen=True, debug=False):
     cmd = wap_scrapy_cmd(
@@ -58,3 +57,7 @@ def run_scrapy_service(spider, loglevel, logfile, logen=True, debug=False):
         debug=debug)
     proc = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     proc.communicate()
+
+@shared_task
+def run_adsl_service():
+    reset_adsl()

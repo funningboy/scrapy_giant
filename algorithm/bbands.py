@@ -129,7 +129,7 @@ def run(opt='twse', debug=False, limit=0):
         try:
             kwargs = {
                 'opt': opt,
-                'targets': ['stock', 'trader', 'future', 'credit'],
+                'targets': ['stock', 'future', 'credit'],
                 'starttime': starttime,
                 'endtime': endtime,
                 'stockids': [stockid],
@@ -137,8 +137,8 @@ def run(opt='twse', debug=False, limit=0):
                 'base': 'stock',
                 'order': [],
                 'callback': None,
-                'limit': 10,
-                'debug': True
+                'limit': 1,
+                'debug': debug
             }
             panel, dbhandler = collect_hisframe(**kwargs)
             if len(panel[stockid].index) < maxlen:
@@ -148,7 +148,7 @@ def run(opt='twse', debug=False, limit=0):
             report.collect(stockid, results)
             print "%s pass" %(stockid)
         except:
-            print traceback.format_exc()
+            #print traceback.format_exc()
             continue
 
     if report.report.empty:

@@ -78,7 +78,9 @@ pip install django_compressor
 broker=rabbitmq
 backend=mongodb
 ```
+sudo service supervisor start
 echo_supervisord_conf > supervisord.con
+sudo /root/anaconda/bin/supervisorctl -c /etc/supervisor/supervisord.conf
 sudo  /usr/lib/rabbitmq/lib/rabbitmq_server-3.2.4/sbin/rabbitmq-plugins enable rabbitmq_management
 
 rabbitmqctl cluster MASTER SLAVE

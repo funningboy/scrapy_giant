@@ -14,7 +14,7 @@ from algorithm.report import Report
 from algorithm.dualema import DualEMAAlgorithm
 from algorithm.besttrader import BestTraderAlgorithm
 from algorithm.bbands import BBandsAlgorithm
-#from algorithm.randforest import RandForestAlgorithm
+from algorithm.randforest import RandForestAlgorithm
 #from algorithm.kdtree import KdtKnnAlgorithm
 #from algorithm.kmeans import
 
@@ -26,8 +26,8 @@ __all__ = [
     'OtcBestTraderAlg',
     'TwseBBandsAlg',
     'OtcBBandsAlg',
-#    'TwseRandForestAlg',
-#    'OtcRandForestAlg'
+    'TwseRandForestAlg',
+    'OtcRandForestAlg'
     ]
 
 # alg db map
@@ -35,7 +35,7 @@ algdbmap = {
     DualEMAAlgorithm: 'dualemadb',
     BestTraderAlgorithm: 'btraderdb',
     BBandsAlgorithm: 'bbandsdb',
-#    RandForestAlgorithm: 'rforestdb',
+    RandForestAlgorithm: 'rforestdb',
 }
 
 class TwseAlgDBHandler(object):
@@ -223,6 +223,13 @@ class TwseBBandsAlg(TwseAlgDBHandler):
         super(TwseBBandsAlg, self).__init__(**kwargs)
         self._kwargs.update({'targets': ['stock']})
 
+class TwseRandForestAlg(TwseAlgDBHandler):
+
+    def __init__(self, **kwargs):
+        self._alg = RandForestAlgorithm
+        super(TwseRandForestAlg, self).__init__(**kwargs)
+        self._kwargs.update({'targets': ['stock']})
+
 class OtcDualemaAlg(TwseDualemaAlg):
 
     def __init__(self, **kwargs):
@@ -256,3 +263,13 @@ class OtcBBandsAlg(TwseBBandsAlg):
         self._sumycoll = switch(AlgSummaryColl, db)
         self._id = OtcIdDBHandler(debug=self._debug, opt='otc')
 
+class OtcRandForestAlg(TwseRandForestAlg):
+
+    def __init__(self, **kwargs):
+        super(OtcRandForestAlg, self).__init__(**kwargs)
+        db = "otc%s" %(algdbmap[self._alg])
+        db = db if not self._debug else 'test' + db
+        host, port = MongoDBDriver._host, MongoDBDriver._port
+        connect(db, host=host, port=port, alias=db)
+        self._sumycoll = switch(AlgSummaryColl, db)
+        self._id = OtcIdDBHandler(debug=self._debug, opt='otc')

@@ -10,9 +10,9 @@ class JSONResponse(HttpResponse):
         super(JSONResponse, self).__init__(content, **kwargs)
 
 def json_export(function):
-	def wrap(request, **kwargs):
-		try:
-			return function(request, **kwargs)
-		except:
-			return HttpResponse(404)
-	return wrap
+    def wrap(request, **kwargs):
+        try:
+            return function(request, **kwargs)
+        except:
+            return HttpResponse(404)
+    return wrap

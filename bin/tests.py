@@ -257,7 +257,7 @@ class TestTwseHisStock(TestRunScrapyService):
         expect = ['2317', '1314', '2330']
         cursor = self._db.stock.coll.objects(Q(stockid__in=expect)).order_by('-date')
         item = list(cursor)[0]
-        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
         print stream
 
 class TestTwseHisTrader(TestRunScrapyService):
@@ -276,7 +276,7 @@ class TestTwseHisTrader(TestRunScrapyService):
         expect = ['2317', '1314', '2330']
         cursor = self._db.trader.coll.objects(Q(stockid__in=expect)).order_by('-date')
         item = list(cursor)[0]
-        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
         print stream
 
 class TestTwseHisTrader2(TestRunScrapyService):
@@ -295,7 +295,7 @@ class TestTwseHisTrader2(TestRunScrapyService):
         expect = ['2317', '1314', '2330']
         cursor = self._db.trader.coll.objects(Q(stockid__in=expect)).order_by('-date')
         item = list(cursor)[0]
-        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
         print stream
 
 class TestTwseHisCredit(TestRunScrapyService):
@@ -314,7 +314,7 @@ class TestTwseHisCredit(TestRunScrapyService):
         expect = ['2317', '1314', '2330']
         cursor = self._db.credit.coll.objects(Q(stockid__in=expect)).order_by('-date')
         item = list(cursor)[0]
-        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
         print stream
     
 class TestTwseHisFuture(TestRunScrapyService):
@@ -333,7 +333,7 @@ class TestTwseHisFuture(TestRunScrapyService):
         expect = ['2317', '1314', '2330']
         cursor = self._db.future.coll.objects(Q(stockid__in=expect)).order_by('-date')
         item = list(cursor)[0]
-        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
         print stream
 
 class TestOtcHisStock(TestRunScrapyService):
@@ -352,7 +352,7 @@ class TestOtcHisStock(TestRunScrapyService):
         expect = ['5371', '1565', '3105']
         cursor = self._db.stock.coll.objects(Q(stockid__in=expect)).order_by('-date')
         item = list(cursor)[0]
-        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
         print stream
 
 class TestOtcHisTrader(TestRunScrapyService):
@@ -371,7 +371,7 @@ class TestOtcHisTrader(TestRunScrapyService):
         expect = ['5371', '1565', '3105']
         cursor = self._db.trader.coll.objects(Q(stockid__in=expect)).order_by('-date')
         item = list(cursor)[0]
-        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
         print stream
 
 class TestOtcHisTrader2(TestRunScrapyService):
@@ -390,7 +390,7 @@ class TestOtcHisTrader2(TestRunScrapyService):
         expect = ['5371', '1565', '3105']
         cursor = self._db.trader.coll.objects(Q(stockid__in=expect)).order_by('-date')
         item = list(cursor)[0]
-        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
         print stream
 
 class TestOtcHisCredit(TestRunScrapyService):
@@ -409,7 +409,7 @@ class TestOtcHisCredit(TestRunScrapyService):
         expect = ['5371', '1565', '3105']
         cursor = self._db.credit.coll.objects(Q(stockid__in=expect)).order_by('-date')
         item = list(cursor)[0]
-        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
         print stream
     
 class TestOtcHisFuture(TestRunScrapyService):
@@ -428,6 +428,6 @@ class TestOtcHisFuture(TestRunScrapyService):
         expect = ['5371', '1565', '3105']
         cursor = self._db.future.coll.objects(Q(stockid__in=expect)).order_by('-date')
         item = list(cursor)[0]
-        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
         print stream
 

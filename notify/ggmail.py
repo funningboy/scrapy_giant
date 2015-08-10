@@ -17,18 +17,18 @@ class GGMail(GMail):
         self._account = self._cfg.pop('GMAIL_ACCOUNT', None)
         self._passwd = self._cfg.pop('GMAIL_PASSWD', None)
         self._to = self._cfg.pop('GMAIL_RCPT', [])
+        self._subject = self._cfg.pop('subject', 'best list ...')
         super(GGMail, self).__init__(self._account, self._passwd)
 
     def create_msg(self):
-        subject = "best list ..."
+        subject = self._subject
         to = ";".join(self._to)
         payload = {
             'starttime': self._starttime.strftime("%Y-%m-%d"),
             'endtime': self._endtime.strftime("%Y-%m-%d"),
-            'graph': '',
             'list': self._stockids[:10]
         }
-        text = json.dumps(OrderedDict(payload), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
+        text = json.dumps(OrderedDict(payload), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
         msg = Message(subject, to=to, text=text)
         return msg
 

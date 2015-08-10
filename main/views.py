@@ -18,7 +18,7 @@ def about(request):
 # @
 def router_search(request):
     collect = create_search(request)
-    router = [
+    routers = [
         # detail query
         (is_hisstock_detail, hisstock_detail_html),
         (is_histrader_detail, histrader_detail_html),
@@ -36,7 +36,7 @@ def router_search(request):
 #
 def router_portfolio(request):
     collect = create_portfolio(request)
-    router = [
+    routers = [
         #(is_dualema_list, dualema_list_html),
         #(is_btrader_list, btader_list_html),
         #(is_bbands_list, bbands_list_html)

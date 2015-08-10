@@ -101,12 +101,15 @@ class OtcHisTraderSpider2(CrawlSpider):
         item['close'] = u'0'
         item['volume'] = u'0'
         elems = sel.xpath('.//table[@id="ctl00_ContentPlaceHolder1_GridView2"]//td/font/text()').extract()
-        for i in xrange(0, len(elems)-20, 4):
+        for i in xrange(0, len(elems)-20+1, 4):
             tradernm = elems[i].replace('-', '').replace(u'\u3000', u'').replace(u' ', u'')
-            traderid = u"%s" %(OtcIdDBHandler().trader.get_id(tradernm))
+            traderid = self._id.trader.get_id(tradernm)
+            if not traderid:
+                log.msg("%s not found at trader list" %(tradernm), log.INFO)
+                continue
             sub = {
                 'index': u'0',
-                'traderid': traderid,
+                'traderid': u"%s" %(traderid),
                 'tradernm': tradernm,
                 'price': elems[i+3] if elems[i+3] else u'0',
                 'buyvolume': u"%d" % (float(elems[i+1])*1000) if elems[i+1] else u'0',

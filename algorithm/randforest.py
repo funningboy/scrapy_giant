@@ -176,7 +176,7 @@ def run(opt='twse', debug=False, limit=0):
                 'order': [],
                 'callback': None,
                 'limit': 1,
-                'debug': True
+                'debug': debug
             }
             panel, dbhandler = collect_hisframe(**kwargs)
             if len(panel[stockid].index) < maxlen:
@@ -186,7 +186,7 @@ def run(opt='twse', debug=False, limit=0):
             report.collect(stockid, results)
             print "%s pass" %(stockid)
         except:
-            print traceback.format_exc()
+            #print traceback.format_exc()
             continue
 
     if report.report.empty:

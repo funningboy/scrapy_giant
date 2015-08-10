@@ -49,19 +49,19 @@ Nodes:
             }
         )',
 
-        # 2
-        'Loader.parse_task(
-            "./routers/tasks/NtyLine.yaml",
-            kwargs = {
-                "opt": "twse",
-                "targets": ["line"],
-                "starttime": "datetime.utcnow() - timedelta(days=1)",
-                "endtime": "datetime.utcnow()",
-                "stockids": [],
-                "limit": 20,
-                "debug": True
-            }
-        )',
+ #       # 2
+ #       'Loader.parse_task(
+ #           "./routers/tasks/NtyLine.yaml",
+ #           kwargs = {
+ #               "opt": "twse",
+ #               "targets": ["line"],
+ #               "starttime": "datetime.utcnow() - timedelta(days=1)",
+ #               "endtime": "datetime.utcnow()",
+ #               "stockids": [],
+ #               "limit": 20,
+ #               "debug": True
+ #           }
+ #       )',
 
         # 3
         'Loader.parse_task(
@@ -73,7 +73,10 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
                 "limit": 20,
-                "debug": True
+                "debug": True,
+                "cfg": {
+                    "subject": "test best twse Dualema list ..."
+                }
             }
         )'
     ]
