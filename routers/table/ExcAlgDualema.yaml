@@ -2,12 +2,12 @@
 Edges:
     [
         # twse
-        [0,3,1],
-        [1,3,1],
+        [0,1,1],
+        [1,2,1],
         [2,3,1],
         # otc
-        [4,7,1],
-        [5,7,1],
+        [4,5,1],
+        [5,6,1],
         [6,7,1]
     ]
 
@@ -23,7 +23,7 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"twse\"]().stock.get_ids()]",
                 "base": "stock",
-                "order": ["-totalvolume"],
+                "order": ["-totalvolume", "-totaldiff"],
                 "limit": 1000
             }
         )',
@@ -39,7 +39,7 @@ Nodes:
                 "stockids": "[i for i in iddb_tasks[\"twse\"]().stock.get_ids()]",
                 "base": "stock",
                 "order": ["+bearishused", "+financeused"],
-                "limit": 1000
+                "limit": 500
             }
         )',
 
@@ -53,8 +53,8 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"twse\"]().stock.get_ids()]",
                 "base": "stock",
-                "order": ["-totalvolume"],
-                "limit": 1000
+                "order": ["-totalvolume", "-totaldiff"],
+                "limit": 250
             }
         )',
 
@@ -88,7 +88,7 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"otc\"]().stock.get_ids()]",
                 "base": "stock",
-                "order": ["-totalvolume"],
+                "order": ["-totalvolume", "-totaldiff"],
                 "limit": 1000
             }
         )',
@@ -104,7 +104,7 @@ Nodes:
                 "stockids": "[i for i in iddb_tasks[\"otc\"]().stock.get_ids()]",
                 "base": "stock",
                 "order": ["+bearishused", "+financeused"],
-                "limit": 1000
+                "limit": 500
             }
         )',
 
@@ -118,8 +118,8 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"otc\"]().stock.get_ids()]",
                 "base": "stock",
-                "order": ["-totalvolume"],
-                "limit": 1000
+                "order": ["-totalvolume", "-totaldiff"],
+                "limit": 250
             }
         )',
 

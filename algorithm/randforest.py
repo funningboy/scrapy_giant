@@ -24,7 +24,7 @@ from handler.tasks import collect_hisframe
 
 from algorithm.report import Report
 
-
+# decorator??
 class RandForestAlgorithm(TradingAlgorithm):
     """ RandForest
     buy:
@@ -181,7 +181,7 @@ def run(opt='twse', debug=False, limit=0):
             panel, dbhandler = collect_hisframe(**kwargs)
             if len(panel[stockid].index) < maxlen:
                 continue
-            rforest = RandForestAlgorithm(dbhandler=dbhandler, debug=debug)
+            rforest = RandForestAlgorithm(dbhandler=dbhandler)
             results = rforest.run(panel).fillna(0)
             report.collect(stockid, results)
             print "%s pass" %(stockid)

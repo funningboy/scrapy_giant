@@ -70,21 +70,15 @@ class TwseHisFutureSpider(CrawlSpider):
 
     def redirect_contract_table(self, response):
         """ get contract """
-        stime = datetime.utcnow()
-        ftime = stime - timedelta(days=10)
-        [fyear, syear] = [ftime.year, stime.year] 
-        [fmon, smon] = [ftime.month, stime.month] 
-        [fdd, sdd] = [1, calendar.monthrange(stime.year, stime.month)[1]]
+        ftime = datetime.utcnow()
+        fyear, fmon, fdd = ftime.year, ftime.month, ftime.day
         URL = (
             'http://59.120.135.101/chinese/3/3_1_1_getcontract.asp?' +
             'date1=%(fyear)d/%(fmon)02d/%(fdd)02d&' +
-            'date2=%(syear)d/%(smon)02d/%(sdd)02d' ) % {
+            'date2=' ) % {
                 'fyear': fyear, 
                 'fmon': fmon,
-                'fdd': fdd,
-                'syear': syear,
-                'smon': smon,
-                'sdd': sdd
+                'fdd': fdd
         }
         request = Request(
             URL,
@@ -100,7 +94,7 @@ class TwseHisFutureSpider(CrawlSpider):
         log.msg("URL: %s" % (response.url), level=log.DEBUG)
         sel = Selector(response)
         elems = sel.xpath('.//*[@id="commodity_id2t"]/option')
-
+        print response.body
         # skip 請選擇, 全部
         for elem in elems[2:]:
             contract = elem.xpath('./text()').extract()[0].replace(u'\u3000', u'').replace(u' ', u'')

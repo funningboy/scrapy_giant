@@ -76,7 +76,7 @@ class DualEMAAlgorithm(TradingAlgorithm):
     
             # sell after buy
             if self._trend_up:
-                if (short_ema > long_ema).all() and not self.invested_buy:
+                if short_ema[-1] > long_ema[-1] and not self.invested_buy:
                     self.order(sid, self._buy_amount)
                     self.invested_buy = True
                     self.buy = True
@@ -88,7 +88,7 @@ class DualEMAAlgorithm(TradingAlgorithm):
 
             # buy after sell
             if self._trend_down:
-                if (short_ema < long_ema).all() and not self.invested_sell:
+                if short_ema[-1] < long_ema[-1] and not self.invested_sell:
                     self.order(sid, -self._sell_amount)
                     self.invested_sell = True
                     self.sell = True
@@ -132,7 +132,7 @@ def run(opt='twse', debug=False, limit=0):
         try:
             kwargs = {
                 'opt': opt,
-                'targets': ['stock', 'future', 'credit'],
+                'targets': ['stock'],
                 'starttime': starttime,
                 'endtime': endtime,
                 'stockids': [stockid],
@@ -146,7 +146,7 @@ def run(opt='twse', debug=False, limit=0):
             panel, dbhandler = collect_hisframe(**kwargs)
             if len(panel[stockid].index) < maxlen:
                 continue
-            dualema = DualEMAAlgorithm(dbhandler=dbhandler, debug=debug)
+            dualema = DualEMAAlgorithm(dbhandler=dbhandler)
             results = dualema.run(panel).fillna(0)
             report.collect(stockid, results)
             print "%s pass" %(stockid)

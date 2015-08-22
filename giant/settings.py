@@ -270,13 +270,13 @@ CELERYBEAT_SCHEDULE = {
     #},
     'run_adsl_service': {
         'task': 'bin.tasks.run_adsl_service',
-        'schedule': crontab(minute=0, hour='0,4,14'),
+        'schedule': crontab(minute=0, hour='0,4,14,17'),
         'args': ()
     },
     # register all scrapy services
     'run_scrapy_service_twseid': {
         'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=5, hour='0,4,14'),
+        'schedule': crontab(minute=5, hour='0,4,14,17'),
         'args': (
             'twseid',
             'INFO',
@@ -287,7 +287,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'run_scrapy_service_otcid': {
         'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=5, hour='0,4,14'),
+        'schedule': crontab(minute=5, hour='0,4,14,17'),
         'args': (
             'otcid',
             'INFO',
@@ -298,7 +298,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'run_scrapy_service_traderid': {
         'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=5, hour='0,4,14'),
+        'schedule': crontab(minute=5, hour='0,4,14,17'),
         'args': (
             'traderid',
             'INFO',
@@ -309,7 +309,7 @@ CELERYBEAT_SCHEDULE = {
     },
     #'run_scrapy_service_twsehistrader': {
     #    'task': 'bin.tasks.run_scrapy_service',
-    #    'schedule': crontab(minute=0, hour='1,5,15'),
+    #    'schedule': crontab(minute=0, hour='1,5,15,18'),
     #    'args': (
     #        'twsehistrader',
     #        'INFO',
@@ -320,7 +320,7 @@ CELERYBEAT_SCHEDULE = {
     #},
     'run_scrapy_service_twsehistrader2': {
         'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=0, hour='1,5,15'),
+        'schedule': crontab(minute=0, hour='1,5,15,18'),
         'args': (
             'twsehistrader2',
             'INFO',
@@ -331,7 +331,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'run_scrapy_service_twsehisstock': {
         'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=0, hour='1,5,15'),
+        'schedule': crontab(minute=0, hour='1,5,15,18'),
         'args': (
             'twsehisstock',
             'INFO',
@@ -342,7 +342,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'run_scrapy_service_twsehiscredit': {
         'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=0, hour='1,5,15'),
+        'schedule': crontab(minute=0, hour='1,5,15,18'),
         'args': (
             'twsehiscredit',
             'INFO',
@@ -353,7 +353,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'run_scrapy_service_twsehisfuture': {
         'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=0, hour='1,5,15'),
+        'schedule': crontab(minute=0, hour='1,5,15,18'),
         'args': (
             'twsehisfuture',
             'INFO',
@@ -364,7 +364,7 @@ CELERYBEAT_SCHEDULE = {
     },
     #'run_scrapy_service_otchistrader': {
     #    'task': 'bin.tasks.run_scrapy_service',
-    #    'schedule': crontab(minute=0, hour='1,5,15'),
+    #    'schedule': crontab(minute=0, hour='1,5,1,18'),
     #    'args': (
     #        'otchistrader',
     #        'INFO',
@@ -375,7 +375,7 @@ CELERYBEAT_SCHEDULE = {
     #},
     'run_scrapy_service_otchistrader2': {
         'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=0, hour='1,5,15'),
+        'schedule': crontab(minute=0, hour='1,5,15,18'),
         'args': (
             'otchistrader2',
             'INFO',
@@ -386,7 +386,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'run_scrapy_service_otchisstock': {
         'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=0, hour='1,5,15'),
+        'schedule': crontab(minute=0, hour='1,5,15,18'),
         'args': (
             'otchisstock',
             'INFO',
@@ -397,7 +397,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'run_scrapy_service_otchiscredit': {
         'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=0, hour='1,5,15'),
+        'schedule': crontab(minute=0, hour='1,5,15,18'),
         'args': (
             'otchiscredit',
             'INFO',
@@ -408,7 +408,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'run_scrapy_service_otchisfuture': {
         'task': 'bin.tasks.run_scrapy_service',
-        'schedule': crontab(minute=0, hour='1,5,15'),
+        'schedule': crontab(minute=0, hour='1,5,15,18'),
         'args': (
             'otchisfuture',
             'INFO',

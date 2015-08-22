@@ -151,7 +151,10 @@ def run(opt='twse', debug=False, limit=0):
             }
             panel, dbhandler = collect_hisframe(**kwargs)
             tops = list(dbhandler.trader.get_alias([stockid], 'trader', ["top%d" %i for i in range(10)]))
-            print "prefound:%s" %(tops)
+            if not tops:
+                continue
+                
+            print "%s prefound:%s" %(stockid, tops)
             traderid = tops[0] if traderid not in tops else traderid
             # run
             kwargs = {

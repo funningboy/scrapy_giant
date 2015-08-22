@@ -77,3 +77,7 @@ DOWNLOADER_MIDDLEWARES = {
 }
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'giant (+http://www.yourdomain.com)'
+
+EXTENSIONS = {
+   'scrapy.telnet.TelnetConsole': None
+}

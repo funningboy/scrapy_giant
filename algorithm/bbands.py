@@ -72,6 +72,7 @@ class BBandsAlgorithm(TradingAlgorithm):
             upper_bb, lower_bb = close - upper, close - lower
             upper_bb, lower_bb = upper_bb[~np.isnan(upper_bb)], lower_bb[~np.isnan(lower_bb)]
             h_idx, l_idx = np.argmax(upper_bb), np.argmin(lower_bb)
+
             rule_idx = h_idx + self._buf_win//3 <= l_idx and l_idx + 15 <= self._buf_win
             rule_inbb = close[-1] >= middle[-1] * 0.8 and close[-1] <= middle[-1] * 1.2
             rule_hidd = close[-1] >= open[-1] * 1.01
@@ -83,7 +84,7 @@ class BBandsAlgorithm(TradingAlgorithm):
 
             # sell after buy
             if self._trend_up:
-                if rule_idx and rule_inbb and rule_hidd and self.invested_buy == False:
+                if rule_idx and rule_inbb and rule_hidd and not self.invested_buy:
                     self.order(sid, self._buy_amount)
                     self.invested_buy = True
                     self.buy = True
@@ -95,7 +96,15 @@ class BBandsAlgorithm(TradingAlgorithm):
 
             # buy after sell
             if self._trend_down:
-                pass
+                if not rule_idx and not rule_inbb and not rule_hidd and not self.invested_sell:
+                    self.order(sid, -self._sell_amount)
+                    self.invested_sell = True
+                    self.sell = True
+                    self.sell_hold = self._sell_hold
+                elif self.invested_sell == True and self.sell_hold == 0:
+                    self.order(sid, self._sell_hold)
+                    self.invested_sell = False
+                    self.buy = True
 
             # save to recorder
             signals = {
@@ -143,7 +152,7 @@ def run(opt='twse', debug=False, limit=0):
             panel, dbhandler = collect_hisframe(**kwargs)
             if len(panel[stockid].index) < maxlen:
                 continue
-            bbands = BBandsAlgorithm(dbhandler=dbhandler, debug=debug)
+            bbands = BBandsAlgorithm(dbhandler=dbhandler)
             results = bbands.run(panel).fillna(0)
             report.collect(stockid, results)
             print "%s pass" %(stockid)

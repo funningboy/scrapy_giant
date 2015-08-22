@@ -3,10 +3,8 @@ Edges:
     [
         # twse
         [0,1,1],
-        [1,2,1],
         # otc
-        [3,4,1],
-        [4,5,1],
+        [2,3,1],
     ]
 
 Nodes:
@@ -21,8 +19,7 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "base": "trader",
                 "order": ["-totalvolume"],
-                "limit": 3,
-                "debug": True
+                "limit": 3
             })',
 
         # 1
@@ -37,13 +34,12 @@ Nodes:
                 "traderids": [],
                 "base": "stock",
                 "order": [],
-                "limit": 3,
-                "debug": True
+                "limit": 3
             })',
 
         # 0
         'Loader.parse_task(
-            "./routers/tasks/HisTraderGroup1.yaml",
+            "./routers/tasks/HisTraderGroup3.yaml",
             kwargs = {
                 "opt": "otc",
                 "targets": ["trader"],
@@ -51,8 +47,7 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "base": "trader",
                 "order": ["-totalvolume"],
-                "limit": 3,
-                "debug": True
+                "limit": 3
             })',
 
         # 1
@@ -67,8 +62,7 @@ Nodes:
                 "traderids": [],
                 "base": "stock",
                 "order": [],
-                "limit": 3,
-                "debug": True
+                "limit": 3
             })',
 
     ]

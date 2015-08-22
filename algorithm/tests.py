@@ -60,7 +60,7 @@ class TestTwseDualemaAlg(NoSQLTestCase):
         alg = algdb_tasks['twse']['dualema'](**kwargs) 
         alg.sumycoll.drop_collection()
         run_algitem.delay(**kwargs).get()
-        # query summary back and check
+        # query summary factor back and check
         starttime, endtime = datetime.utcnow() - timedelta(days=1), datetime.utcnow()
         if endtime.isoweekday() in [6, 7]:
             starttime -= timedelta(days=2)

@@ -1,0 +1,143 @@
+# background service after learn very well
+Edges:
+    [
+        # twse
+        [0,1,1],
+        [1,2,1],
+        [2,3,1],
+        # otc
+        [4,5,1],
+        [5,6,1],
+        [6,7,1]
+    ]
+
+Nodes:
+    [
+        # 0
+        'Loader.parse_task(
+            "./routers/tasks/HisStock.yaml", 
+            kwargs = {
+                "opt": "twse",
+                "targets": ["stock"],
+                "starttime": "datetime.utcnow() - timedelta(days=5)",
+                "endtime": "datetime.utcnow()",
+                "stockids": "[i for i in iddb_tasks[\"twse\"]().stock.get_ids()]",
+                "base": "stock",
+                "order": ["-totalvolume", "-totaldiff"],
+                "limit": 1000
+            }
+        )',
+
+        # 1
+        'Loader.parse_task(
+            "./routers/tasks/HisCredit.yaml",
+            kwargs = {
+                "opt": "twse",
+                "targets": ["credit"],
+                "starttime": "datetime.utcnow() -timedelta(days=5)",
+                "endtime": "datetime.utcnow()",
+                "stockids": "[i for i in iddb_tasks[\"twse\"]().stock.get_ids()]",
+                "base": "stock",
+                "order": ["+bearishused", "+financeused"],
+                "limit": 500
+            }
+        )',
+
+        # 2
+        'Loader.parse_task(
+            "./routers/tasks/HisFuture.yaml",
+            kwargs = {
+                "opt": "twse",
+                "targets":  ["future"],
+                "starttime": "datetime.utcnow() - timedelta(days=5)",
+                "endtime": "datetime.utcnow()",
+                "stockids": "[i for i in iddb_tasks[\"twse\"]().stock.get_ids()]",
+                "base": "stock",
+                "order": ["-totalvolume", "-totaldiff"],
+                "limit": 250
+            }
+        )',
+
+        # 3
+        'Loader.parse_task(
+            "./routers/tasks/AlgBTrader.yaml",
+            kwargs = {
+                "opt": "twse",
+                "targets": ["trader"],
+                "starttime": "datetime.utcnow() - timedelta(days=10)",
+                "endtime": "datetime.utcnow()",
+                "stockids": [],
+                "base": "stock",
+                "order": ["-buys", "-sells", "-portfolio_value"],
+                "callback": "insert_summary",
+                "limit": 50,
+                "cfg": {
+                    "buf_win": 140
+                }
+            }
+        )',
+
+        # 4
+        'Loader.parse_task(
+            "./routers/tasks/HisStock.yaml", 
+            kwargs = {
+                "opt": "otc",
+                "targets": ["stock"],
+                "starttime": "datetime.utcnow() - timedelta(days=5)",
+                "endtime": "datetime.utcnow()",
+                "stockids": "[i for i in iddb_tasks[\"otc\"]().stock.get_ids()]",
+                "base": "stock",
+                "order": ["-totalvolume", "-totaldiff"],
+                "limit": 1000
+            }
+        )',
+
+        # 5
+        'Loader.parse_task(
+            "./routers/tasks/HisCredit.yaml",
+            kwargs = {
+                "opt": "otc",
+                "targets": ["credit"],
+                "starttime": "datetime.utcnow() -timedelta(days=5)",
+                "endtime": "datetime.utcnow()",
+                "stockids": "[i for i in iddb_tasks[\"otc\"]().stock.get_ids()]",
+                "base": "stock",
+                "order": ["+bearishused", "+financeused"],
+                "limit": 500
+            }
+        )',
+
+        # 6
+        'Loader.parse_task(
+            "./routers/tasks/HisFuture.yaml",
+            kwargs = {
+                "opt": "otc",
+                "targets":  ["future"],
+                "starttime": "datetime.utcnow() - timedelta(days=5)",
+                "endtime": "datetime.utcnow()",
+                "stockids": "[i for i in iddb_tasks[\"otc\"]().stock.get_ids()]",
+                "base": "stock",
+                "order": ["-totalvolume"],
+                "limit": 250
+            }
+        )',
+
+        # 7
+        'Loader.parse_task(
+            "./routers/tasks/AlgBTrader.yaml",
+            kwargs = {
+                "opt": "otc",
+                "targets": ["trader"],
+                "starttime": "datetime.utcnow() - timedelta(days=10)",
+                "endtime": "datetime.utcnow()",
+                "stockids": [],
+                "base": "stock",
+                "order": ["-buys", "-sells", "-portfolio_value"],
+                "callback": "insert_summary",
+                "limit": 50,
+                "cfg": {
+                    "buf_win": 140
+                }
+            }
+        )'
+    ]

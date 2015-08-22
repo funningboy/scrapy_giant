@@ -21,8 +21,8 @@ class TestLoaderStrategy(NoSQLTestCase):
         'routers/table/TestStockProfile1.yaml',
         'routers/table/TestTraderProfile0.yaml',
         'routers/table/TestTraderProfile1.yaml',
-        #'routers/table/TestExcAlgDualema.yaml',
-        #'routers/table/TestExcRptDualema.yaml',
+        'routers/table/TestExcAlgDualema.yaml',
+        'routers/table/TestExcRptDualema.yaml',
         #'routers/table/TestNtyAll.yaml'
     ]
 
@@ -63,10 +63,10 @@ class TestAlwaysRunStrategy(NoSQLTestCase):
     _paths = [
         'routers/table/ExcAlgDualema.yaml',
         'routers/table/ExcRptDualema.yaml',
-        'routers/table/ExcAlgBBands.yaml',
-        'routers/table/ExcRptBBands.yaml',
-        'routers/table/ExcAlgBTrader.yaml',
-        'routers/table/ExcRptBTrader.yaml'
+        #'routers/table/ExcAlgBBands.yaml',
+        #'routers/table/ExcRptBBands.yaml',
+        #'routers/table/ExcAlgBTrader.yaml',
+        #'routers/table/ExcRptBTrader.yaml'
     ]
 
     def setUp(self):
