@@ -6,7 +6,7 @@ from django.views.decorators.csrf import csrf_protect
 
 @csrf_protect
 def hisstock_list_html(request, collect):
-	return render(request, 'handler/hisstock_list.html', collect)
+    return render(request, 'handler/hisstock_list.html', collect)
 
 @csrf_protect
 def hisstock_detail_html(request, collect):

@@ -41,6 +41,3 @@ def create_search(request):
     }
     
     return collect
-
-def create_portfolio(request):
-    pass

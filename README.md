@@ -36,6 +36,10 @@ conda install scrapy
 conda install opencv
 conda install mongodb
 conda install -c Quantopian zipline
+use latest zipline from github
+https://github.com/quantopian/zipline
+cd conda
+conda build zipline >= 0.8.0
 ```
 0.3 install drive libs
 ```
@@ -56,7 +60,7 @@ make install
 easy_install TA-Lib
 pip install Pillow
 pip install mongoengine
-pip install zipline
+#pip install zipline
 pip install celery
 pip install celery-with-mongodb
 pip install supervisor

@@ -171,8 +171,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
      'django.contrib.auth.context_processors.auth',
      'django.contrib.messages.context_processors.messages',
      'main.context_processor.current_url',
-     'main.context_processor.searchform',
-     'main.context_processor.portfolioform'
+     'main.context_processor.searchform'
 )
 
 
@@ -219,7 +218,7 @@ INSTALLED_APPS = (
     'algorithm',
     'workers',
     'routers',
-    'notify',
+    #'notify',
     # Uncomment the next line to enable the admin:
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:

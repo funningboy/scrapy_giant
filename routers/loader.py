@@ -16,7 +16,7 @@ from workers.gworker import GWorker
 from workers.nodes import Node
 from handler.tasks import *
 from algorithm.tasks import *
-from notify.tasks import *
+#from notify.tasks import *
 
 class Loader(object):
 
@@ -41,7 +41,7 @@ class Loader(object):
             (cls._parse_kwargs, 'limit'),
             (cls._parse_kwargs, 'cfg'),
             (cls._parse_kwargs, 'debug'),
-        ] 
+        ]
         return methods
 
     @classmethod
@@ -53,9 +53,9 @@ class Loader(object):
             except:
                 print "loading %s fail" %(path)
                 raise
-        
+
             for p, t in cls._parse_kwargs_all():
-                p(t, stream['kwargs'], kwargs)        
+                p(t, stream['kwargs'], kwargs)
             return stream
 
     @classmethod
@@ -145,13 +145,13 @@ class Loader(object):
         if edge in graph.edges():
             u, v = edge
             graph.remove_edge(u, v)
-    
+
     def _valid_graph(self, stream, graph):
         if not nx.is_directed_acyclic_graph(graph):
             print "cycles:"
             print list(nx.simple_cycles(graph))
             raise
-  
+
     def _set_start_to_run(self, stream, graph):
         for node in nx.topological_sort(graph):
             if not nx.ancestors(graph, node):

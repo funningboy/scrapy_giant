@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+#%matplotlib inline
+import pyfolio as pf
+
 import pytz
 import matplotlib.pyplot as plt
 import numpy as np
@@ -73,10 +76,10 @@ class DualEMAAlgorithm(TradingAlgorithm):
             self.sell_hold = self.sell_hold - 1 if self.sell_hold > 0 else self.sell_hold
             self.buy = False
             self.sell = False
-    
+
             # sell after buy
             if self._trend_up:
-                if (short_ema > long_ema).all() and not self.invested_buy:
+                if short_ema[-1] > long_ema[-1] and not self.invested_buy:
                     self.order(sid, self._buy_amount)
                     self.invested_buy = True
                     self.buy = True
@@ -88,7 +91,7 @@ class DualEMAAlgorithm(TradingAlgorithm):
 
             # buy after sell
             if self._trend_down:
-                if (short_ema < long_ema).all() and not self.invested_sell:
+                if short_ema[-1] < long_ema[-1] and not self.invested_sell:
                     self.order(sid, -self._sell_amount)
                     self.invested_sell = True
                     self.sell = True
@@ -146,12 +149,14 @@ def run(opt='twse', debug=False, limit=0):
             panel, dbhandler = collect_hisframe(**kwargs)
             if len(panel[stockid].index) < maxlen:
                 continue
-            dualema = DualEMAAlgorithm(dbhandler=dbhandler, debug=debug)
+            dualema = DualEMAAlgorithm(dbhandler=dbhandler, debug=debug, capital_base=float("1.0e5"), data_frequency='daily')
             results = dualema.run(panel).fillna(0)
+            # risk metric 1month, 3month, 12month..
+            [perf for perf in dualema.get_generator()][-1]
             report.collect(stockid, results)
             print "%s pass" %(stockid)
         except:
-            #print traceback.format_exc()
+            print traceback.format_exc()
             continue
 
     if report.report.empty:

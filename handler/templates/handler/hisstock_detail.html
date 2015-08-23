@@ -5,12 +5,32 @@
 {% block page %}
 {{ block.super }}
 <!-- layout -->
-<div class="row">
-   <!-- {%include "handler/summary.html" %} -->
-    {%include "handler/topbuy_piechart.html" %}
-    {%include "handler/topsell_piechart.html" %}
-    {%include "handler/topmap_columnchart.html" %}
-    {%include "handler/stockdetail_table.html" %}
+<div class="hisstockdetail">
+    <div class="toptrader">
+        <div class="row0">
+            {%include "handler/topbuy_piechart.html" %}
+            {%include "handler/topsell_piechart.html" %}
+            {%include "handler/topmap_piechart.html" %}
+        </div>
+       <div class="row1">
+            {%include "handler/topmap_columnchart.html" %}
+        </div>
+    </div>
+    <div class="credit">
+        <div class="row0">
+            {%include "handler/credit_columnchart.html" %}
+        </div> 
+    </div>
+    <div class="future">
+        <div class="row0">
+            {%include "handler/future_columnchart.html" %}
+        </div> 
+    </div>  
+    <div class="stockdetail">
+        <div class="row0">
+            {%include "handler/stockdetail_table.html" %}
+        </div>
+    </div>
 </div>
 {% endblock %}
 

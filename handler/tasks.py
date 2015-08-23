@@ -23,6 +23,7 @@ iddb_tasks = {
 
 hisitems = ['stock', 'credit', 'future', 'trader']
 
+
 @shared_task
 def collect_hisitem(opt, targets, starttime, endtime, base='stock', order=[], stockids=[], traderids=[], limit=10, callback=None, debug=False):
     """ as middleware collect raw his stock/toptrader/credit/future to item
