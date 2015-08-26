@@ -4,8 +4,8 @@
 import telnetlib
 import time
 
-def reset_adsl():
-    HOST = "192.168.1.1"
+def reset_adsl(host="192.168.1.1"):
+    HOST = host
     user = "cht"
     password = "chtnvdsl"
 

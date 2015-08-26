@@ -19,6 +19,7 @@ def router_search(request):
     #return hisstock_detail_html(request, collect)
     #return histrader_detail_html(request, collect)
     return hisstock_list_html(request, collect)
+    #return histrader_list.html(request, collect)
     return home(request)
 
 

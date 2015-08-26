@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime, timedelta
-from handler.collects import create_hiscollect
 from django.conf import settings
 
 def create_search(request):

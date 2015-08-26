@@ -422,9 +422,10 @@ class TwseTraderHisDBHandler(object):
         results = cursor.map_reduce(map_f, reduce_f, 'toptradermap')
         results = list(results)
         retval = []
-        mkey = 'stockid' if base == 'stock' else 'traderid'
-        mids = stockids if base == 'stock' else traderids
-        results = [i for i in results if i.key[mkey] in mids]
+        sort = [('stockid', stockids), ('traderid', traderids)] if base == 'stock' else [('traderid', traderids), ('stockid', stockids)]
+        for k, s in sort:
+            if s:
+                results = list(filter(lambda x: x.key[k] in s, results))
         reorder = lambda k: map(lambda x: k.value[x[1:]] if x.startswith('x') else -k.value[x[1:]], order)
         pool = sorted(results, key=reorder)[:limit]
         for i, it in enumerate(pool):

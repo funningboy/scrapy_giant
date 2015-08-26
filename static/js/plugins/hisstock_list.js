@@ -41,10 +41,10 @@ function loadChartData(settings) {
 function generateTableData(result){
     var stockitem = result.stockitem;
     var credititem = result.credititem;
+    var futureitem = results.futureitem;
     var data = [];
 
     // try iter to fill all fields
-    // populate stockitem 
     console.log(result);
 
     $.each(stockitem, function(s_idx, s_it) {
@@ -67,7 +67,6 @@ function generateTableData(result){
         });
     });
 
-    // populate credititem
     var ndata = $.extend(true, [], data);
     $.each(credititem, function(c_idx, c_it) {
         var d_idx = c_it.datalist.length -1;
@@ -78,6 +77,15 @@ function generateTableData(result){
         if (rst.length != 0) {
             rst[0].finaused = parseFloat(d_it.financeused.toFixed(2));
             rst[0].bearused = parseFloat(d_it.bearishused.toFixed(2));
+        }
+    });
+
+    var fdata = $.extend(true, [], data);
+    $.each(futureitem[0].datalist, function(d_idx, d_it) {
+        var date = new Date(d_it.date);
+        var rst = $.grep(ndata, function(e){ return e.date == yyyymmdd(date); });
+        if (rst.length != 0) {
+            rst[0].future = d_it.fclose.toFixed(2);
         }
     });
 

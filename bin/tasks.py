@@ -5,6 +5,7 @@ import subprocess
 from bin.start import wap_scrapy_cmd
 from giant.celery import app
 from celery import shared_task
+from bin.adsl import *
 
 from celery.utils.log import get_task_logger
 logger = get_task_logger('bin')

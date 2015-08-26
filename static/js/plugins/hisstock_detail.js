@@ -24,14 +24,17 @@ function loadChartData(settings) {
             $("#topbuy_piechart").show();
             $("#topsell_piechart").show();
             $("#topmap_columnchart").show();
+            $("#credit_columnchart").show();
+            $("#future_columnchar").show();
             // auto refresh after time out
             setTimeout(loadChartData, 10*60*1000); 
         },
 
         success: function (result) {
-            //
-            generateChartData(result);
-            generateTableData(result);
+            plotTraderData(result);
+            plotCreditData(result);
+            plotFutureData(result);
+            plotTableData(result);
         },
 
         error: function (xhr, ajaxOptions, thrownError) {
@@ -40,11 +43,13 @@ function loadChartData(settings) {
             $("#topbuy_piechart").hide();
             $("#topsell_piechart").hide();
             $("#topmap_columnchart").hide();
+            $("#credit_columnchart").hide();
+            $("future_columnchart").hide();
         }
     });
 }
 
-function generateChartData(result) {
+function plotTraderData(result) {
     var stockitem = result.stockitem;  
     var traderitem = result.traderitem;
     var index = 0;
@@ -52,7 +57,6 @@ function generateChartData(result) {
     var pdata = [];
     var cdata;
 
-    // populate stockitem 
     $.each(stockitem[0].datalist, function(d_idx, d_it) {
         data.push({
             "date": new Date(d_it.date),
@@ -70,7 +74,6 @@ function generateChartData(result) {
         });
     });
 
-    // populate traderitem
     $.each(traderitem, function(t_idx, t_it) {
         var ndata = $.extend(true, [], data);
         $.each(t_it.datalist, function(d_idx, d_it) {
@@ -101,7 +104,6 @@ function generateChartData(result) {
     schart = createTopSellPieChart(pdata);
     mchart = createTopMapColumnChart(cdata);
     createCallBackListener(bchart, schart, mchart, cdata);
-
     // console.log(pdata);
     // console.log(cdata);
 }
@@ -149,7 +151,7 @@ function createTopBuyPieChart(pdata) {
         "dataProvider": pdata,
         "valueField": "totalbuyvolume",
         "titleField": "traderidnm",
-        "labelText": "[[title]]: [[value]]",
+        "labelText": "[[title]]: \n[[value]]",
         "pullOutOnlyOne": true,
          "export": {
                  "enabled": true
@@ -167,7 +169,7 @@ function createTopSellPieChart(pdata) {
         "dataProvider": pdata,
         "valueField": "totalsellvolume",
         "titleField": "traderidnm",
-        "labelText": "[[title]]: [[value]]",
+        "labelText": "[[title]]: \n[[value]]",
         "pullOutOnlyOne": true,
          "export": {
                  "enabled": true
@@ -177,7 +179,6 @@ function createTopSellPieChart(pdata) {
 }
 
 function createTopMapColumnChart(cdata) {
-    // create column chart
     var chart = AmCharts.makeChart("topmap_columnchart", {
         "type": "serial",
         "theme": "dark",
@@ -391,13 +392,178 @@ function createCallBackListener(bchart, schart, mchart, cdata){
     });
 }
 
-function generateTableData(result){
+function plotCreditData(result){
+
+
+}
+
+
+function createCreditColumnChart(cdata) {
+    var chart = AmCharts.makeChart("credit_columnchart", {
+        "type": "serial",
+        "theme": "dark",
+        "path": "http://www.amcharts.com/lib/3/",
+        "pathToImages": "http://www.amcharts.com/lib/3/images/",    
+        "dataProvider": cdata,  
+        "legend": {
+            "equalWidths": false,
+            "useGraphSettings": true
+        },
+        "valueAxes": [{
+            "id": "volumeAxis",
+            "axisAlpha": 0,
+            "gridAlpha": 0,
+            "position": "left",
+            "title": "volume",        
+            "stackType": "regular"
+        }, 
+        {
+            "id": "priceAxis",
+            "axisAlpha": 0,
+            "gridAlpha": 0,
+            "inside": true,
+            "position": "right",
+            "title": "price"
+        }],
+        "graphs": [{
+            "balloonText": "[[value]]",
+            "dashLengthField": "dashLength",
+            "fillAlphas": 0.7,
+            "legendPeriodValueText": "[[value]]",
+            "legendValueText": "v: [[value]]",
+            "title": "traderbuyvolume",
+            "type": "column",
+            "valueField": "traderbuyvolume",
+            "valueAxis": "volumeAxis"
+        },
+        {
+            "balloonText": "[[value]]",
+            "dashLengthField": "dashLength",
+            "fillAlphas": 0.7,
+            "legendPeriodValueText": "[[value]]",
+            "legendValueText": "v: [[value]]",
+            "title": "tradersellvolume",
+            "type": "column",
+            "valueField": "tradersellvolume",
+            "valueAxis": "volumeAxis"
+        },             
+        {
+            "balloonText": "[[value]]",
+            "dashLengthField": "dashLength",
+            "fillAlphas": 0.7,
+            "legendPeriodValueText": "[[value]]",
+            "legendValueText": "v: [[value]]",
+            "title": "stockvolume",
+            "type": "column",
+            "newStack": true, 
+            "valueField": "stockvolume",
+            "valueAxis": "volumeAxis"
+        },
+        {
+            "balloonText": "p:[[value]]",
+            "bullet": "round",
+            "bulletBorderAlpha": 1,
+            "useLineColorForBulletBorder": true,
+            "bulletColor": "#FFFFFF",
+            "bulletSizeField": "townSize",
+            "dashLengthField": "dashLength",
+            "descriptionField": "event",
+            "labelPosition": "right",
+            "labelText": "[[event]]",
+            "legendValueText": "p: [[value]]",
+            "title": "traderavgbuyprice",
+            "fillAlphas": 0,
+            "valueField": "traderavgbuyprice",
+            "valueAxis": "priceAxis"
+        },
+        {
+            "balloonText": "p:[[value]]",
+            "bullet": "round",
+            "bulletBorderAlpha": 1,
+            "useLineColorForBulletBorder": true,
+            "bulletColor": "#FFFFFF",
+            "bulletSizeField": "townSize",
+            "dashLengthField": "dashLength",
+            "descriptionField": "event",
+            "labelPosition": "right",
+            "labelText": "[[event]]",
+            "legendValueText": "p: [[value]]",
+            "title": "traderavgsellprice",
+            "fillAlphas": 0,
+            "valueField": "traderavgsellprice",
+            "valueAxis": "priceAxis"
+        },
+        {
+            "balloonText": "p: [[value]]",
+            "bullet": "round",
+            "bulletBorderAlpha": 1,
+            "useLineColorForBulletBorder": true,
+            "bulletColor": "#FFFFFF",
+            "bulletSizeField": "townSize",
+            "dashLengthField": "dashLength",
+            "descriptionField": "event",
+            "labelPosition": "right",
+            "labelText": "[[event]]",
+            "legendValueText": "p: [[value]]",
+            "title": "stockprice",
+            "fillAlphas": 0,
+            "valueField": "stockprice",
+            "valueAxis": "priceAxis"
+        }], 
+        "chartCursor": {
+            "categoryBalloonDateFormat": "WW",
+            "cursorAlpha": 0.1,
+            "cursorColor":"#000000",
+            "fullWidth":true,
+            "valueBalloonsEnabled": false,
+            "zoomable": false
+        },
+        "dataDateFormat": "YYYY-MM-DD", 
+        "categoryField": "date",
+        "categoryAxis": {
+            "dateFormats": [{
+                "period": "DD",
+                "format": "DD"
+            }, {
+                "period": "WW",
+                "format": "MMM DD"
+            }, {
+                "period": "MM",
+                "format": "MMM"
+            }, {
+                "period": "YYYY",
+                "format": "YYYY"
+            }],
+            "parseDates": true,
+            "autoGridCount": false,
+            "axisColor": "#555555",
+            "gridAlpha": 0.1,
+            "gridColor": "#FFFFFF",
+            "gridCount": 50
+        },
+        "export": {
+            "enabled": true
+        },
+        "chartScrollbar": {},  
+        "chartCursor": {
+            "cursorPosition": "mouse"
+        }
+    });
+    return cdata;
+}
+
+function plotFutureData(result){
+
+}
+
+
+function plotTableData(result){
     var stockitem = result.stockitem;
     var credititem = result.credititem;
+    var futureitem = result.futureitem;
     var data = [];
 
     // try iter to fill all fields
-    // populate stockitem 
     $.each(stockitem[0].datalist, function(d_idx, d_it) {
         var date = new Date(d_it.date);
         data.push({
@@ -414,7 +580,6 @@ function generateTableData(result){
         });
     });
 
-    // populate credititem
     var ndata = $.extend(true, [], data);
     $.each(credititem[0].datalist, function(d_idx, d_it) {
         var date = new Date(d_it.date);
@@ -425,7 +590,14 @@ function generateTableData(result){
         }
     });
 
-    // populate futureitem
+    var fdata = $.extend(true, [], data);
+    $.each(futureitem[0].datalist, function(d_idx, d_it) {
+        var date = new Date(d_it.date);
+        var rst = $.grep(ndata, function(e){ return e.date == yyyymmdd(date); });
+        if (rst.length != 0) {
+            rst[0].future = d_it.fclose.toFixed(2);
+        }
+    });
 
     $('#stockdetail_table').dynatable({
         dataset: {
