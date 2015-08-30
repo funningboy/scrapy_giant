@@ -5,7 +5,7 @@
 <style type='text/css'>
     #topbuy_piechart {
         width : 100%;
-        height : 300px;
+        height : 400px;
         font-size : 8px;
         float: middle;
     }
@@ -16,24 +16,12 @@
             <div class="panel-heading">
                 <i class="fa fa-bar-chart-o fa-fw"></i> Top Buy
                 <div class="pull-right">
-                    <div id="topbuybtn" class="btn-group">
-                        <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdow">
-                            Actions
-                            <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu pull-right" role="menu">
-                            <li><a href="#">Action</a></li>
-                            <li><a href="#">hide</a></li>
-                            <li class="divider"></li>
-                            <li><a href="#">Separated link</a>
-                            </li>
-                        </ul>
-                    </div>
+                <a href="javascript:;" data-toggle="collapse" data-target="#topbuy_piechart"><i class="fa fa-fw fa-caret-down"></i></a>
                 </div>
             </div>
             <!-- /.panel-heading -->
             <div class="panel-body">
-                <div id="topbuy_piechart"></div>
+                <ul id="topbuy_piechart"></ul>
             </div>
             <!-- /.panel-body -->
         </div>

@@ -7,6 +7,7 @@
         starttime: "datetime.utcnow() - timedelta(days=15)",
         endtime: "datetime.utcnow()",
         stockids: ['3474'],
+        traderids: [],
         base: 'stock',
         order: ['-totalvolume', '-totaldiff'],
         callback: null,

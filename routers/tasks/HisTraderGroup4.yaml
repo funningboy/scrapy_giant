@@ -1,0 +1,18 @@
+{
+    # handler/tasks.py
+    task: "collect_hisitem",
+    kwargs: {
+        opt: null,
+        targets: ['trader'],
+        starttime: "datetime.utcnow() - timedelta(days=5)",
+        endtime: "datetime.utcnow()",
+        stockids: [],
+        traderids: ['1020', '1030', '1040', '1110', '1230', '5380', '7000', '9300'],
+        base: 'trader',
+        order: ['-totalvolume'],
+        callback: null,
+        limit: 100,
+        debug: False
+    },
+    description: '八大公股: (1020)合庫,（1030)土銀, (1040)臺銀證券, (1110)台灣企銀, (1230)彰銀, (5380)第一金, (7000)兆豐, (9300)華南永昌'
+}

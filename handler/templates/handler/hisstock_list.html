@@ -6,9 +6,11 @@
 {{ block.super }}
 <!-- layout -->
 <div class="hisstocklist">
-	<class="row0">
-   		<!-- {%include "handler/summary.html" %} -->
-   		{%include "handler/stocklist_table.html" %}
+	<div class="stockdetail">
+		<div class="row0">
+   			<!-- {%include "handler/summary.html" %} -->
+   			{%include "handler/stocklist_table.html" %}
+   		</div>
    	</div>
 </div>
 {% endblock %}
@@ -23,6 +25,7 @@
 <script type="text/javascript" src="http://www.amcharts.com/lib/3/serial.js"></script>
 <script type="text/javascript" src="http://www.amcharts.com/lib/3/plugins/export/export.js"></script>
 <script type="text/javascript" src="{% static 'js/jquery.dynatable.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/plugins/hisstock_ltable.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/plugins/hisstock_list.js' %}"></script>
 <script type="text/javascript">
 // <![CDATA[

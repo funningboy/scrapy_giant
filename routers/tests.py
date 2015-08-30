@@ -21,8 +21,8 @@ class TestLoaderStrategy(NoSQLTestCase):
         'routers/table/TestStockProfile1.yaml',
         'routers/table/TestTraderProfile0.yaml',
         'routers/table/TestTraderProfile1.yaml',
-        'routers/table/TestExcAlgDualema.yaml',
-        'routers/table/TestExcRptDualema.yaml',
+        #'routers/table/TestExcAlgDualema.yaml',
+        #'routers/table/TestExcRptDualema.yaml',
         #'routers/table/TestNtyAll.yaml'
     ]
 
@@ -34,6 +34,7 @@ class TestLoaderStrategy(NoSQLTestCase):
         for path in self._paths:
             # add as event listener/sumbit
             G = self._loader.create_graph(path, priority=1, debug=True)
+            self._loader.finalize(G)
             self.assertTrue(G)
             G.start()
             self._graphs.append(G)
@@ -76,6 +77,7 @@ class TestAlwaysRunStrategy(NoSQLTestCase):
     def test_on_run(self):
         for path in self._paths:
             G = self._loader.create_graph(path, priority=1, debug=False)
+            self._loader.finalize(G)
             self.assertTrue(G)
             G.start()
             self._graphs.append(G)

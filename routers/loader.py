@@ -92,8 +92,7 @@ class Loader(object):
         methods = [
             self._create_edges,
             self._create_nodes,
-            self._valid_graph,
-            self._set_start_to_run
+            self._valid_graph
         ]
         return methods
 
@@ -105,6 +104,11 @@ class Loader(object):
             for it in self._create_graph_methods():
                 it(stream, graph)
             return graph
+
+    def finalize(self, graph):
+        for node in nx.topological_sort(graph):
+            if not nx.ancestors(graph, node):
+                graph.set_start_to_run(node)
 
     def _delete_node(self, graph, node):
         if node in graph.nodes():
@@ -151,8 +155,3 @@ class Loader(object):
             print "cycles:"
             print list(nx.simple_cycles(graph))
             raise
-
-    def _set_start_to_run(self, stream, graph):
-        for node in nx.topological_sort(graph):
-            if not nx.ancestors(graph, node):
-                graph.set_start_to_run(node)

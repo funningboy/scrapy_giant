@@ -3,14 +3,13 @@
 from datetime import datetime, timedelta
 from django.conf import settings
 
-def create_search(request):
+def create_search_collect(request):
     starttime = datetime.utcnow() - timedelta(days=150)
     endtime = datetime.utcnow()
     stockids = []
     traderids = []
     opt = None
     algorithm = None
-    method = None
 
     # form.is_valid
     if 'starttime' in request.GET and request.GET['starttime']:
@@ -25,8 +24,6 @@ def create_search(request):
         opt = request.GET['opt']
     if 'algorithm' in request.GET and request.GET['algorithm']:
         algorithm = request.GET['algorithm']
-    if 'method' in request.GET and request.GET['method']:
-        method = request.GET['method']
 
     collect = {
         'starttime': starttime,
@@ -35,8 +32,6 @@ def create_search(request):
         'traderids': traderids,
         'opt': opt,
         'algorithm': algorithm,
-        'method': method,
         'debug': settings.DEBUG
     }
-    
     return collect

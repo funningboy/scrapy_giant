@@ -27,8 +27,11 @@ function loadChartData(settings) {
         },
 
         success: function (result) {
-            //
-            generateTableData(result);
+            try {
+                plotTableData(result);
+            } catch(err) {
+                console.log("plotTableData fail");
+            }
         },
 
         error: function (xhr, ajaxOptions, thrownError) {
@@ -37,65 +40,3 @@ function loadChartData(settings) {
         }
     });
 }
-
-function generateTableData(result){
-    var stockitem = result.stockitem;
-    var credititem = result.credititem;
-    var futureitem = results.futureitem;
-    var data = [];
-
-    // try iter to fill all fields
-    console.log(result);
-
-    $.each(stockitem, function(s_idx, s_it) {
-        var d_idx = s_it.datalist.length -1;
-        var d_it = s_it.datalist[d_idx];
-        var stockidnm = s_it.stockid + '-' + s_it.stocknm;
-        var date = new Date(d_it.date);
-        data.push({
-            "date": yyyymmdd(date),
-            "stockidnm": stockidnm,
-            "open": parseFloat(d_it.open.toFixed(2)),
-            "high": parseFloat(d_it.high.toFixed(2)),
-            "low": parseFloat(d_it.low.toFixed(2)),
-            "close": parseFloat(d_it.close.toFixed(2)),
-            "volume": parseInt(d_it.volume.toFixed()),
-            "finaused" : 0.00,
-            "bearused": 0.00,
-            "future": 0.00,
-            "event": ""
-        });
-    });
-
-    var ndata = $.extend(true, [], data);
-    $.each(credititem, function(c_idx, c_it) {
-        var d_idx = c_it.datalist.length -1;
-        var d_it = c_it.datalist[d_idx];
-        var date = new Date(d_it.date);
-        var stockidnm = c_it.stockid + '-' + c_it.stocknm;
-        var rst = $.grep(ndata, function(e){ return e.date == yyyymmdd(date) && e.stockidnm == stockidnm; });
-        if (rst.length != 0) {
-            rst[0].finaused = parseFloat(d_it.financeused.toFixed(2));
-            rst[0].bearused = parseFloat(d_it.bearishused.toFixed(2));
-        }
-    });
-
-    var fdata = $.extend(true, [], data);
-    $.each(futureitem[0].datalist, function(d_idx, d_it) {
-        var date = new Date(d_it.date);
-        var rst = $.grep(ndata, function(e){ return e.date == yyyymmdd(date); });
-        if (rst.length != 0) {
-            rst[0].future = d_it.fclose.toFixed(2);
-        }
-    });
-
-    $('#stocklist_table').dynatable({
-        dataset: {
-            records: ndata
-        }
-    });
-
-    // debug
-    console.log(data);
-}
-

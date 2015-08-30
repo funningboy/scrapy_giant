@@ -1,0 +1,31 @@
+{% load compress %}
+{% load staticfiles %}
+
+{% block credit_columnchart %}<!-- topmap_columnchart -->
+<style type='text/css'>
+    #credit_columnchart {
+        width : 100%;
+        height : 400px;
+        font-size : 8px;
+        float: middle;
+    }
+    </style>
+    <div class="col-lg-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="fa fa-bar-chart-o fa-fw"></i> Credit Detail
+                <div class="pull-right">
+                <a href="javascript:;" data-toggle="collapse" data-target="#credit_columnchart"><i class="fa fa-fw fa-caret-down"></i></a>
+                </div>
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <ul id="credit_columnchart"></ul>
+            </div>
+            <!-- /.panel-body -->
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+{% endblock %}
