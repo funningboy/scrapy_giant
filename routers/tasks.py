@@ -29,16 +29,12 @@ router = {
         'otc': ([5], [6,7,8], [9])
         }),
     'TraderProfileUp0': ('routers/table/TraderProfileUp0.yaml', {
-        'twse': ([0], [1], [2]),
-        'otc': ([3], [4], [5])
+        'twse': ([0], [], [1]),
+        'otc': ([2], [], [3])
         }),
     'TraderProfileDown0': ('routers/table/TraderProfileDown0.yaml', {
-        'twse': ([0], [1], [2]),
-        'otc': ([3], [4], [5])
-        }),
-    'TraderProfileUp1': ('routers/table/TraderProfileUp1.yaml', {
-        'twse': ([0], [1], [2]),
-        'otc': ([3], [4], [5])
+        'twse': ([0], [], [1]),
+        'otc': ([2], [], [3])
         }),
     'TraderGroup0': ('routers/table/TraderGroup0.yaml', {
         'twse': ([0], [], [1]),

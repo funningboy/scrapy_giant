@@ -49,11 +49,11 @@ function loadChartData(settings) {
                 console.log("plotFutureData fail");
             }
 
-            //try {
+            try {
                 plotTableData(result);
-            //} catch(err) {
-            //    console.log("plotTableData fail");
-            //}
+            } catch(err) {
+                console.log("plotTableData fail");
+            }
         },
 
         error: function (xhr, ajaxOptions, thrownError) {

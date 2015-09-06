@@ -27,7 +27,7 @@ Nodes:
             "./routers/tasks/HisItemAll.yaml",
             kwargs = {
                 "opt": "twse",
-                "targets": ["stock", "credit", "futute", "trader"],
+                "targets": ["stock", "credit", "future", "trader"],
                 "starttime": "datetime.utcnow() - timedelta(days=5)",
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
@@ -55,7 +55,7 @@ Nodes:
             "./routers/tasks/HisItemAll.yaml",
             kwargs = {
                 "opt": "otc",
-                "targets": ["stock", "credit", "futute", "trader"],
+                "targets": ["stock", "credit", "future", "trader"],
                 "starttime": "datetime.utcnow() - timedelta(days=5)",
                 "endtime": "datetime.utcnow()",
                 "stockids": [],

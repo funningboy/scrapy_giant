@@ -19,7 +19,7 @@ function plotTableData(result){
             "bearused": 0.00,
             "fopen": 0.00,
             "fclose": 0.00,
-            "fvolume": 0
+            "fvolume": 0,
             "event": ""
         });
     });

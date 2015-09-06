@@ -1,3 +1,4 @@
+
 function loadChartData(settings) {
     // host:port ...
     var URL = "http://127.0.0.1:8000/handler/api/histrader_detail/?";
@@ -28,11 +29,13 @@ function loadChartData(settings) {
         },
 
         success: function (result) {
-            try {
+            //try {
                 plotStockData(result);
-            } catch(err) {
-                console.log("plotStockData fail");
-            }
+            //} catch(err) {
+            //    console.log("plotStockData fail");
+            //}
+
+            plotlTableData(result);
         },
 
         error: function (xhr, ajaxOptions, thrownError) {

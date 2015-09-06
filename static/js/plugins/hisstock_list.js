@@ -28,7 +28,7 @@ function loadChartData(settings) {
 
         success: function (result) {
             try {
-                plotTableData(result);
+                plotlTableData(result);
             } catch(err) {
                 console.log("plotTableData fail");
             }
