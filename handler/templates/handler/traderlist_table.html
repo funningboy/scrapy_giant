@@ -1,9 +1,9 @@
 {% load compress %}
 {% load staticfiles %}
 
-{% block stocklist_table %}
-<!-- traderdetail table  -->
-<div>
+{% block traderlist_table %}
+<!-- traderlist table  -->
+<div class="row">
     <div class="col-lg-12">
         <div class="panel panel-default">
             <div class="panel-heading">
@@ -14,11 +14,12 @@
             <!-- /.panel-heading -->
             <div class="panel-body">
                 <div class="table-responsive">
-                    <table id="stocklist_table" class="table table-bordered table-hover">
+                    <table id="traderlist_table" class="table table-bordered table-hover">
                         <thead>
                             <tr>
                                 <th>date</th>
-                                <th>stockidnm</th>
+                                <th>stockidnm</th> 
+                                <th>traderidnm</th>
                                 <th>open</th>
                                 <th>high</th>
                                 <th>low</th>
@@ -30,7 +31,7 @@
                                 <th>fclose</th>
                                 <th>fvolume</th>
                                 <th>expect</th>
-                                <th>accuracy<th>
+                                <th>accuracy</th>
                                 <th>event</th>
                             </tr>
                         </thead>

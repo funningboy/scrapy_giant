@@ -17,7 +17,9 @@ class GWorker(DAGWorker):
         'dualemaitem', 
         'btraderitem', 
         'bbanditem', 
-        'kmeansitem'
+        'rforestitem',
+        'kmeansitem',
+        'kdtreeitem'
     ]
     
     def __init__(self, **kwargs):

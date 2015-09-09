@@ -2,7 +2,8 @@
 from routers.loader import Loader
 from datetime import datetime, timedelta
 
-router = {
+
+routers = {
     # key, search path, init node, middle node, end node
     'StockProfileUp0': ('routers/table/StockProfileUp0.yaml', {
         'twse': ([0,1,2], [3], [4]),
@@ -51,6 +52,14 @@ router = {
     'TraderGroup3': ('routers/table/TraderGroup3.yaml', {
         'twse': ([0], [], [1]),
         'otc': ([2], [], [3])
+        }),
+    'StockGroup0': ('routers/table/StockGroup0.yaml', {
+        'twse': (),
+        'otc': ()
+        }),
+    'StockGroup1': ('routers/table/StockGroup1.yaml', {
+        'twse': (),
+        'otc': ()
         })
 }
 
@@ -63,15 +72,15 @@ def schedule_router_tasks(**collect):
     traderids = collect.pop('traderids', [])
     debug = collect.pop('debug', False)
 
-    starts = router[algorithm][1][opt][0]
-    middles = router[algorithm][1][opt][1]
-    ends = router[algorithm][1][opt][2]
-    tmps = router[algorithm][1]['otc'] if opt == 'twse' else router[algorithm][1]['twse']
+    starts = routers[algorithm][1][opt][0]
+    middles = routers[algorithm][1][opt][1]
+    ends = routers[algorithm][1][opt][2]
+    tmps = routers[algorithm][1]['otc'] if opt == 'twse' else routers[algorithm][1]['twse']
     cuts = []
     map(lambda x: cuts.extend(x), tmps)
 
     loader = Loader()
-    graph = loader.create_graph(router[algorithm][0], priority=1, debug=True)
+    graph = loader.create_graph(routers[algorithm][0], priority=1, debug=True)
 
     for n in starts:
         ptr = graph.node[n]['ptr']
@@ -102,4 +111,6 @@ def schedule_router_tasks(**collect):
     loader.finalize(graph)
     graph.start()
     graph.join()
-    return graph.record[ends[0]]['retval']
+
+    nodes = filter(lambda x: x['node'] == ends[0], graph.record)
+    return nodes[0]['retval']
