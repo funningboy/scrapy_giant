@@ -22,11 +22,26 @@ iddb_tasks = {
 }
 
 hisitems = ['stock', 'credit', 'future', 'trader']
-
+iditems = ['stock', 'trader']
 
 @shared_task
+def collect_iditem(opt, targets, callback=None, debug=False):
+    """ collect raw stockid/traderid to item
+    """
+
+    item = {}
+    idhandler = iddb_tasks[opt](debug=debug)
+    for target in targets:
+        ptr = getattr(idhandler, target)
+        dt = ptr.query_raw()
+        if dt:
+            item.update({target+'item': dt})
+    return item
+
+
+@shared_task(time_limit=60*60)
 def collect_hisitem(opt, targets, starttime, endtime, base='stock', order=[], stockids=[], traderids=[], limit=10, callback=None, debug=False):
-    """ as middleware collect raw his stock/toptrader/credit/future to item
+    """ collect raw his stock/toptrader/credit/future to item
     """
 
     #asssert ...
@@ -47,7 +62,7 @@ def collect_hisitem(opt, targets, starttime, endtime, base='stock', order=[], st
 
 
 def collect_hisframe(opt, targets, starttime, endtime, base='stock', order=[], stockids=[], traderids=[], limit=10, callback=None, debug=False):
-    """  as middleware collect raw his stock/toptrader/credit/future to df
+    """  collect raw his stock/toptrader/credit/future to df
     <stockid>                                | <stockid> ...
                 open| high| financeused| top0|           open | ...
     20140928    100 | 101 | 0,2        | 100 |20140928 | 110  | ...

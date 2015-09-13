@@ -120,6 +120,18 @@ class TestTwseHisItemQuery(NoSQLTestCase):
         [self.assertTrue(item[i]) for i in ['stockitem', 'traderitem', 'credititem', 'futureitem']] 
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
 
+    def test_on_allid(self):
+        kwargs = {
+            'opt': 'twse',
+            'targets': ['stock', 'trader'],
+            'callback': None,
+            'debug': True
+        }
+        item = collect_iditem.delay(**kwargs).get()
+        self.assertTrue(item)
+        [self.assertTrue(item[i]) for i in ['stockitem', 'traderitem']]
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
+
 
 @unittest.skipIf(skip_tests['TestTwseHisFrameQuery'], "skip")
 class TestTwseHisFrameQuery(NoSQLTestCase):
@@ -240,6 +252,18 @@ class TestOtcHisItemQuery(NoSQLTestCase):
         item = collect_hisitem.delay(**kwargs).get()
         self.assertTrue(item)
         [self.assertTrue(item[i]) for i in ['stockitem', 'traderitem', 'credititem', 'futureitem']] 
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
+
+    def test_on_stockid(self):
+        kwargs = {
+            'opt': 'otc',
+            'targets': ['stock', 'trader'],
+            'callback': None,
+            'debug': True
+        }
+        item = collect_iditem.delay(**kwargs).get()
+        self.assertTrue(item)
+        [self.assertTrue(item[i]) for i in ['stockitem', 'traderitem']]
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
 
 

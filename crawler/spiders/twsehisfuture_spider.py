@@ -36,7 +36,7 @@ class TwseHisFutureSpider(CrawlSpider):
         (u'收盤價', u'close'),
         (u'成交量', u'volume'),
         (u'結算價', u'setprice'),
-        (u'未沖銷契約數', u'untrdcount'), 
+        (u'未沖銷契約數', u'untrdcount'),
         (u'最後最佳買價', u'bestbuy'),
         (u'最後最佳賣價', u'bestsell')
     ]
@@ -72,13 +72,13 @@ class TwseHisFutureSpider(CrawlSpider):
         """ get contract """
         timestamp = datetime.utcnow()
         [fyear, syear] = [timestamp.year] * 2
-        [fmon, smon] = [timestamp.month] * 2 
+        [fmon, smon] = [timestamp.month] * 2
         [fdd, sdd] = [1, calendar.monthrange(timestamp.year, timestamp.month)[1]]
         URL = (
             'http://59.120.135.101/chinese/3/3_1_1_getcontract.asp?' +
             'date1=%(fyear)d/%(fmon)02d/%(fdd)02d&' +
             'date2=%(syear)d/%(smon)02d/%(sdd)02d') % {
-                'fyear': fyear, 
+                'fyear': fyear,
                 'fmon': fmon,
                 'fdd': fdd,
                 'syear': syear,
@@ -99,7 +99,6 @@ class TwseHisFutureSpider(CrawlSpider):
         log.msg("URL: %s" % (response.url), level=log.DEBUG)
         sel = Selector(response)
         elems = sel.xpath('.//*[@id="commodity_id2t"]/option')
-        print response.body
         # skip 請選擇, 全部
         for elem in elems[2:]:
             contract = elem.xpath('./text()').extract()[0].replace(u'\u3000', u'').replace(u' ', u'')
@@ -110,10 +109,10 @@ class TwseHisFutureSpider(CrawlSpider):
                 if self._id.stock.has_id(stockid):
                     # skip DU1, DHS first contract token
                     self._table.update({ stockid: identify.split(',')[-1]})
-                    
+
         table = json.dumps(dict(self._table), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=False)
         log.msg("table: %s" % table, level=log.DEBUG)
-        
+
         # request after contract find
         URL = 'http://59.120.135.101/chinese/3/3_1_2dl.asp'
         sdate = datetime.utcnow() - timedelta(days=5)
@@ -155,7 +154,7 @@ class TwseHisFutureSpider(CrawlSpider):
         yield request
 
     def parse_after_contract_find(self, response):
-        """ 
+        """
         data struct
         [
             {
@@ -206,7 +205,7 @@ class TwseHisFutureSpider(CrawlSpider):
                             'date': date,
                             'stockid': k,
                             'open': cols[3],
-                            'high': cols[4], 
+                            'high': cols[4],
                             'low': cols[5],
                             'close': cols[6],
                             'volume': cols[9],

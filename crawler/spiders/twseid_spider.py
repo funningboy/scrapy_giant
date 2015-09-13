@@ -35,6 +35,7 @@ class TwseIdSpider(CrawlSpider):
         elems = sel.xpath('.//tr')
         for elem in elems[1:]:
             its = elem.xpath('./td/text()').extract()
+            # skip 權證
             if len(its) < 6:
                 continue
             its = [it.strip(string.whitespace).replace(',', '') for it in its]

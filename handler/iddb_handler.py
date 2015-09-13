@@ -129,7 +129,6 @@ class StockIdDBHandler(object):
             if cursor:
                 return cursor[0] 
 
-
     def get_name(self, stockid):
         cursor = self._coll.objects(Q(stockid=stockid)).limit(1)
         cursor = list(cursor)
@@ -163,6 +162,54 @@ class StockIdDBHandler(object):
             coll = self._coll() if len(cursor) == 0 else cursor[0]
             [setattr(coll, k, it[k]) for k in keys]
             coll.save()
+
+    def query_raw(self, callback=None):
+        # class by market, or tag
+        map_f = """
+            function () {
+                try {
+                    var key = null;
+                    var value = { 
+                        data: [{
+                            stockid: this.stockid,
+                            stocknm: this.stocknm 
+                        }]
+                    };
+                    emit(key, value);
+                }
+                catch(e){
+                }
+                finally{
+                }
+            }
+        """
+        reduce_f = """
+            function (key, values) {
+                var redval = {
+                    data: []
+                };
+                if (values.length == 0) {
+                    return redval;
+                }
+                for (var i=0; i < values.length; i++) {
+                    redval.data = values[i].data.concat(redval.data);
+                }
+                return redval;
+            }
+        """
+        finalize_f = """
+        """
+        cursor = self._coll.objects.all()
+        results = cursor.map_reduce(map_f, reduce_f, 'stockidmap')
+        results = list(results)
+        retval = []
+        for it in results:
+            coll = { 'datalist': [] }
+            for data in it.value['data']:
+                coll['datalist'].append(data)
+            retval.append(coll)
+        return callback(retval) if callback else retval
+
 
 class TraderIdDBHandler(object):
 
@@ -239,3 +286,53 @@ class TraderIdDBHandler(object):
             coll = self._coll() if len(cursor) == 0 else cursor[0]
             [setattr(coll, k, it[k]) for k in keys]
             coll.save()
+
+    def query_raw(self, callback=None):
+        # class by market, or tag
+        map_f = """
+            function () {
+                try {
+                    var key = null;
+                    var value = { 
+                        data: [{
+                            stockid: this.traderid,
+                            stocknm: this.tradernm 
+                        }]
+                    };
+                    emit(key, value);
+                }
+                catch(e){
+                }
+                finally{
+                }
+            }
+        """
+        reduce_f = """
+            function (key, values) {
+                var redval = {
+                    data: []
+                };
+                if (values.length == 0) {
+                    return redval;
+                }
+                for (var i=0; i < values.length; i++) {
+                    redval.data = values[i].data.concat(redval.data);
+                }
+                return redval;
+            }
+        """
+        finalize_f = """
+        """
+        cursor = self._coll.objects.all()
+        results = cursor.map_reduce(map_f, reduce_f, 'traderidmap')
+        results = list(results)
+        retval = []
+        for it in results:
+            coll = { 'datalist': [] }
+            for data in it.value['data']:
+                coll['datalist'].append(data)
+            retval.append(coll)
+        return callback(retval) if callback else retval
+
+
+

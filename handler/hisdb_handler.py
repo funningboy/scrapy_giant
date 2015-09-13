@@ -409,7 +409,7 @@ class TwseTraderHisDBHandler(object):
         """
         finalize_f = """
         """
-        assert(set([o[1:] for o in order]) <= set(['totalvolume', 'totalbuyvolume', 'totalsellvolume']))
+        assert(set([o[1:] for o in order]) <= set(['totalvolume', 'totalbuyvolume', 'totalsellvolume', 'totalhit']))
         bufwin = (endtime - starttime).days
         if stockids and traderids:
             cursor = self._coll.objects(
@@ -597,7 +597,7 @@ class TwseCreditHisDBHandler(object):
             }
         """
         reduce_f = """
-          function (key, values) {
+            function (key, values) {
                 var redval = {
                     financetrend: 0,
                     financeused: 0,

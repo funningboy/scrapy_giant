@@ -35,7 +35,8 @@ class OtcIdSpider(CrawlSpider):
         for elem in elems[1:]:
             sub = {}
             its = elem.xpath('./td/text()').extract()
-            if len(its) < 5:
+            # skip 權證
+            if len(its) < 6:
                 continue
             its = [it.strip(string.whitespace).replace(',', '') for it in its]
             m = re.search(r'([0-9a-zA-Z]+)(\W+)?', its[0].replace(u' ', u'').replace(u'\u3000', u''))

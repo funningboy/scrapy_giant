@@ -30,7 +30,7 @@ algdb_tasks = {
 
 algitems = ['dualema', 'btrader', 'bbands']
 
-@shared_task
+@shared_task(time_limit=60*60*60)
 def run_algitem(opt, targets, starttime, endtime, base='stock', order=[], stockids=[], traderids=[], limit=10, cfg={}, callback=None, debug=False):
     """ middleware to run as summary info or getting detail info """
     # assert ...
@@ -61,7 +61,7 @@ def run_algitem(opt, targets, starttime, endtime, base='stock', order=[], stocki
                     item.update({target+'item': dt})
         return item
 
-@shared_task
+@shared_task(time_limit=60*60)
 def collect_algitem(opt, targets, starttime, endtime, base='stock', order=[], stockids=[], traderids=[], limit=10, cfg={}, callback=None, debug=False):
     # assert ...
 

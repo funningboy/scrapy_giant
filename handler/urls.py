@@ -20,5 +20,9 @@ urlpatterns = patterns('',
     url(r'^api/histrader_list/',
         view=serializers.histrader_list_json,
         name='histrader_list_json'
+    ),
+    url(r'^api/allid_list/',
+        view=serializers.allid_list_json,
+        name='allid_list_json'
     )
 )
