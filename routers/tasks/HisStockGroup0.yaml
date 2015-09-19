@@ -1,5 +1,6 @@
 {
     # handler/tasks.py
+    # TODO
     task: "collect_hisitem",
     kwargs: {
         opt: null,
@@ -9,7 +10,8 @@
         stockids: ['3474'],
         traderids: [],
         base: 'stock',
-        order: ['-totalvolume', '-totaldiff'],
+        constraint: null,
+        order: null,
         callback: null,
         limit: 100,
         debug: False

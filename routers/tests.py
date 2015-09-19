@@ -17,13 +17,14 @@ skip_tests = {
 class TestLoaderStrategy(NoSQLTestCase):
 
     _paths = [
-        'routers/table/TestStockProfile0.yaml',
-        'routers/table/TestStockProfile1.yaml',
-        'routers/table/TestTraderProfile0.yaml',
-        'routers/table/TestTraderProfile1.yaml',
-        'routers/table/TestExcAlgDualema.yaml',
-        'routers/table/TestExcRptDualema.yaml',
-        'routers/table/TestNtyAll.yaml'
+        'routers/table/Test.yaml',
+        #'routers/table/TestStockProfile0.yaml',
+        #'routers/table/TestStockProfile1.yaml',
+        #'routers/table/TestTraderProfile0.yaml',
+        #'routers/table/TestTraderProfile1.yaml',
+        #'routers/table/TestExcAlgDualema.yaml',
+        #'routers/table/TestExcRptDualema.yaml',
+        #'routers/table/TestNtyAll.yaml'
     ]
 
     def setUp(self):

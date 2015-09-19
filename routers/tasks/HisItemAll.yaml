@@ -8,7 +8,8 @@
         stockids: [],
         traderids: [],
         base: 'stock',
-        order: [],
+        constraint: null,
+        order: null,
         callback: null,
         limit: 50,
         debug: False

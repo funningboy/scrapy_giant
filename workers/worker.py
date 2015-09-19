@@ -5,14 +5,14 @@
 # http://www.csie.ntnu.edu.tw/~u91029/DirectedAcyclicGraph.html
 
 import networkx as nx
-import timeit 
+import timeit
 #from gevent import monkey, sleep
 #monkey.patch_all()
 import threading
 import time
 
 class DAGWorker(nx.DiGraph, threading.Thread):
-    
+
     def __init__(self, **kwargs):
         self._debug = kwargs.pop('debug', False)
         self._maxloop = kwargs.pop('maxloop', -1)
@@ -88,7 +88,7 @@ class DAGWorker(nx.DiGraph, threading.Thread):
 
     def _collect_incoming_kwargs(self, node):
         raise NotImplementedError("subclass should implement this")
-   
+
     def _start_to_run(self, node):
         if self.node[node]['ptr'].status != 'run':
             self._collect_incoming_kwargs(node)
@@ -174,9 +174,9 @@ class DAGWorker(nx.DiGraph, threading.Thread):
 
     def _is_maxloop_out(self):
         return self._maxloop_count >= self._maxloop and self._maxloop != -1
-        
+
     def close(self):
-        self._runs[:] = []    
+        self._runs[:] = []
         self._waits[:] = []
         self._finishs[:] = []
         self._records[:] = []
@@ -191,8 +191,7 @@ class DAGWorker(nx.DiGraph, threading.Thread):
                 'waits': self._waits,
                 'finishs': self._finishs
             }
-            print msg
-        
+
     def run(self, callback=None):
 
         while True:

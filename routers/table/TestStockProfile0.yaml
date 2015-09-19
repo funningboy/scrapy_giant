@@ -33,7 +33,8 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"twse\"](debug=True).stock.get_ids()]",
                 "base": "stock",
-                "order": ["+bearishused", "+financeused"],
+                "constraint": "lambda x: x.value[\"efinanceremain\"] > 0 or x.value[\"ebearfinaratio\"] > 0",
+                "order": "lambda x: [-x.value[\"ebearfinaratio\"], -x.value[\"totalfinanceremain\"]]",
                 "limit": 2,
                 "debug": True
             }
@@ -49,7 +50,8 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
                 "base": "stock",
-                "order": ["-totalvolume"],
+                "constraint": "lambda x: x.value[\"eclose\"] > 0 and x.value[\"evolume\"] > 0",
+                "order": "lambda x: [-x.value[\"totalvolume\"], -x.value[\"eclose\"]]",
                 "limit": 2,
                 "debug": True
             }

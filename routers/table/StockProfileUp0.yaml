@@ -28,7 +28,7 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"twse\"]().stock.get_ids()]",
                 "base": "stock",
-                "order": ["+bearishused", "+financeused"],
+                "order": ["+financeused", "+bearishused"],
                 "limit": 10
             }
         )',
@@ -74,7 +74,7 @@ Nodes:
                 "stockids": [],
                 "traderids": [],
                 "base": "stock",
-                "order": ["-totalvolume"],
+                "order": ["-totalbuyvolume", "-totalhit"],
                 "limit": 20
             }
         )',

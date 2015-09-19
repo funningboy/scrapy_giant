@@ -9,8 +9,8 @@
         stockids: [],
         traderids: [],
         base: 'stock',
-        order: "random.sample([''.join(i) for i in list(itertools.product(['+','-'],['bearishused','financeused']))], random.randint(1,4))",
-        callback: null,
+        constraint: "lambda x: x.value[\"efinanceremain\"] > 0 or x.value[\"ebearfinaratio\"] > 0",
+        order: "lambda x: [-x.value[\"ebearfinaratio\"], -x.value[\"totalfinanceremain\"]]",
         limit: "random.randint(100, 200)",
         debug: False
     },

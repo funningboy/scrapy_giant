@@ -4,6 +4,8 @@
 # main.INSTALLED_APPS has included handler task
 
 #from celery import chain, group
+import dill 
+import pickle
 import timeit
 import unittest
 from datetime import datetime, timedelta
@@ -30,79 +32,83 @@ skip_tests = {
 class TestTwseHisItemQuery(NoSQLTestCase):
 
     def test_on_stock(self):
-        kwargs = {
+        stream = pickle.dumps(((), {
             'opt': 'twse',
             'targets': ['stock'],
             'starttime': datetime.utcnow() - timedelta(days=5),
             'endtime': datetime.utcnow(),
             'stockids': ['2317', '2330'],
             'base': 'stock',
-            'order': ['-totalvolume', '-totaldiff'],
+            'constraint': lambda x: x.value['eclose'] > 0 and x.value['evolume'] > 0,
+            'order': lambda x: [-x.value['totalvolume'], -x.value['eclose']],
             'callback': None,
             'limit': 1,
             'debug': True
-        }
-        item = collect_hisitem.delay(**kwargs).get()
+        }))
+        item = pickle.loads(collect_hisitem.delay(stream).get())
         self.assertTrue(item)
         self.assertTrue(item['stockitem'])
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
 
     def test_on_trader(self):
-        kwargs = {
+        stream = pickle.dumps(((), {
             'opt': 'twse',
             'targets': ['trader'],
             'starttime': datetime.utcnow() - timedelta(days=5),
             'endtime': datetime.utcnow(),
             'stockids': ['2317', '2330'],
             'base': 'stock',
-            'order': ['-totalvolume'],
+            'constraint': lambda x: x.value['ebuyratio'] > 0 or x.value['totalbuyratio'] > 0,
+            'order': lambda x: [-x.value['totalvolume'], -x.value['totalbuyratio']],
             'callback': None,
             'limit': 1,
             'debug': True
-        }
-        item = collect_hisitem.delay(**kwargs).get()
+        }))
+        item = pickle.loads(collect_hisitem.delay(stream).get())
         self.assertTrue(item)
         self.assertTrue(item['traderitem'])
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
 
     def test_on_credit(self):
-        kwargs = {
+        stream = pickle.dumps(((), {
             'opt': 'twse',
             'targets': ['credit'],
             'starttime': datetime.utcnow() - timedelta(days=5),
             'endtime': datetime.utcnow(),
             'stockids': ['2317', '2330'],
             'base': 'stock',
-            'order': ['+bearishused', '+financeused'],
+            'constraint': lambda x: x.value['efinanceremain'] > 0 or x.value['ebearfinaratio'] > 0,
+            'order': lambda x: [-x.value['ebearfinaratio'], -x.value['totalfinanceremain']],
             'callback': None,
             'limit': 1,
             'debug': True
-        }
-        item = collect_hisitem.delay(**kwargs).get()
+        }))
+        item = pickle.loads(collect_hisitem.delay(stream).get())
         self.assertTrue(item)
         self.assertTrue(item['credititem'])
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
-    
+ 
     def test_on_future(self):
-        kwargs = {
+        stream = pickle.dumps(((), {
             'opt': 'twse',
             'targets': ['future'],
             'starttime': datetime.utcnow() - timedelta(days=5),
             'endtime': datetime.utcnow(),
             'stockids': ['2317', '2330'],
             'base': 'stock',
-            'order': ['-totalvolume', '-totaldiff'],
+            'constraint': lambda x: x.value['edfcdiff'] > 0 or x.value['totalvolume'] > 0,
+            'order': lambda x: [-x.value['edfcdiff'], -x.value['totalvolume']],
             'callback': None,
             'limit': 1,
             'debug': True
-        }
-        item = collect_hisitem.delay(**kwargs).get()
+        }))
+        item = pickle.loads(collect_hisitem.delay(stream).get())
         self.assertTrue(item)
         self.assertTrue(item['futureitem'])
-        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
-    
+        print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)   
+
     def test_on_all(self):
-        kwargs = {
+        stream = pickle.dumps(((), {
             'opt': 'twse',
             'targets': ['stock', 'trader', 'future', 'credit'],
             'starttime': datetime.utcnow() - timedelta(days=5),
@@ -110,24 +116,25 @@ class TestTwseHisItemQuery(NoSQLTestCase):
             'stockids': ['2317', '2330'],
             'traderids': [],
             'base': 'stock',
-            'order': [],
+            'constraint': None,
+            'order': None,
             'callback': None,
             'limit': 2,
             'debug': True
-        }
-        item = collect_hisitem.delay(**kwargs).get()
+        }))
+        item = pickle.loads(collect_hisitem.delay(stream).get())
         self.assertTrue(item)
         [self.assertTrue(item[i]) for i in ['stockitem', 'traderitem', 'credititem', 'futureitem']] 
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
 
     def test_on_allid(self):
-        kwargs = {
+        stream = pickle.dumps(((), {
             'opt': 'twse',
             'targets': ['stock', 'trader'],
             'callback': None,
             'debug': True
-        }
-        item = collect_iditem.delay(**kwargs).get()
+        }))
+        item = pickle.loads(collect_iditem.delay(stream).get())
         self.assertTrue(item)
         [self.assertTrue(item[i]) for i in ['stockitem', 'traderitem']]
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
@@ -145,7 +152,8 @@ class TestTwseHisFrameQuery(NoSQLTestCase):
             'stockids': ['2317'],
             'traderids': [],
             'base': 'stock',
-            'order': [],
+            'constraint': None,
+            'order': None,
             'callback': None,
             'limit': 1,
             'debug': True
@@ -154,7 +162,7 @@ class TestTwseHisFrameQuery(NoSQLTestCase):
         self.assertTrue(panel is not None)
         self.assertFalse(panel.empty)
         self.assertFalse(panel['2317'].empty)
-        for k in ['open', 'high', 'low', 'close', 'volume', 'financeused', 'bearishused']:
+        for k in ['open', 'high', 'low', 'close', 'volume', 'financeremain', 'bearishremain']:
             self.assertFalse(panel['2317'][k].empty)
             self.assertTrue(panel['2317'][k].sum >= 0)
         print panel['2317']
@@ -164,79 +172,82 @@ class TestTwseHisFrameQuery(NoSQLTestCase):
 class TestOtcHisItemQuery(NoSQLTestCase):
 
     def test_on_stock(self):
-        kwargs = {
+        stream = pickle.dumps(((), {
             'opt': 'otc',
             'targets': ['stock'],
             'starttime': datetime.utcnow() - timedelta(days=5),
             'endtime': datetime.utcnow(),
             'stockids': ['5371', '1565'],
             'base': 'stock',
-            'order': ['-totalvolume', '-totaldiff'],
+            'constraint': lambda x: x.value['eclose'] > 0 and x.value['evolume'] > 0,
+            'order': lambda x: [-x.value['totalvolume'], -x.value['eclose']],
             'callback': None,
             'limit': 1,
             'debug': True
-        }
-        item = collect_hisitem.delay(**kwargs).get()
+        }))
+        item = pickle.loads(collect_hisitem.delay(stream).get())
         self.assertTrue(item)
         self.assertTrue(item['stockitem'])
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
 
     def test_on_trader(self):
-        kwargs = {
+        stream = pickle.dumps(((), {
             'opt': 'otc',
             'targets': ['trader'],
             'starttime': datetime.utcnow() - timedelta(days=5),
             'endtime': datetime.utcnow(),
             'stockids': ['5371', '1565'],
             'base': 'stock',
-            'order': ['-totalvolume'],
+            'constraint': lambda x: x.value['ebuyratio'] > 0 or x.value['totalbuyratio'] > 0,
+            'order': lambda x: [-x.value['totalvolume'], -x.value['totalbuyratio']],
             'callback': None,
             'limit': 1,
             'debug': True
-        }
-        item = collect_hisitem.delay(**kwargs).get()
+        }))
+        item = pickle.loads(collect_hisitem.delay(stream).get())
         self.assertTrue(item)
         self.assertTrue(item['traderitem'])
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
 
     def test_on_credit(self):
-        kwargs = {
+        stream = pickle.dumps(((), {
             'opt': 'otc',
             'targets': ['credit'],
             'starttime': datetime.utcnow() - timedelta(days=5),
             'endtime': datetime.utcnow(),
             'stockids': ['5371', '1565'],
             'base': 'stock',
-            'order': ['+bearishused', '+financeused'],
+            'constraint': lambda x: x.value['efinanceremain'] > 0 or x.value['ebearfinaratio'] > 0,
+            'order': lambda x: [-x.value['ebearfinaratio'], -x.value['totalfinanceremain']],
             'callback': None,
             'limit': 1,
             'debug': True
-        }
-        item = collect_hisitem.delay(**kwargs).get()
+        }))
+        item = pickle.loads(collect_hisitem.delay(stream).get())
         self.assertTrue(item)
         self.assertTrue(item['credititem'])
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
     
     def test_on_future(self):
-        kwargs = {
+        stream = pickle.dumps(((), {
             'opt': 'otc',
             'targets': ['future'],
             'starttime': datetime.utcnow() - timedelta(days=5),
             'endtime': datetime.utcnow(),
             'stockids': ['5371', '1565'],
             'base': 'stock',
-            'order': ['-totalvolume', '-totaldiff'],
-            'callback': None,
+            'constraint': lambda x: x.value['edfcdiff'] > 0 or x.value['totalvolume'] > 0,
+            'order': lambda x: [-x.value['edfcdiff'], -x.value['totalvolume']],
             'limit': 1,
             'debug': True
-        }
-        item = collect_hisitem.delay(**kwargs).get()
+        }))
+        item = pickle.loads(collect_hisitem.delay(stream).get())
         self.assertTrue(item)
         self.assertTrue(item['futureitem'])
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
     
     def test_on_all(self):
-        kwargs = {
+        stream = pickle.dumps(((), {
             'opt': 'otc',
             'targets': ['stock', 'trader', 'future', 'credit'],
             'starttime': datetime.utcnow() - timedelta(days=5),
@@ -244,24 +255,25 @@ class TestOtcHisItemQuery(NoSQLTestCase):
             'stockids': ['5371', '1565'],
             'traderids': [],
             'base': 'stock',
-            'order': [],
+            'constraint': None,
+            'order': None,
             'callback': None,
             'limit': 2,
             'debug': True
-        }
-        item = collect_hisitem.delay(**kwargs).get()
+        }))
+        item = pickle.loads(collect_hisitem.delay(stream).get())
         self.assertTrue(item)
         [self.assertTrue(item[i]) for i in ['stockitem', 'traderitem', 'credititem', 'futureitem']] 
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
 
-    def test_on_stockid(self):
-        kwargs = {
+    def test_on_allid(self):
+        stream = pickle.dumps(((), {
             'opt': 'otc',
             'targets': ['stock', 'trader'],
             'callback': None,
             'debug': True
-        }
-        item = collect_iditem.delay(**kwargs).get()
+        }))
+        item = pickle.loads(collect_iditem.delay(stream).get())
         self.assertTrue(item)
         [self.assertTrue(item[i]) for i in ['stockitem', 'traderitem']]
         print json.dumps(dict(item), sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
@@ -279,7 +291,8 @@ class TestTwseHisFrameQuery(NoSQLTestCase):
             'stockids': ['5371'],
             'traderids': [],
             'base': 'stock',
-            'order': [],
+            'constraint': None,
+            'order': None,
             'callback': None,
             'limit': 1,
             'debug': True
@@ -288,7 +301,7 @@ class TestTwseHisFrameQuery(NoSQLTestCase):
         self.assertTrue(panel is not None)
         self.assertFalse(panel.empty)
         self.assertFalse(panel['5371'].empty)
-        for k in ['open', 'high', 'low', 'close', 'volume', 'financeused', 'bearishused']:
+        for k in ['open', 'high', 'low', 'close', 'volume', 'financeremain', 'bearishremain']:
             self.assertFalse(panel['5371'][k].empty)
             self.assertTrue(panel['5371'][k].sum >= 0)
         print panel['5371']

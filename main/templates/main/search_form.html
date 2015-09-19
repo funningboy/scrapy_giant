@@ -1,13 +1,15 @@
 {% block search_form %}
 <li class="sidebar-search">
 <a href="javascript:;" data-toggle="collapse" data-target="#search"><i class="fa fa-fw fa-arrows-v"></i> Search <i class="fa fa-fw fa-caret-down"></i></a>
+<div class="col-sm-offset-2 col-sm-10">
 <ul id="search" class="collapse">
     <form class="form-horizontal" id="{{ searchform.auto_id }}" action="{% url 'router_search' %}" method="get">
         {% csrf_token %}
         <!-- opt -->
-        <div class="input-group input-group-sm{% if searchform.opt.errors %} has-error{% endif %}">
-            <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
-            <select class="form-control" id="{{ searchform.opt.auto_id }}" name="{{ searchform.opt.name }}">
+        <ul class="list-group">
+        <div class="form-group-sm {% if searchform.opt.errors %} has-error{% endif %}">
+            <label for="opt"><font color="red">opt:</font></label>
+            <select class="form-control" id="{{ searchform.opt.auto_id }}" name="{{ searchform.opt.name }}" onchange="myFunction(this.value)">
                 {% for error in searchform.opt.errors %}
                 <p class="help-block">{{ error }}</p>
                 {% endfor %}
@@ -17,40 +19,40 @@
             </select>
         </div>
         <!-- starttime -->
-        <div class="input-group input-group-sm{% if searchform.starttime.errors %} has-error{% endif %}">
-            <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
+        <div class="form-group-sm {% if searchform.starttime.errors %} has-error{% endif %}">
+            <label for="starttime"><font color="red">starttime:</font></label>
             <input type="text" class="form-control" id="{{ searchform.starttime.auto_id }}" name="{{ searchform.starttime.name }}" placeholder="{{ searchform.starttime.help_text }}" autocomplete="off">
             {% for error in searchform.starttime.errors %}
             <p class="help-block">{{ error }}</p>
             {% endfor %}
         </div>
         <!-- endtime -->
-        <div class="input-group input-group-sm{% if searchform.endtime.errors %} has-error{% endif %}">
-            <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
+        <div class="form-group-sm {% if searchform.endtime.errors %} has-error{% endif %}">
+            <label for="endtime"><font color="red">endtime:</font></label>
             <input type="text" class="form-control" id="{{ searchform.endtime.auto_id }}" name="{{ searchform.endtime.name }}" placeholder="{{ searchform.endtime.help_text }}" autocomplete="off">
             {% for error in searchform.endtime.errors %}
             <p class="help-block">{{ error }}</p>
             {% endfor %}
         </div>
         <!-- stockids -->
-        <div class="input-group input-group-sm{% if searchform.stockids.errors %} has-error{% endif %}">
-            <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
-            <input type="text" class="form-control" id="{{ searchform.stockids.auto_id }}" name="{{ searchform.stockids.name }}" placeholder="{{ searchform.stockids.help_text }}" autocomplete="off">
+        <div class="form-group-sm {% if searchform.stockids.errors %} has-error{% endif %}">
+            <label for="stockids"><font color="red">stockids:</font></label>
+            <input type="text" class="form-control" id="{{ searchform.stockids.auto_id }}" name="{{ searchform.stockids.name }}" placeholder="{{ searchform.stockids.help_text }}" autocomplete="on">
             {% for error in searchform.stockids.errors %}
             <p class="help-block">{{ error }}</p>
             {% endfor %}
         </div>
         <!-- traderids -->
-        <div class="input-group input-group-sm{% if searchform.traderids.errors %} has-error{% endif %}">
-            <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
-            <input type="text" class="form-control" id="{{ searchform.traderids.auto_id }}" name="{{ searchform.traderids.name }}" placeholder="{{ searchform.traderids.help_text }}" autocomplete="off">
+        <div class="form-group-sm{% if searchform.traderids.errors %} has-error{% endif %}">
+            <label for="traderids"><font color="red">traderids:</font></label>
+            <input type="text" class="form-control" id="{{ searchform.traderids.auto_id }}" name="{{ searchform.traderids.name }}" placeholder="{{ searchform.traderids.help_text }}" autocomplete="on">
             {% for error in searchform.traderids.errors %}
             <p class="help-block">{{ error }}</p>
             {% endfor %}
         </div>
         <!-- algorithm choice -->
-        <div class="input-group input-group-sm{% if searchform.algorithm.errors %} has-error{% endif %}">
-            <span class="input-group-addon"><i class="fa fa-list fa-fw"></i></span>
+        <div class="form-group-sm{% if searchform.algorithm.errors %} has-error{% endif %}">
+            <label for="algorithm"><font color="red">algorithm:</font></label>
             <select class="form-control" id="{{ searchform.algorithm.auto_id }}" name="{{ searchform.algorithm.name }}">
                 {% for error in searchform.algorithm.errors %}
                 <p class="help-block">{{ error }}</p>
@@ -61,17 +63,21 @@
             </select>
         </div>
         <!-- search -->
-        <div class="input-group input-group-sm">
-            <span class="input-group-addon"><i class="fa fa-coffee fa-fw"></i></span>
+        <div class="form-group-sm">
             <button class="btn btn-default" type="submit"><i class="fa fa-search fa-fw"></i></button>
         </div>
+        </ul>
     </form>
 </ul>
+</div>
 </li>
 {% endblock %}
 
 {% block script %}
 {{ script.super }}
+
+
+
 <script type="text/javascript">
     $(document).ready(function () {
         $("#{{ searchform.starttime.auto_id }}").datetimepicker({
@@ -81,6 +87,51 @@
         $("#{{ searchform.endtime.auto_id }}").datetimepicker({
             format: 'YYYY/MM/DD'
         });
+/*
+var substringMatcher = function(strs) {
+  return function findMatches(q, cb) {
+    var matches, substringRegex;
+
+    // an array that will be populated with substring matches
+    matches = [];
+
+    // regex used to determine if a string contains the substring `q`
+    substrRegex = new RegExp(q, 'i');
+
+    // iterate through the pool of strings and for any string that
+    // contains the substring `q`, add it to the `matches` array
+    $.each(strs, function(i, str) {
+      if (substrRegex.test(str)) {
+        matches.push(str);
+      }
+    });
+
+    cb(matches);
+  };
+};
+
+var states = ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California',
+  'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii',
+  'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana',
+  'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota',
+  'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire',
+  'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota',
+  'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island',
+  'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont',
+  'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'
+];
+
+$("#{{ searchform.stockids.auto_id }}").typeahead({
+  hint: false,
+  highlight: false,
+  minLength: 1
+},
+{
+  name: 'states',
+  source: substringMatcher(states)
+});
+*/
+     
     });
 </script>
 {% endblock %}

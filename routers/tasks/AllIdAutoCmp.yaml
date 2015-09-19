@@ -1,0 +1,11 @@
+{
+    # handler/tasks.py stockid rand
+    task: "collect_iditem",
+    kwargs: {
+        opt: null,
+        targets: ['stock', 'trader'],
+        callback: null,
+        debug: False
+        },
+    description: 'autocomplete stockids and traderids'
+}

@@ -2,6 +2,13 @@
 from routers.loader import Loader
 from datetime import datetime, timedelta
 
+autocmp = {
+    # key, search path, end node
+    'AllIdAutoCmp': ('routers/table/AllIdAutoCmp.yaml', {
+        'twse': ([0],),
+        'otc': ([1],)
+    })
+}
 
 routers = {
     # key, search path, init node, middle node, end node
@@ -54,19 +61,41 @@ routers = {
         'otc': ([2], [], [3])
         }),
     'StockGroup0': ('routers/table/StockGroup0.yaml', {
-        'twse': (),
-        'otc': ()
+        'twse': ([], [], []),
+        'otc': ([], [], [])
         }),
     'StockGroup1': ('routers/table/StockGroup1.yaml', {
-        'twse': (),
-        'otc': ()
+        'twse': ([], [], []),
+        'otc': ([], [], [])
         })
 }
+
+def schedule_autocmp_tasks(**collect):
+    opt = collect.pop('opt', 'twse')
+    debug = collect.pop('debug', False)
+    ends = autocmp['AllIdAutoCmp'][1][opt][0]
+    tmps = autocmp['AllIdAutoCmp'][1]['otc'] if opt == 'twse' else autocmp['AllIdAutoCmp'][1]['twse']
+    cuts = []
+    map(lambda x: cuts.extend(x), tmps)
+
+    loader = Loader()
+    graph = loader.create_graph(autocmp['AllIdAutoCmp'][0], priority=1, debug=debug)
+
+    for n in cuts:
+        graph.remove_node(n)
+
+    loader.finalize(graph)
+    graph.start()
+    graph.join()
+
+    nodes = filter(lambda x: x['node'] == ends[0], graph.record)
+    return nodes[0]['retval']
+
 
 def schedule_router_tasks(**collect):
     opt = collect.pop('opt', 'twse')
     algorithm = collect.pop('algorithm', 'StockProfileUp0')
-    starttime = collect.pop('starttime', datetime.utcnow() - timedelta(days=15))
+    starttime = collect.pop('starttime', datetime.utcnow() - timedelta(days=20))
     endtime = collect.pop('endtime', datetime.utcnow())
     stockids = collect.pop('stockids', [])
     traderids = collect.pop('traderids', [])
@@ -80,13 +109,13 @@ def schedule_router_tasks(**collect):
     map(lambda x: cuts.extend(x), tmps)
 
     loader = Loader()
-    graph = loader.create_graph(routers[algorithm][0], priority=1, debug=True)
+    graph = loader.create_graph(routers[algorithm][0], priority=1, debug=debug)
 
     for n in starts:
         ptr = graph.node[n]['ptr']
         ptr.kwargs.update({
-            'starttime': starttime if starttime else ptr.kwargs['starttime'],
-            'endtime': endtime if endtime else ptr.kwargs['endtime'],
+            'starttime': starttime,
+            'endtime': endtime,
             'stockids': stockids if stockids else ptr.kwargs['stockids'],
             'traderids': traderids if traderids else ptr.kwargs['traderids'],
             'debug': debug

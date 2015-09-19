@@ -35,3 +35,15 @@ def create_search_collect(request):
         'debug': settings.DEBUG
     }
     return collect
+
+
+def create_autocmp_collect(request):
+    opt = None
+
+    if 'opt' in request.GET and request.GET['opt']:
+        opt = request.GET['opt']
+
+    collect = {
+        'opt': opt
+    }
+    return collect

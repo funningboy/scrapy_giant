@@ -9,7 +9,8 @@
         stockids: [],
         traderids: [],
         base: 'stock',
-        order: "random.sample([''.join(i) for i in list(itertools.product(['+','-'],['totalvolume','totalbuyvolume', 'totalsellvolume']))], random.randint(1,6))",
+        constraint: "lambda x: x.value[\"ebuyratio\"] > 0 or x.value[\"totalbuyratio\"] > 0",
+        order: "lambda x: [-x.value[\"totalvolume\"], -x.value[\"totalbuyratio\"]]",
         callback: null,
         limit: "random.randint(100, 200)",
         debug: False

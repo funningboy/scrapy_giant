@@ -36,6 +36,7 @@ class Loader(object):
             (cls._parse_kwargs, 'stockids'),
             (cls._parse_kwargs, 'traderids'),
             (cls._parse_kwargs, 'base'),
+            (cls._parse_kwargs, 'constraint'),
             (cls._parse_kwargs, 'order'),
             (cls._parse_kwargs, 'callback'),
             (cls._parse_kwargs, 'limit'),

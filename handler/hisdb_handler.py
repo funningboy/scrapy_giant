@@ -18,25 +18,9 @@ __all__ = ['TwseHisDBHandler', 'OtcHisDBHandler']
 
 
 class TwseHisDBHandler(object):
+    """ ref tests.py
     """
-    >>> starttime = datetime.utcnow() - timedelta(days=10)
-    >>> endtime = datetime.utcnow()
-    >>> dbhandler = TwseHisDBHandler(debug=True, opt='twse')
-    >>> dbhandler.stock.ids = ['2317']
-    >>> args = (starttime, endtime, [stockid], 'stock', ['-totalvolume'], 10)
-    >>> cursor = dbhandler.stock.query_raw(*args)
-    >>> data = dbhandler.stock.to_pandas(cursor)
-    >>> print data
-    >>> dbhandler.trader.ids = ['2317']
-    >>> args = (starttime, endtime, ['2317'], ['1440'], 'stock', ['-totalvolume'], 10)
-    >>> cursor = dbhandler.trader.query_raw(*args)
-    >>> data = dbhandler.trader.to_pandas(cursor)
-    >>> print data
-    >>> args = (starttime, endtime, [stockid], 'stock', ['-financeused'], 10)
-    >>> cursor = dbhandler.credit.query_raw(*args)
-    >>> data = dbhandler.credit.to_pandas(cursor)
-    >>> print data
-    """
+
     def __init__(self, **kwargs):
         self._debug = kwargs.pop('debug', False)
         db = 'twsehisdb' if not self._debug else 'testtwsehisdb'
@@ -162,7 +146,7 @@ class TwseStockHisDBHandler(object):
             coll.data = data
             coll.save()
 
-    def query_raw(self, starttime, endtime, stockids=[], base='stock', order=['-totalvolume'], limit=10, callback=None):
+    def query_raw(self, starttime, endtime, stockids=[], base='stock', constraint=None, order=None, limit=10, callback=None):
         """ return orm
         <stockid>                               | <stockid> ...
                     open| high| low|close|volume|          | open | ...
@@ -173,10 +157,17 @@ class TwseStockHisDBHandler(object):
             function () {
                 try {
                     var key =  { stockid : this.stockid };
-                    var diff = this.data.high - this.data.low;
+                    // as constraint/sort key
                     var value = {
+                        sopen: this.data.open,
+                        sclose: this.data.close,
+                        svolume: this.data.volume,
+                        eopen: this.data.open,
+                        eclose: this.data.close,
+                        evolume: this.data.volume,
                         totalvolume: this.data.volume,
-                        totaldiff: diff,
+                        totalhldiff: Math.abs(this.data.high - this.data.low),
+                        totalocdiff: Math.abs(this.data.open - this.data.close),
                         data: [{
                             date: this.date,
                             open: this.data.open,
@@ -198,32 +189,52 @@ class TwseStockHisDBHandler(object):
         reduce_f = """
           function (key, values) {
                 var redval = {
+                    sopen: 0,
+                    sclose: 0,
+                    svolume: 0,
+                    eopen: 0,
+                    eclose: 0,
+                    evolume: 0,
                     totalvolume: 0,
-                    totaldiff: 0,
+                    totalhldiff: 0,
+                    totalocdiff: 0,
+                    avgvolume: 0,
                     data: []
                 };
-                if (values.length == 0) {
-                    return redval;
-                }
                 for (var i=0; i < values.length; i++) {
+                    if (i==0) {
+                        redval.sopen = values[i].data[0]['open'];
+                        redval.sclose = values[i].data[0]['close'];
+                        redval.svolume = values[i].data[0]['volume'];
+                    }
+                    if (i == values.length-1) {
+                        redval.eopen = values[i].data[0]['open'];
+                        redval.eclose = values[i].data[0]['close'];
+                        redval.evolume = values[i].data[0]['volume'];
+                    }
                     redval.totalvolume += values[i].totalvolume;
-                    redval.totaldiff += values[i].totaldiff;
+                    redval.totalhldiff += values[i].totalhldiff;
+                    redval.totalocdiff += values[i].totalocdiff;
                     redval.data = values[i].data.concat(redval.data);
+                }
+                if (values.length) {
+                    redval.avgvolume = redval.totalvolume / values.length;
+                    redval.avgvolume = parseFloat(redval.avgvolume.toFixed(2));
                 }
                 return redval;
             }
         """
         finalize_f = """
         """
-        assert(set([o[1:] for o in order]) <= set(['totalvolume', 'totaldiff']))
         bufwin = (endtime - starttime).days
         cursor = self._coll.objects(Q(date__gte=starttime) & Q(date__lte=endtime) & Q(stockid__in=stockids))
-        results = cursor.map_reduce(map_f, reduce_f, 'stockmap')
-        results = list(results)
-        reorder = lambda k: map(lambda x: k.value[x[1:]] if x.startswith('+') else -k.value[x[1:]], order)
-        pool = sorted(results, key=reorder)[:limit]
+        results = list(cursor.map_reduce(map_f, reduce_f, 'stockmap'))
+        if constraint:
+            results = filter(constraint, results)
+        if order:
+            results = sorted(results, key=order)[:limit]
         retval = []
-        for it in pool:
+        for it in results:
             coll = { 'datalist': [] }
             for data in sorted(it.value['data'], key=lambda x: x['date']):
                 coll['datalist'].append(data)
@@ -232,11 +243,11 @@ class TwseStockHisDBHandler(object):
                 'date': endtime,
                 'bufwin': bufwin,
                 'stockid': it.key['stockid'],
-                'order': order,
                 'stocknm': self._id.stock.get_name(it.key['stockid']),
                 # value
                 'totalvolume': it.value['totalvolume'],
-                'totaldiff': it.value['totaldiff']
+                'totalhldiff': it.value['totalhldiff'],
+                'totalocdiff': it.value['totalocdiff']
             })
             retval.append(coll)
         return callback(retval) if callback else retval
@@ -309,7 +320,7 @@ class TwseTraderHisDBHandler(object):
         coll.toplist = toplist
         coll.save()
 
-    def query_raw(self, starttime, endtime, stockids=[], traderids=[], base='stock', order=['-totalvolume'], limit=10, callback=None):
+    def query_raw(self, starttime, endtime, stockids=[], traderids=[], base='stock', constraint=None, order=None, limit=10, callback=None):
         """ get rank toplist volume stock/trader data
             <stockid>                                          <stockid>
                      | top0_v/p_<traderid>| top1  | ... top10 |          | top0_<traderid>
@@ -335,37 +346,45 @@ class TwseTraderHisDBHandler(object):
                         var sellvolume = this.toplist[i].data.sellvolume;
                         var avgbuyprice = this.toplist[i].data.avgbuyprice;
                         var avgsellprice = this.toplist[i].data.avgsellprice;
-                        var hit = 0;
-                        var ratio = 0;
-                        var tradeprice = 0;
-                        var tradevolume = 0;
+                        var keepbuy = 0;
+                        var keepsell = 0;
+                        var buyratio = 0;
+                        var sellratio = 0;
                         var maxvolume = Math.max(buyvolume, sellvolume);
                         var minvolume = Math.min(buyvolume, sellvolume);
                         var maxprice = Math.max(avgbuyprice, avgsellprice);
                         var minprice = Math.min(avgbuyprice, avgsellprice);
                         if (this.data.volume >0) {
-                            if (maxvolume >0) {
-                                ratio = maxvolume / this.data.volume * 100;
-                                ratio = parseFloat(ratio.toFixed(2));
-                                hit = 1;
+                            if (buyvolume >0) {
+                                buyratio = buyvolume / this.data.volume * 100;
+                                buyratio = parseFloat(buyratio.toFixed(2));
+                                keepbuy = 1;
+                            }
+                            if (sellvolume >0) {
+                                sellratio = sellvolume / this.data.volume * 100;
+                                sellratio = parseFloat(sellratio.toFixed(2));
+                                keepsell = 1;
                             }
                         }
-                        if (minprice > 0 && minvolume > 0) {
-                            tradeprice = maxprice - minprice;
-                            tradevolume = minvolume;
-                        }
+                        // as constraint/sort key
                         var value = {
                             totalvolume: totalvolume,
                             totalbuyvolume: buyvolume,
                             totalsellvolume: sellvolume,
-                            totalhit: hit,
-                            totaltradeprice: tradeprice,
-                            totaltradevolume: tradevolume,
+                            totalkeepbuy: keepbuy,
+                            totalkeepsell: keepsell,
+                            totalbuyratio: buyratio,
+                            totalsellratio: sellratio,
+                            ebuyratio: buyratio,
+                            esellratio: sellratio,
                             data: [{
                                 date: this.date,
                                 traderid: this.toplist[i].traderid,
                                 tradernm: this.toplist[i].tradernm,
-                                ratio: ratio,
+                                keepbuy: keepbuy,
+                                keepsell: keepsell,
+                                buyratio: buyratio,
+                                sellratio: sellratio,
                                 avgbuyprice: avgbuyprice,
                                 avgsellprice: avgsellprice,
                                 buyvolume: buyvolume,
@@ -387,21 +406,26 @@ class TwseTraderHisDBHandler(object):
                     totalvolume: 0,
                     totalbuyvolume: 0,
                     totalsellvolume: 0,
-                    totalhit: 0,
-                    totaltradeprice: 0,
-                    totaltradevolume: 0,
+                    totalkeepbuy: 0,
+                    totalkeepsell: 0,
+                    totalbuyratio: 0,
+                    totalsellratio: 0,
+                    ebuyratio: 0,
+                    esellratio: 0,
                     data: []
                 };
-                if (values.length == 0) {
-                    return redval;
-                }
                 for (var i=0; i < values.length; i++) {
+                    if (i == values.length-1) {
+                        redval.ebuyratio = values[i].data[0]['buyratio'];
+                        redval.esellratio = values[i].data[0]['sellratio'];
+                    }
                     redval.totalvolume += values[i].totalvolume;
                     redval.totalbuyvolume += values[i].totalbuyvolume;
                     redval.totalsellvolume += values[i].totalsellvolume;
-                    redval.totalhit += values[i].totalhit;
-                    redval.totaltradeprice += values[i].totaltradeprice;
-                    redval.totaltradevolume += values[i].totaltradevolume;
+                    redval.totalkeepbuy += values[i].totalkeepbuy;
+                    redval.totalkeepsell += values[i].totalkeepsell;
+                    redval.totalbuyratio += values[i].totalbuyratio;
+                    redval.totalsellratio += values[i].totalsellratio;
                     redval.data = values[i].data.concat(redval.data);
                 }
                 return redval;
@@ -409,7 +433,6 @@ class TwseTraderHisDBHandler(object):
         """
         finalize_f = """
         """
-        assert(set([o[1:] for o in order]) <= set(['totalvolume', 'totalbuyvolume', 'totalsellvolume', 'totalhit']))
         bufwin = (endtime - starttime).days
         if stockids and traderids:
             cursor = self._coll.objects(
@@ -419,20 +442,21 @@ class TwseTraderHisDBHandler(object):
             cursor = self._coll.objects(
                 Q(date__gte=starttime) & Q(date__lte=endtime) &
                 (Q(stockid__in=stockids) | Q(toplist__traderid__in=traderids)))
-        results = cursor.map_reduce(map_f, reduce_f, 'toptradermap')
-        results = list(results)
+        results = list(cursor.map_reduce(map_f, reduce_f, 'toptradermap'))
         retval = []
         sort = [('stockid', stockids), ('traderid', traderids)] if base == 'stock' else [('traderid', traderids), ('stockid', stockids)]
+        if constraint:
+            results = filter(constraint, results)
         for k, s in sort:
             if s:
                 results = list(filter(lambda x: x.key[k] in s, results))
-        reorder = lambda k: map(lambda x: k.value[x[1:]] if x.startswith('x') else -k.value[x[1:]], order)
-        pool = sorted(results, key=reorder)[:limit]
-        for i, it in enumerate(pool):
-             coll = { 'datalist': [] }
-             for data in sorted(it.value['data'], key=lambda x: x['date']):
-                 coll['datalist'].append(data)
-             coll.update({
+        if order:
+            results = sorted(results, key=order)[:limit]
+        for i, it in enumerate(results):
+            coll = { 'datalist': [] }
+            for data in sorted(it.value['data'], key=lambda x: x['date']):
+                coll['datalist'].append(data)
+            coll.update({
                 # html link
                 'opt': 'twse' if self.__class__.__name__ == 'TwseTraderHisDBHandler' else 'otc',
                 'starttime': datetime.strftime(starttime, "%Y%m%d"),
@@ -442,19 +466,19 @@ class TwseTraderHisDBHandler(object):
                 'bufwin': bufwin,
                 'traderid': it.key['traderid'],
                 'stockid': it.key['stockid'],
-                'order': order,
                 'tradernm': self._id.trader.get_name(it.key['traderid']),
                 'stocknm': self._id.stock.get_name(it.key['stockid']),
                 # value
                 'totalvolume': it.value['totalvolume'],
                 'totalbuyvolume': it.value['totalbuyvolume'],
                 'totalsellvolume': it.value['totalsellvolume'],
-                'totalhit': it.value['totalhit'],
-                'totaltradeprice': it.value['totaltradeprice'],
-                'totaltradevolume': it.value['totaltradevolume'],
+                'totalkeepbuy': it.value['totalkeepbuy'],
+                'totalkeepsell': it.value['totalkeepsell'],
+                'totalbuyratio': it.value['totalbuyratio'],
+                'totalsellratio': it.value['totalsellratio'],
                 'alias': "top%d" % (i)
-             })
-             retval.append(coll)
+            })
+            retval.append(coll)
         self._cache = retval
         return callback(retval) if callback else retval
 
@@ -472,7 +496,10 @@ class TwseTraderHisDBHandler(object):
                     if date:
                         index.append(pytz.timezone('UTC').localize(date))
                         mdata = {
-                            "%s_ratio" % (it['alias']): i['ratio'],
+                            "%s_buyratio" % (it['alias']): i['buyratio'],
+                            "%s_sellratio" % (it['alias']): i['sellratio'],
+                            "%s_keepbuy" % (it['alias']): i['keepbuy'],
+                            "%s_keepsell" % (it['alias']): i['keepsell'],
                             "%s_avgbuyprice" % (it['alias']): i['avgbuyprice'],
                             "%s_avgsellprice" % (it['alias']): i['avgsellprice'],
                             "%s_buyvolume" % (it['alias']): i['buyvolume'],
@@ -542,10 +569,10 @@ class TwseCreditHisDBHandler(object):
                 coll.bearish = data
             coll.save()
 
-    def query_raw(self, starttime, endtime, stockids=[], base='stock', order=['-financeused'], limit=10, callback=None):
+    def query_raw(self, starttime, endtime, stockids=[], base='stock', constraint=None, order=None, limit=10, callback=None):
         """ return orm
         <stockid>                                         | <stockid> ...
-                    financeused| financetrend| bearishused| ...|
+                    financeremain| financetrend| bearishremain| ...|
         20140928    100        | 101         |        999 | ...|
         20140929    100        | 102         |        999 | ...|
         """
@@ -554,38 +581,49 @@ class TwseCreditHisDBHandler(object):
                 try {
                     var key =  { stockid : this.stockid };
                     var financetrend = 0;
-                    var financeused = 0;
+                    var financeremain = 0;
                     var bearishtrend = 0;
-                    var bearishused = 0;
+                    var bearishremain = 0;
+                    var bearfinaratio = 0;
                     if (this.finance.preremain > 0) {
                         financetrend = (this.finance.curremain - this.finance.preremain) / this.finance.preremain;
                         financetrend = parseFloat(financetrend.toFixed(2));
                     }
                     if (this.finance.limit > 0) {
-                        financeused = this.finance.curremain / this.finance.limit * 100;
-                        financeused = parseFloat(financeused.toFixed(2));
+                        financeremain = this.finance.curremain / this.finance.limit * 100;
+                        financeremain = parseFloat(financeremain.toFixed(2));
                     }
                     if (this.bearish.preremain > 0) {
                         bearishtrend = (this.bearish.curremain - this.bearish.preremain) / this.bearish.preremain;
                         bearishtrend = parseFloat(bearishtrend.toFixed(2));
                     }
                     if (this.bearish.limit > 0) {
-                        bearishused = this.bearish.curremain / this.bearish.limit * 100;
-                        bearishused = parseFloat(bearishused.toFixed(2));
+                        bearishremain = this.bearish.curremain / this.bearish.limit * 100;
+                        bearishremain = parseFloat(bearishremain.toFixed(2));
                     }
+                    if (this.finance.curremain) {
+                        bearfinaratio = this.bearish.curremain / this.finance.curremain * 100;
+                        bearfinaratio = parseFloat(bearfinaratio.toFixed(2));
+                    }
+                    // as constraint/sort key
                     var value = {
-                        financetrend: financetrend,
-                        financeused: financeused,
-                        bearishtrend: bearishtrend,
-                        bearishused: bearishused,
+                        totalfinanceremain: financeremain,
+                        totalbearishremain: bearishremain,
+                        efinanceremain: financeremain,
+                        efinancetrend: financetrend,
+                        ebearishremain: bearishremain,
+                        ebearishtrend: bearishtrend,
+                        ebearfinaratio: bearfinaratio,
                         data: [{
                             date: this.date,
                             financebuyvolume: this.finance.buyvolume,
                             financesellvolume: this.finance.sellvolume,
-                            financeused: financeused,
+                            financeremain: financeremain,
+                            financetrend: financetrend,
                             bearishbuyvolume: this.bearish.buyvolume,
                             bearishsellvolume: this.bearish.sellvolume,
-                            bearishused: bearishused
+                            bearishremain: bearishremain,
+                            bearishtrend: bearishtrend
                         }]
                     };
                     emit(key, value);
@@ -599,20 +637,25 @@ class TwseCreditHisDBHandler(object):
         reduce_f = """
             function (key, values) {
                 var redval = {
-                    financetrend: 0,
-                    financeused: 0,
-                    bearishtrend: 0,
-                    bearishtrend: 0,
+                    totalfinanceremain: 0,
+                    totalbearishremain: 0,
+                    efinanceremain: 0,
+                    efinancetrend: 0,
+                    ebearishremain: 0,
+                    ebearishtrend: 0,
+                    ebearfinaratio: 0,
                     data: []
                 };
-                if (values.length == 0) {
-                    return redval;
-                }
                 for (var i=0; i < values.length; i++) {
-                    redval.financetrend += values[i].financetrend;
-                    redval.financeused += values[i].financeused;
-                    redval.bearishtrend += values[i].bearishtrend;
-                    redval.bearishused += values[i].bearishused;
+                    if (i == values.length-1) {
+                        redval.efinancetrend = values[i].data[0]['financetrend'];
+                        redval.efinanceremain = values[i].data[0]['financeremain'];
+                        redval.ebearishtrend = values[i].data[0]['bearishtrend'];
+                        redval.ebearishremain = values[i].data[0]['bearishremain'];
+                        redval.ebearfinaratio = values[i].data[0]['bearfinaratio'];
+                    }
+                    redval.totalfinanceremain += values[i].financeremain;
+                    redval.totalbearishremain += values[i].bearishremain;
                     redval.data = values[i].data.concat(redval.data);
                 }
                 return redval;
@@ -620,24 +663,27 @@ class TwseCreditHisDBHandler(object):
         """
         finalize_f = """
         """
-        assert(set([o[1:] for o in order]) <= set(['financeused', 'bearishused']))
         bufwin = (endtime - starttime).days
         cursor = self._coll.objects(Q(date__gte=starttime) & Q(date__lte=endtime) & Q(stockid__in=stockids))
-        results = cursor.map_reduce(map_f, reduce_f, 'creditmap')
-        results = list(results)
-        reorder = lambda k: map(lambda x: k.value[x[1:]] if x.startswith('x') else -k.value[x[1:]], order)
-        pool = sorted(results, key=reorder)[:limit]
+        results = list(cursor.map_reduce(map_f, reduce_f, 'creditmap'))
+        if constraint:
+            results = filter(constraint, results)
+        if order:
+            results = sorted(results, key=order)[:limit]
         retval = []
-        for it in pool:
+        for it in results:
             coll = { 'datalist': [] }
             for data in sorted(it.value['data'], key=lambda x: x['date']):
                 coll['datalist'].append(data)
             coll.update({
+                #key
                 'date': endtime,
                 'stockid': it.key['stockid'],
                 'stocknm': self._id.stock.get_name(it.key['stockid']),
                 'bufwin': bufwin,
-                'order': order
+                # value
+                'totalfinanceremain': it.value['totalfinanceremain'],
+                'totalbearishremain': it.value['totalbearishremain']
             })
             retval.append(coll)
         return callback(retval) if callback else retval
@@ -704,7 +750,7 @@ class TwseFutureHisDBHandler(object):
             coll.future = data
             coll.save()
 
-    def query_raw(self, starttime, endtime, stockids=[], base='stock', order=['-totalvolume'], limit=10, callback=None):
+    def query_raw(self, starttime, endtime, stockids=[], base='stock', constraint=None, order=None, limit=10, callback=None):
         """ return orm
         <stockid>                               | <stockid> ...
                     open| high| low|close|volume|          | open | ...
@@ -716,9 +762,19 @@ class TwseFutureHisDBHandler(object):
                 try {    
                     var key =  { stockid : this.stockid };
                     var diff = this.future.high - this.future.low;
+                    var edfodiff = this.data.open - this.future.open;
+                    var edfhdiff = this.data.high - this.future.high;
+                    var edfldiff = this.data.low - this.future.low;
+                    var edfcdiff = this.data.close - this.future.close;
+                    // as constraint/sort key
                     var value = {
                         totalvolume: this.future.volume,
-                        totaldiff: diff,
+                        totalhldiff: Math.abs(this.future.high - this.future.low),
+                        totalocdiff: Math.abs(this.future.open - this.close),
+                        edfodiff: edfodiff,
+                        edfhdiff: edfhdiff,
+                        edfldiff: edfldiff,
+                        edfcdiff: edfcdiff, 
                         data: [{
                             date: this.date,
                             fopen: this.future.open,
@@ -730,7 +786,11 @@ class TwseFutureHisDBHandler(object):
                             fsetprice: this.future.setprice,
                             funtrdcount: this.future.untrdcount,
                             fbestbuy: this.future.bestbuy,
-                            fbestsell: this.future.bestsell
+                            fbestsell: this.future.bestsell,
+                            dfodiff: edfodiff,
+                            dfhdiff: edfhdiff,
+                            dfldiff: edfldiff,
+                            dfcdiff: edfcdiff
                          }]
                     };
                     emit(key, value);
@@ -745,15 +805,24 @@ class TwseFutureHisDBHandler(object):
           function (key, values) {
                 var redval = {
                     totalvolume: 0,
-                    totaldiff: 0,
+                    totalhldiff: 0,
+                    totalocdiff: 0,
+                    edfodiff: 0,
+                    edfhdiff: 0,
+                    edfldiff: 0,
+                    edfcdiff: 0,
                     data: []
                 };
-                if (values.length == 0) {
-                    return redval;
-                }
                 for (var i=0; i < values.length; i++) {
+                    if (i == values.length-1) {
+                        redval.edfodiff = values[i].data[0]['dfodiff'];
+                        redval.edfhdiff = values[i].data[0]['dfhdiff'];
+                        redval.edfldiff = values[i].data[0]['dfldiff'];
+                        redval.edfcdiff = values[i].data[0]['dfcdiff'];
+                    }
                     redval.totalvolume += values[i].totalvolume;
-                    redval.totaldiff += values[i].totaldiff;
+                    redval.totalhldiff += values[i].totalhldiff;
+                    redval.totalocdiff += values[i].totalocdiff;
                     redval.data = values[i].data.concat(redval.data);
                 }
                 return redval;
@@ -761,15 +830,15 @@ class TwseFutureHisDBHandler(object):
         """
         finalize_f = """
         """
-        assert(set([o[1:] for o in order]) <= set(['totalvolume', 'totaldiff']))
         bufwin = (endtime - starttime).days
         cursor = self._coll.objects(Q(date__gte=starttime) & Q(date__lte=endtime) & Q(stockid__in=stockids))
-        results = cursor.map_reduce(map_f, reduce_f, 'futuremap')
-        results = list(results)
-        reorder = lambda k: map(lambda x: k.value[x[1:]] if x.startswith('+') else -k.value[x[1:]], order)
-        pool = sorted(results, key=reorder)[:limit]
+        results = list(cursor.map_reduce(map_f, reduce_f, 'futuremap'))
+        if constraint:
+            results = filter(constraint, results)
+        if order:
+            results = sorted(results, key=order)[:limit]
         retval = []
-        for it in pool:
+        for it in results:
             coll = { 'datalist': [] }
             for data in sorted(it.value['data'], key=lambda x: x['date']):
                 coll['datalist'].append(data)
@@ -778,11 +847,11 @@ class TwseFutureHisDBHandler(object):
                 'date': endtime,
                 'bufwin': bufwin,
                 'stockid': it.key['stockid'],
-                'order': order,
                 'stocknm': self._id.stock.get_name(it.key['stockid']),
                 # value
                 'totalvolume': it.value['totalvolume'],
-                'totaldiff': it.value['totaldiff']
+                'totalhldiff': it.value['totalhldiff'],
+                'totalocdiff': it.value['totalocdiff'],
             })
             retval.append(coll)
         return callback(retval) if callback else retval

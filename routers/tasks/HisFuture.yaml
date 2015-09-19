@@ -9,7 +9,8 @@
         stockids: [],
         traderids: [],
         base: 'stock',
-        order: "random.sample([''.join(i) for i in list(itertools.product(['+','-'],['totalvolume','totaldiff']))], random.randint(1,4))",
+        constraint: "lambda x: x.value[\"edfcdiff\"] > 0 or x.value[\"totalvolume\"] > 0",
+        order: "lambda x: [-x.value[\"edfcdiff\"], -x.value[\"totalvolume\"]]",
         callback: null,
         limit: "random.randint(100, 200)",
         debug: False

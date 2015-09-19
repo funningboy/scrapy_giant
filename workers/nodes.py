@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import celery as celery
+import dill
+import pickle
 
 class Node(object):
 
@@ -36,7 +38,8 @@ class Node(object):
 
     def run(self):
         if not self._asyncresult:
-            self._asyncresult = self._func.delay(*self._args, **self._kwargs)
+            stream = pickle.dumps((self._args, self._kwargs))
+            self._asyncresult = self._func.delay(stream)
 
     def is_ready(self):
         if self._asyncresult:
@@ -52,7 +55,7 @@ class Node(object):
             return self._asyncresult.task_id
  
     def finish(self):
-        self._retval = self._asyncresult.get()
+        self._retval = pickle.loads(self._asyncresult.get())
         self._asyncresult = None
 
     @property
