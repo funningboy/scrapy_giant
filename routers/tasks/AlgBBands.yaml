@@ -8,7 +8,7 @@
         endtime: "datetime.utcnow()",
         stockids: [],
         traderids: [],
-        constraint: ""
+        constraint: ,
         order: ,
         limit: "random.randint(100, 200)",
         debug: False,

@@ -25,16 +25,14 @@ Nodes:
 
         # 1
         'Loader.parse_task(
-            "./routers/tasks/HisStock.yaml", 
+            "./routers/tasks/HisItemAll.yaml", 
             kwargs = {
                 "opt": "twse",
-                "targets": ["stock"],
+                "targets": ["stock", "future", "trader", "credit"],
                 "starttime": "datetime.utcnow() - timedelta(days=5)",
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
                 "base": "stock",
-                "constraint": "lambda x: x.value[\"eclose\"] > 0 and x.value[\"evolume\"] > 0",
-                "order": "lambda x: [-x.value[\"totalvolume\"], -x.value[\"eclose\"]]",
                 "limit": 2,
                 "debug": True
             }

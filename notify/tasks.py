@@ -2,29 +2,18 @@
 from __future__ import absolute_import
 
 #from main.celery import app
+import pickle
 from celery import shared_task
 from notify.ggmail import GGMail
 from notify.gline import GLine
 
 ntyitems = ['gmail', 'line']
 
-@shared_task
-def collect_ntyitem(opt, targets, starttime, endtime, base='stock', order=[], stockids=[], traderids=[], limit=10, cfg={}, callback=None, debug=False):
+@shared_task(time_limit=60)
+def collect_ntyitem(stream):
+    args, kwargs = pickle.loads(stream)
 
     for target in targets:
-        if target in ntyitems:
-            kwargs = {
-                'opt': opt,
-                'starttime': starttime,
-                'endtime': endtime,
-                'base': base,
-                'order': order,
-                'stockids': stockids,
-                'traderids': traderids,
-                'limit': limit,
-                'cfg': cfg,
-                'debug': debug
-            }
         if target == 'gmail':
             gmail = GGMail(**kwargs)
             msg = gmail.create_msg()

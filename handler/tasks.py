@@ -51,8 +51,8 @@ def collect_hisitem(stream):
 
     opt = kwargs.pop('opt', None)
     targets = kwargs.pop('targets', [])
-    starttime = kwargs.pop('starttime', )
-    endtime = kwargs.pop('endtime', )
+    starttime = kwargs.pop('starttime', None)
+    endtime = kwargs.pop('endtime', None)
     base = kwargs.pop('base', 'stock')
     constraint = kwargs.pop('constraint', None)
     order = kwargs.pop('order', None)

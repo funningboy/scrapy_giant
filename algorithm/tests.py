@@ -3,6 +3,8 @@
 # using as celery worker
 # main.INSTALLED_APPS has included handler task
 
+import dill
+import pickle
 import unittest
 from datetime import datetime, timedelta
 from main.tests import NoSQLTestCase
@@ -16,71 +18,74 @@ skip_tests = {
 class TestTwseDualemaAlg(NoSQLTestCase):
 
     def test_on_to_detail(self):
-        kwargs = {
+        stream = pickle.dumps(((), {
             'opt': 'twse',
             'targets': ['dualema'],
             'starttime': datetime.utcnow() - timedelta(days=150),
             'endtime': datetime.utcnow(),
             'base': 'stock',
             'stockids': ['2317', '2330', '1314'],
-            'order': ['-portfolio_value', '-buys', '-sells'],
+            'constraint': None,
+            'order': lambda x: [-x.value['totalportfolio']],
             'limit': 3,
             'callback': 'to_detail',
             'debug': True,
             'cfg': {
-                "buf_win": 30,
-                "short_ema_win": 20,
-                "long_ema_win": 40
+                'buf_win': 30,
+                'short_ema_win': 20,
+                'long_ema_win': 40
             }
-        }  
-        item = run_algitem.delay(**kwargs).get()
+        }))  
+        item = pickle.loads(run_algitem.delay(stream).get())
         self.assertTrue(item)
         self.assertTrue(item['dualemaitem'])  
         self.assertTrue(len(item['dualemaitem'])>0)
         self.assertTrue(set(sorted(list(item['dualemaitem'][0].keys()))) >= set(sorted(['date', 'portfolio_value', 'buy', 'open'])))
     
     def test_on_to_summary(self):
-        kwargs = {
+        stream = pickle.dumps(((), {
             'opt': 'twse',
             'targets': ['dualema'],
             'starttime': datetime.utcnow() - timedelta(days=150),
             'endtime': datetime.utcnow(),
             'base': 'stock',
             'stockids': ['2317', '2330', '1314'],
-            'order': ['-portfolio_value', '-buys', '-sells'],
+            'constraint': None,
+            'order': None,
             'limit': 3,
             'callback': 'insert_summary',
             'debug': True,
             'cfg': {
-                "buf_win": 30,
-                "short_ema_win": 20,
-                "long_ema_win": 40
+                'buf_win': 30,
+                'short_ema_win': 20,
+                'long_ema_win': 40
             }
-        } 
-        alg = algdb_tasks['twse']['dualema'](**kwargs) 
+        })) 
+        alg = algdb_tasks['twse']['dualema'](debug=True) 
         alg.sumycoll.drop_collection()
-        run_algitem.delay(**kwargs).get()
+        run_algitem.delay(stream).get()
         # query summary factor back and check
         starttime, endtime = datetime.utcnow() - timedelta(days=1), datetime.utcnow()
         if endtime.isoweekday() in [6, 7]:
             starttime -= timedelta(days=2)
-        kwargs = {
+        stream = pickle.dumps(((), {
             'opt': 'twse',
             'targets': ['dualema'],
             'starttime': starttime,
             'endtime': endtime,
             'base': 'stock',
             'stockids': ['2317', '2330', '1314'],
-            'order': ['-totalportfolio', '-totalbuys', '-totalsells'],
+            'constraint': None,
+            'order': lambda x: [-x.value['totalportfolio']],
             'limit': 1,
             'debug': True,
             'cfg': {
-                "buf_win": 30,
-                "short_ema_win": 20,
-                "long_ema_win": 40
+                'buf_win': 30,
+                'short_ema_win': 20,
+                'long_ema_win': 40
             }
-        } 
-        item = collect_algitem.delay(**kwargs).get()
+        })) 
+        item = pickle.loads(collect_algitem.delay(stream).get())
         self.assertTrue(item)
         self.assertTrue(item['dualemaitem'])
         self.assertTrue(len(item['dualemaitem'])>0)

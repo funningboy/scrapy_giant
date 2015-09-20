@@ -18,7 +18,8 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"twse\"](debug=True).stock.get_ids()]",
                 "base": "stock",
-                "order": ["-totalvolume"],
+                "constraint": "lambda x: x.value[\"eclose\"] > 0 and x.value[\"evolume\"] > 0",
+                "order": "lambda x: [-x.value[\"totalvolume\"], -x.value[\"eclose\"]]",
                 "limit": 3,
                 "debug": True
             }
@@ -34,7 +35,8 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"twse\"](debug=True).stock.get_ids()]",
                 "base": "stock",
-                "order": ["+bearishused", "+financeused"],
+                "constraint": "lambda x: x.value[\"efinanceremain\"] > 0 or x.value[\"ebearfinaratio\"] > 0",
+                "order": "lambda x: [-x.value[\"ebearfinaratio\"], -x.value[\"totalfinanceremain\"]]",
                 "limit": 3,
                 "debug": True
             }
@@ -50,7 +52,8 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"twse\"](debug=True).stock.get_ids()]",
                 "base": "stock",
-                "order": ["-totalvolume"],
+                "constraint": "lambda x: x.value[\"edfcdiff\"] > 0 or x.value[\"totalvolume\"] > 0",
+                "order": "lambda x: [-x.value[\"edfcdiff\"], -x.value[\"totalvolume\"]]",
                 "limit": 3,
                 "debug": True
             }
@@ -65,7 +68,8 @@ Nodes:
                 "starttime": "datetime.utcnow() - timedelta(days=150)",
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
-                "order": ["-buys", "-sells", "-portfolio_value"],
+                "constraint": "lambda x: x.value[\"totalportfolio\"] > 0",
+                "order": "lambda x: [-x.value[\"totalbuys\"], -x.value[\"totalsells\"]]",
                 "callback": "insert_summary",
                 "limit": 3,
                 "debug": True,

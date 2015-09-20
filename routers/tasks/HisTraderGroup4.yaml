@@ -9,7 +9,8 @@
         stockids: [],
         traderids: ['1020', '1030', '1040', '1110', '1230', '5380', '7000', '9300'],
         base: 'trader',
-        order: ['-totalvolume'],
+        constraint: null,
+        order: null
         callback: null,
         limit: 100,
         debug: False

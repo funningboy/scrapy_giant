@@ -117,7 +117,7 @@ class TwseAlgDBHandler(object):
                 retval.append(coll)
         return retval
 
-    def query_summary(self, starttime, endtime, cfg, order=['-totalportfolio'], limit=10, callback=None):
+    def query_summary(self, starttime, endtime, cfg, constraint=None, order=None, limit=10, callback=None):
         """ return orm
         <algorithm>
         <watchtime> |<bufwin> | <stockid> | <traderid> | buys | sells ...
@@ -128,6 +128,7 @@ class TwseAlgDBHandler(object):
             function () {
                 try {
                     var key =  { stockid : this.stockid };
+                    // as constraint/sort key
                     var value = {
                         totalportfolio: this.portfolio_value,
                         totalbuys: this.buys,
@@ -158,9 +159,6 @@ class TwseAlgDBHandler(object):
                     totalused: 0,
                     data: []
                 };
-                if (values.length == 0) {
-                    return redval;
-                }
                 for (var i=0; i < values.length; i++) {
                     redval.totalportfolio += values[i].totalportfolio;
                     redval.totalbuys += values[i].totalbuys;
@@ -173,15 +171,15 @@ class TwseAlgDBHandler(object):
         """
         finalize_f = """
         """
-        assert(set([o[1:] for o in order]) <= set(['totalbuys', 'totalsells', 'totalportfolio', 'totalused']))
         bufwin = (endtime - starttime).days
         cursor = self._sumycoll.objects(Q(date__gte=starttime) & Q(date__lte=endtime))
-        results = cursor.map_reduce(map_f, reduce_f, 'algmap')
-        results = list(results)
-        reorder = lambda k: map(lambda x: k.value[x[1:]] if x.startswith('+') else -k.value[x[1:]], order)
-        pool = sorted(results, key=reorder)[:limit]
+        results = list(cursor.map_reduce(map_f, reduce_f, 'algmap'))
+        if constraint:
+            results = filter(constraint, results)
+        if order:
+            results = sorted(results, key=order)[:limit]
         retval = []
-        for it in pool:
+        for it in results:
             coll = {
                 # key
                 'watchtime': endtime,

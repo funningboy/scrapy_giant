@@ -31,29 +31,29 @@ function loadChartData(settings) {
         },
 
         success: function (result) {
-            try {
+            //try {
                 plotTraderData(result);
-            } catch(err) {
-                console.log("plotTraderData fail");
-            }
+            //} catch(err) {
+            //    console.log("plotTraderData fail");
+            //}
 
-            try {
+            //try {
                 plotCreditData(result);
-            } catch(err) {
-                console.log("plotCreditData fail");
-            }
+            //} catch(err) {
+            //    console.log("plotCreditData fail");
+            //}
 
-            try {
+            //try {
                 plotFutureData(result);
-            } catch(err) {
-                console.log("plotFutureData fail");
-            }
+            //} catch(err) {
+            //    console.log("plotFutureData fail");
+            //}
 
-            try {
+            //try {
                 plotTableData(result);
-            } catch(err) {
-                console.log("plotTableData fail");
-            }
+            //} catch(err) {
+            //    console.log("plotTableData fail");
+            //}
         },
 
         error: function (xhr, ajaxOptions, thrownError) {

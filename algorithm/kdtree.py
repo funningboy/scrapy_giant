@@ -32,8 +32,10 @@ class kdtKnnAlgorithm(TradingAlgorithm):
         self.dbhandler.future.ids
 
     def initialize(self):
+        pass
 
     def handle_data(self, data):
+        pass
 
     def post_run(self):
         knn = neighbors.KNeighborsClassifier()
