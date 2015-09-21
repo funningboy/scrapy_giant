@@ -12,6 +12,14 @@ autocmp = {
 
 routers = {
     # key, search path, init node, middle node, end node
+    'TestStock': ('routers/table/TestStock.yaml', {
+        'twse': ([0], [], [1]),
+        'otc': ([2], [], [3])
+        }),
+    'TestTrader': ('routers/table/TestTrader.yaml', {
+        'twse': ([0], [], [1]),
+        'otc': ([2], [], [3])
+        }),
     'StockProfileUp0': ('routers/table/StockProfileUp0.yaml', {
         'twse': ([0,1,2], [3], [4]),
         'otc': ([5,6,7], [8], [9])
@@ -113,8 +121,9 @@ def schedule_router_tasks(**collect):
 
     for n in starts:
         ptr = graph.node[n]['ptr']
+        win = ptr.kwargs['endtime'] - ptr.kwargs['starttime']
         ptr.kwargs.update({
-            'starttime': starttime,
+            'starttime': endtime - win,
             'endtime': endtime,
             'stockids': stockids if stockids else ptr.kwargs['stockids'],
             'traderids': traderids if traderids else ptr.kwargs['traderids'],
@@ -122,8 +131,9 @@ def schedule_router_tasks(**collect):
         })
     for n in middles:
         ptr = graph.node[n]['ptr']
+        win = ptr.kwargs['endtime'] - ptr.kwargs['starttime']
         ptr.kwargs.update({
-            'starttime': starttime,
+            'starttime': endtime - win,
             'endtime': endtime,
             'debug': debug
         })

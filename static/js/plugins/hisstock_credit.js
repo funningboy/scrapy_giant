@@ -15,22 +15,23 @@ function plotCreditData(result){
             "stocklow": parseFloat(d_it.low.toFixed(2)),
             "stockprice": parseFloat(d_it.close.toFixed(2)),
             "stockvolume": parseInt(d_it.volume.toFixed()),
-            "finaused": 0.00,
+            "finaremain": 0.00,
             "finabuyvolume": 0.00,
             "finasellvolume": 0.00,
-            "bearused": 0.00,
+            "bearremain": 0.00,
             "bearbuyvolume": 0.00,
             "bearsellvolume": 0.00
         });
     });
 
+    // try except
     var ndata = $.extend(true, [], data);
     $.each(credititem[0].datalist, function(d_idx, d_it) {
         var date = new Date(d_it.date);
         var rst = $.grep(ndata, function(e){ return e.date == yyyymmdd(date); });
         if (rst.length != 0) {
-            rst[0].finaused = parseFloat(d_it.financeused.toFixed(2));
-            rst[0].bearused = parseFloat(d_it.bearishused.toFixed(2));
+            rst[0].finaremain = parseFloat(d_it.financeremain.toFixed(2));
+            rst[0].bearremain = parseFloat(d_it.bearishremain.toFixed(2));
             rst[0].finabuyvolume = parseInt(d_it.financebuyvolume.toFixed());
             rst[0].finasellvolume = parseInt(d_it.financesellvolume.toFixed());
             rst[0].bearbuyvolume = parseInt(d_it.bearishbuyvolume.toFixed());

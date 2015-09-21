@@ -1,7 +1,9 @@
 Edges:
     [
         # twse
-        [0,1,1]
+        [0,1,1],
+        # otc
+        [2,3,1]
     ]
 
 Nodes:
@@ -28,6 +30,38 @@ Nodes:
             "./routers/tasks/HisItemAll.yaml", 
             kwargs = {
                 "opt": "twse",
+                "targets": ["stock", "future", "credit", "trader"],
+                "starttime": "datetime.utcnow() - timedelta(days=5)",
+                "endtime": "datetime.utcnow()",
+                "stockids": [],
+                "base": "stock",
+                "limit": 2,
+                "debug": True
+            }
+        )',
+
+        # 0
+        'Loader.parse_task(
+            "./routers/tasks/HisCredit.yaml",
+            kwargs = {
+                "opt": "otc",
+                "targets": ["credit"],
+                "starttime": "datetime.utcnow() - timedelta(days=5)",
+                "endtime": "datetime.utcnow()",
+                "stockids": "[i for i in iddb_tasks[\"otc\"](debug=True).stock.get_ids()]",
+                "base": "stock",
+                "constraint": "lambda x: x.value[\"efinanceremain\"] > 0 or x.value[\"ebearfinaratio\"] > 0",
+                "order": "lambda x: [-x.value[\"ebearfinaratio\"], -x.value[\"totalfinanceremain\"]]",
+                "limit": 2,
+                "debug": True
+            }
+        )',
+
+        # 1
+        'Loader.parse_task(
+            "./routers/tasks/HisItemAll.yaml", 
+            kwargs = {
+                "opt": "otc",
                 "targets": ["stock", "future", "trader", "credit"],
                 "starttime": "datetime.utcnow() - timedelta(days=5)",
                 "endtime": "datetime.utcnow()",

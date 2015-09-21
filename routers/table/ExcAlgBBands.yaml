@@ -23,7 +23,8 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"twse\"]().stock.get_ids()]",
                 "base": "stock",
-                "order": ["-totalvolume", "-totaldiff"],
+                "constraint": "lambda x: x.value[\"eclose\"] > 15 and x.value[\"evolume\"] > 500",
+                "order": "lambda x: [-x.value[\"totalvolume\"], -x.value[\"eclose\"]]",
                 "limit": 1000
             }
         )',
@@ -38,7 +39,8 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"twse\"]().stock.get_ids()]",
                 "base": "stock",
-                "order": ["+bearishused", "+financeused"],
+                "constraint": "lambda x: x.value[\"efinanceremain\"] > 10 or x.value[\"ebearfinaratio\"] > 20",
+                "order": "lambda x: [-x.value[\"ebearfinaratio\"], -x.value[\"totalfinanceremain\"]]",
                 "limit": 500
             }
         )',
@@ -52,8 +54,9 @@ Nodes:
                 "starttime": "datetime.utcnow() - timedelta(days=5)",
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"twse\"]().stock.get_ids()]",
-                "base": "stock",
-                "order": ["-totalvolume", "-totaldiff"],
+                "constraint": "lambda x: x.value[\"edfcdiff\"] > 0 or x.value[\"totalvolume\"] > 0",
+                "order": "lambda x: [-x.value[\"edfcdiff\"], -x.value[\"totalvolume\"]]",
+                "base": "stock",       
                 "limit": 250
             }
         )',
@@ -67,7 +70,8 @@ Nodes:
                 "starttime": "datetime.utcnow() - timedelta(days=150)",
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
-                "order": ["-buys", "-sells", "-portfolio_value"],
+                "constraint": "lambda x: x.value[\"totalportfolio\"] > 0",
+                "order": "lambda x: [-x.value[\"totalbuys\"], -x.value[\"totalsells\"]]",
                 "callback": "insert_summary",
                 "limit": 50,
                 "cfg": {
@@ -86,7 +90,8 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"otc\"]().stock.get_ids()]",
                 "base": "stock",
-                "order": ["-totalvolume", "-totaldiff"],
+                "constraint": "lambda x: x.value[\"eclose\"] > 15 and x.value[\"evolume\"] > 500",
+                "order": "lambda x: [-x.value[\"totalvolume\"], -x.value[\"eclose\"]]",
                 "limit": 1000
             }
         )',
@@ -101,7 +106,8 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"otc\"]().stock.get_ids()]",
                 "base": "stock",
-                "order": ["+bearishused", "+financeused"],
+                "constraint": "lambda x: x.value[\"efinanceremain\"] > 10 or x.value[\"ebearfinaratio\"] > 20",
+                "order": "lambda x: [-x.value[\"ebearfinaratio\"], -x.value[\"totalfinanceremain\"]]",
                 "limit": 500
             }
         )',
@@ -116,7 +122,8 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"otc\"]().stock.get_ids()]",
                 "base": "stock",
-                "order": ["-totalvolume", "-totaldiff"],
+                "constraint": "lambda x: x.value[\"edfcdiff\"] > 0 or x.value[\"totalvolume\"] > 0",
+                "order": "lambda x: [-x.value[\"edfcdiff\"], -x.value[\"totalvolume\"]]",
                 "limit": 250
             }
         )',
@@ -130,7 +137,8 @@ Nodes:
                 "starttime": "datetime.utcnow() - timedelta(days=150)",
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
-                "order": ["-buys", "-sells", "-portfolio_value"],
+                "constraint": "lambda x: x.value[\"totalportfolio\"] > 0",
+                "order": "lambda x: [-x.value[\"totalbuys\"], -x.value[\"totalsells\"]]",
                 "callback": "insert_summary",
                 "limit": 50,
                 "cfg": {

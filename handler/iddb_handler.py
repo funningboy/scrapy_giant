@@ -200,8 +200,7 @@ class StockIdDBHandler(object):
         finalize_f = """
         """
         cursor = self._coll.objects.all()
-        results = cursor.map_reduce(map_f, reduce_f, 'stockidmap')
-        results = list(results)
+        results = list(cursor.map_reduce(map_f, reduce_f, 'stockidmap'))
         retval = []
         for it in results:
             coll = { 'datalist': [] }

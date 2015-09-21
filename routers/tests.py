@@ -8,7 +8,7 @@ from routers.generator import Constraint, Generator
 skip_tests = {
     # static 
     'TestLoaderStrategy': False,
-    'TestAlwaysRunStrategy': True,
+    'TestAlwaysRunStrategy': False,
     'TestGeneratorRandom': True
     #
 } 
@@ -17,10 +17,10 @@ skip_tests = {
 class TestLoaderStrategy(NoSQLTestCase):
 
     _paths = [
-        #'routers/table/Test.yaml',
-        #'routers/table/TestStockProfile0.yaml',
-        #'routers/table/TestStockProfile1.yaml',
-        #'routers/table/TestTraderProfile0.yaml',
+        'routers/table/Test.yaml',
+        'routers/table/TestStockProfile0.yaml',
+        'routers/table/TestStockProfile1.yaml',
+        'routers/table/TestTraderProfile0.yaml',
         'routers/table/TestExcAlgDualema.yaml',
         'routers/table/TestExcRptDualema.yaml',
         #'routers/table/TestNtyAll.yaml'

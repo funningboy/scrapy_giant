@@ -16,7 +16,7 @@ from workers.gworker import GWorker
 from workers.nodes import Node
 from handler.tasks import *
 from algorithm.tasks import *
-from notify.tasks import *
+#from notify.tasks import *
 
 class Loader(object):
 

@@ -15,8 +15,9 @@ function plotTableData(result){
             "high": parseFloat(d_it.high.toFixed(2)),
             "low": parseFloat(d_it.low.toFixed(2)),
             "volume": parseInt(d_it.volume.toFixed()),
-            "finaused" : 0.00,
-            "bearused": 0.00,
+            "finarmn" : 0.00,
+            "bearrmn": 0.00,
+            "bfratio": 0.00,
             "fopen": 0.00,
             "fclose": 0.00,
             "fvolume": 0,
@@ -29,8 +30,9 @@ function plotTableData(result){
         var date = new Date(d_it.date);
         var rst = $.grep(ndata, function(e){ return e.date == yyyymmdd(date); });
         if (rst.length != 0) {
-            rst[0].finaused = parseFloat(d_it.financeused.toFixed(2));
-            rst[0].bearused = parseFloat(d_it.bearishused.toFixed(2));
+            rst[0].finarmn = parseFloat(d_it.financeremain.toFixed(2));
+            rst[0].bearrmn = parseFloat(d_it.bearishremain.toFixed(2));
+            rst[0].bfratio = parseFloat(d_it.bearfinaratio.toFixed(2));
         }
     });
 

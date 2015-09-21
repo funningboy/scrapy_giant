@@ -27,11 +27,11 @@ function loadChartData(settings) {
         },
 
         success: function (result) {
-            try {
+            //try {
                 plotlTableData(result);
-            } catch(err) {
-                console.log("plotTableData fail");
-            }
+            //} catch(err) {
+            //    console.log("plotTableData fail");
+            //}
         },
 
         error: function (xhr, ajaxOptions, thrownError) {

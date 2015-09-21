@@ -623,7 +623,8 @@ class TwseCreditHisDBHandler(object):
                             bearishbuyvolume: this.bearish.buyvolume,
                             bearishsellvolume: this.bearish.sellvolume,
                             bearishremain: bearishremain,
-                            bearishtrend: bearishtrend
+                            bearishtrend: bearishtrend,
+                            bearfinaratio: bearfinaratio
                         }]
                     };
                     emit(key, value);
@@ -770,7 +771,7 @@ class TwseFutureHisDBHandler(object):
                     var value = {
                         totalvolume: this.future.volume,
                         totalhldiff: Math.abs(this.future.high - this.future.low),
-                        totalocdiff: Math.abs(this.future.open - this.close),
+                        totalocdiff: Math.abs(this.future.open - this.future.close),
                         edfodiff: edfodiff,
                         edfhdiff: edfhdiff,
                         edfldiff: edfldiff,

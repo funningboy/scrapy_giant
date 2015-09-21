@@ -8,7 +8,8 @@
         endtime: "datetime.utcnow()",
         stockids: [],
         traderids: [],
-        order: ['-totalbuys', '-totalsells', '-totalportfolio'],
+        constraint: "lambda x: x.value[\"totalportfolio\"] > 0",
+        order: "lambda x: [-x.value[\"totalbuys\"], -x.value[\"totalsells\"]]",
         callback: null,
         limit: 100,
         debug: False

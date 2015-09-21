@@ -11,8 +11,12 @@ from main.routers import *
 routers = (
     (is_hisstock_detail, hisstock_detail_html),
     (is_histrader_detail, histrader_detail_html),
+    (is_teststock_detail, hisstock_detail_html),
+    (is_testtrader_detail, histrader_detail_html),
     (is_hisstock_list, hisstock_list_html),
-    (is_histrader_list, histrader_list_html)
+    (is_histrader_list, histrader_list_html),
+    (is_teststock_list, hisstock_list_html),
+    (is_testtrader_list, histrader_list_html)
 )
 
 def home(request):
