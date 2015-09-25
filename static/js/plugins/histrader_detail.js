@@ -29,11 +29,11 @@ function loadChartData(settings) {
         },
 
         success: function (result) {
-            //try {
+            try {
                 plotStockData(result);
-            //} catch(err) {
-            //    console.log("plotStockData fail");
-            //}
+            } catch(err) {
+                console.log("plotStockData fail");
+            }
 
             plotlTableData(result);
         },

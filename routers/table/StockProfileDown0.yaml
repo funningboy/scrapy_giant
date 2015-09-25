@@ -1,4 +1,4 @@
-# raw profile as trend down
+# raw profile as layer 1 trend down
 
 Edges:
     [
@@ -28,7 +28,8 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"twse\"]().stock.get_ids()]",
                 "base": "stock",
-                "order": "lambda x: [+x.value[\"totalbearishremain\"], +x.value[\"totalfinanceremain\"]]",
+                "constraint": "lambda x: x.value[\"ebearfinaratio\"] < 30",
+                "order": "lambda x: [+x.value[\"ebearfinaratio\"], -x.value[\"totalbearishremain\"]]",
                 "limit": 10
             }
         )',
@@ -44,7 +45,7 @@ Nodes:
                 "stockids": "[i for i in iddb_tasks[\"twse\"]().stock.get_ids()]",
                 "base": "stock",
                 "constraint": "lambda x: x.value[\"eclose\"] > 30 and x.value[\"evolume\"] > 500",
-                "order": "lambda x: [+x.value[\"totalvolume\"], -x.value[\"eclose\"]]",
+                "order": "lambda x: [-x.value[\"totalvolume\"], -x.value[\"eclose\"]]",
                 "limit": 10,
             }
         )',
@@ -76,7 +77,8 @@ Nodes:
                 "stockids": [],
                 "traderids": [],
                 "base": "stock",
-                "order": ["-totalvolume"],
+                "constraint": "lambda x: x.value[\"esellratio\"] > 40 or x.value[\"totalkeepsell\"] > 2",
+                "order": "lambda x: [-x.value[\"totalvolume\"], -x.value[\"totalsellratio\"]]",
                 "limit": 20
             }
         )',
@@ -107,7 +109,8 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"otc\"]().stock.get_ids()]",
                 "base": "stock",
-                "order": ["+bearishused", "+financeused"],
+                "constraint": "lambda x: x.value[\"ebearfinaratio\"] < 30",
+                "order": "lambda x: [+x.value[\"ebearfinaratio\"], -x.value[\"totalbearishremain\"]]",
                 "limit": 10
             }
         )',
@@ -122,7 +125,8 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"otc\"]().stock.get_ids()]",
                 "base": "stock",
-                "order": ["-totalvolume", "-totaldiff"],
+                "constraint": "lambda x: x.value[\"eclose\"] > 30 and x.value[\"evolume\"] > 500",
+                "order": "lambda x: [-x.value[\"totalvolume\"], -x.value[\"eclose\"]]",
                 "limit": 10
             }
         )',
@@ -137,7 +141,8 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"otc\"]().stock.get_ids()]",
                 "base": "stock",
-                "order": ["-totalvolume", "-totaldiff"],
+                "constraint": "lambda x: x.value[\"edfcdiff\"] > 0 or x.value[\"totalvolume\"] > 100",
+                "order": "lambda x: [-x.value[\"edfcdiff\"], -x.value[\"totalvolume\"]]",
                 "limit": 10
             }
         )',
@@ -153,7 +158,8 @@ Nodes:
                 "stockids": [],
                 "traderids": [],
                 "base": "stock",
-                "order": ["-totalvolume"],
+                "constraint": "lambda x: x.value[\"esellratio\"] > 40 or x.value[\"totalkeepsell\"] > 2",
+                "order": "lambda x: [-x.value[\"totalvolume\"], -x.value[\"totalsellratio\"]]",
                 "limit": 20
             }
         )',
@@ -169,7 +175,6 @@ Nodes:
                 "stockids": [],
                 "traderids": [],
                 "base": "stock",
-                "order": [],
                 "limit": 20
             }
         )'

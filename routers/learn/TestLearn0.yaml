@@ -7,7 +7,7 @@ period: 1
 Nodes: "random.randint(5,8)"
 Edges: "random.randint(4,5)"
 
-# at start Node(task) constraint 
+# at input layer
 start_tasks: 
 	[
         'Loader.parse_task(
@@ -25,9 +25,11 @@ start_tasks:
         )'
 	]
 
+# as hidden layer
 middle_tasks: 
 	[]
 
+# as output layer
 end_tasks:
 	[
         'Loader.parse_task(

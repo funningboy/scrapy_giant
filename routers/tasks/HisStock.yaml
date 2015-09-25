@@ -1,5 +1,5 @@
 {
-    # handler/tasks.py hisstock rand
+    # handler/tasks.py hisstock rand layer 1
     task: "collect_hisitem",
     kwargs: {
         opt: null,

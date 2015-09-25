@@ -24,7 +24,6 @@ function plotCreditData(result){
         });
     });
 
-    // try except
     var ndata = $.extend(true, [], data);
     $.each(credititem[0].datalist, function(d_idx, d_it) {
         var date = new Date(d_it.date);

@@ -1,6 +1,6 @@
 {
-    # handler/tasks.py
-    # TODO
+    # handler/tasks.py layer 1
+    # TODO: complete stockids
     task: "collect_hisitem",
     kwargs: {
         opt: null,

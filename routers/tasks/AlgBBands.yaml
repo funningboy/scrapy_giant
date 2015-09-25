@@ -1,5 +1,5 @@
 {
-    # algorithm/tasks.py algbbands rand
+    # algorithm/tasks.py algbbands rand layer 2
     task: "run_algitem",
     kwargs: {
         opt: null,

@@ -1,5 +1,5 @@
 {
-    # handler/tasks.py hisfuture rand
+    # handler/tasks.py hisfuture rand layer 1
     task: "collect_hisitem",
     kwargs: {
         opt: null,

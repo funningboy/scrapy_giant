@@ -23,7 +23,7 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"twse\"]().stock.get_ids()]",
                 "base": "stock",
-                "constraint": "lambda x: x.value[\"eclose\"] > 15 and x.value[\"evolume\"] > 500",
+                "constraint": "lambda x: x.value[\"eclose\"] > 30 and x.value[\"evolume\"] > 500",
                 "order": "lambda x: [-x.value[\"totalvolume\"], -x.value[\"eclose\"]]",
                 "limit": 1000
             }
@@ -39,7 +39,7 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"twse\"]().stock.get_ids()]",
                 "base": "stock",
-                "constraint": "lambda x: x.value[\"efinanceremain\"] > 10 or x.value[\"ebearfinaratio\"] > 20",
+                "constraint": "lambda x: x.value[\"ebearfinaratio\"] > 30",
                 "order": "lambda x: [-x.value[\"ebearfinaratio\"], -x.value[\"totalfinanceremain\"]]",
                 "limit": 500
             }
@@ -90,7 +90,7 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"otc\"]().stock.get_ids()]",
                 "base": "stock",
-                "constraint": "lambda x: x.value[\"eclose\"] > 15 and x.value[\"evolume\"] > 500",
+                "constraint": "lambda x: x.value[\"eclose\"] > 30 and x.value[\"evolume\"] > 500",
                 "order": "lambda x: [-x.value[\"totalvolume\"], -x.value[\"eclose\"]]",
                 "limit": 1000
             }
@@ -106,7 +106,7 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"otc\"]().stock.get_ids()]",
                 "base": "stock",
-                "constraint": "lambda x: x.value[\"efinanceremain\"] > 10 or x.value[\"ebearfinaratio\"] > 20",
+                "constraint": "lambda x: x.value[\"ebearfinaratio\"] > 30",
                 "order": "lambda x: [-x.value[\"ebearfinaratio\"], -x.value[\"totalfinanceremain\"]]",
                 "limit": 500
             }

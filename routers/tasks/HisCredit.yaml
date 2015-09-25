@@ -1,5 +1,5 @@
 {
-    # handler/tasks.py hiscredit rand
+    # handler/tasks.py hiscredit rand layer 1
     task: "collect_hisitem",
     kwargs: {
         opt: null,
