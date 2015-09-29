@@ -17,13 +17,14 @@ import matplotlib.ticker as mticker
 
 from zipline.algorithm import TradingAlgorithm
 from zipline.utils.factory import *
+from zipline.finance.trading import SimulationParameters
 from talib import MA_Type
 
 from bin.mongodb_driver import *
 from bin.start import *
+from handler.tasks import collect_hisframe
 from handler.hisdb_handler import TwseHisDBHandler, OtcHisDBHandler
 from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
-from handler.tasks import collect_hisframe
 
 from algorithm.report import Report
 
@@ -144,7 +145,6 @@ def run(opt='twse', debug=False, limit=0):
                 'stockids': [stockid],
                 'traderids': [],
                 'base': 'stock',
-                'order': [],
                 'callback': None,
                 'limit': 1,
                 'debug': debug
@@ -152,12 +152,21 @@ def run(opt='twse', debug=False, limit=0):
             panel, dbhandler = collect_hisframe(**kwargs)
             if len(panel[stockid].index) < maxlen:
                 continue
-            bbands = BBandsAlgorithm(dbhandler=dbhandler)
+
+            sim_params = SimulationParameters(
+                period_start=panel[stockid].index[0],
+                period_end=panel[stockid].index[-1],
+                data_frequency='daily',
+                emission_rate='daily'
+            )
+
+            bbands = BBandsAlgorithm(dbhandler=dbhandler, debug=debug, sim_params=sim_params)
             results = bbands.run(panel).fillna(0)
-            report.collect(stockid, results)
+            risks = bbands.perf_tracker.handle_simulation_end()
+            report.collect(stockid, results, risks)
             print "%s pass" %(stockid)
         except:
-            #print traceback.format_exc()
+            print traceback.format_exc()
             continue
 
     if report.report.empty:

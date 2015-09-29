@@ -37,34 +37,30 @@ class kdtKnnAlgorithm(TradingAlgorithm):
     def handle_data(self, data):
         pass
 
-    def post_run(self):
-        knn = neighbors.KNeighborsClassifier()
-        knn.fit(train.data, train.target)
-        knn.score(test.data, test.target)
-
 
 def run(opt='twse', debug=False, limit=0):
     """ as doctest run """
-    # set time window
+    maxlen = 30
     starttime = datetime.utcnow() - timedelta(days=300)
     endtime = datetime.utcnow()
-    # sort factor
     report = Report(
         sort=[('buy_count', False), ('sell_count', False), ('volume', False)], limit=20)
-    # set debug or normal mode
+
     kwargs = {
         'debug': debug,
         'limit': limit,
         'opt': opt
     }
-    idhandler = TwseIdDBHandler() if kwargs['opt'] == 'twse' else OtcIdDBHandler()
-    for stockid in idhandler.stock.get_ids(**kwargs):
-        dbhandler = TwseHisDBHandler() if kwargs['opt'] == 'twse' else OtcHisDBHandler()
-        dbhandler.stock.ids = [stockid]
-        data = dbhandler.transform_all_data(starttime, endtime, [stockid], [], 'totalvolume', 10)
-        supman = SuperManAlgorithm(dbhandler=dbhandler)
-        results = supman.run(data).fillna(0)
-        report.collect(stockid, results)
+
+    idhandler = TwseIdDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcIdDBHandler(**kwargs)
+    for stockid in idhandler.stock.get_ids():
+        try:
+            kwargs = {
+                'opt':
+            }
+        kdtree = kdtKnnAlgorithm(dbhandler=dbhandler)
+        results = kdtree.run(data).fillna(0)
+        report.collect(stockid, results, risks)
         print "%s pass" %(stockid)
 
     if report.report.empty:

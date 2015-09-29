@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 #%matplotlib inline
-import pyfolio as pf
+#import pyfolio as pf
 
 import pytz
 import matplotlib.pyplot as plt
@@ -11,6 +11,7 @@ import traceback
 
 from zipline.algorithm import TradingAlgorithm
 from zipline.utils.factory import *
+from zipline.finance.trading import SimulationParameters
 
 # Import exponential moving average from talib wrapper
 # ref: http://mrjbq7.github.io/ta-lib/doc_index.html
@@ -21,6 +22,7 @@ from collections import deque
 from bin.mongodb_driver import *
 from bin.start import *
 from handler.tasks import collect_hisframe
+from handler.hisdb_handler import TwseHisDBHandler, OtcHisDBHandler
 from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
 
 from algorithm.report import Report
@@ -148,11 +150,18 @@ def run(opt='twse', debug=False, limit=0):
             panel, dbhandler = collect_hisframe(**kwargs)
             if len(panel[stockid].index) < maxlen:
                 continue
-            dualema = DualEMAAlgorithm(dbhandler=dbhandler, debug=debug, capital_base=float("1.0e5"), data_frequency='daily')
+
+            sim_params = SimulationParameters(
+                period_start=panel[stockid].index[0],
+                period_end=panel[stockid].index[-1],
+                data_frequency='daily',
+                emission_rate='daily'
+            )
+
+            dualema = DualEMAAlgorithm(dbhandler=dbhandler, debug=debug, sim_params=sim_params)
             results = dualema.run(panel).fillna(0)
-            # risk metric 1month, 3month, 12month..
-            [perf for perf in dualema.get_generator()][-1]
-            report.collect(stockid, results)
+            risks = dualema.perf_tracker.handle_simulation_end()  
+            report.collect(stockid, results, risks)
             print "%s pass" %(stockid)
         except:
             print traceback.format_exc()

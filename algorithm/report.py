@@ -25,7 +25,7 @@ class Report(object):
     def pool(self):
         return self._pool
 
-    def collect(self, symbol, results):
+    def collect(self, symbol, results, risks):
         # ref:
         # https://github.com/quantopian/zipline/blob/7892a6943f7b027be1e3c5a75eac61e7c4c0a027/zipline/finance/performance/period.py
         # collect and sort results as df
@@ -40,6 +40,10 @@ class Report(object):
             'ending_cash': results['ending_cash'][-1] if 'ending_cash' in results.columns else 0,
             'capital_used': results['capital_used'][-1] if 'capital_used' in results.columns else 0
         })
+        try:
+            item.update(risks['one_month'][-1])
+        except:
+            pass
         frame = pd.DataFrame.from_dict({symbol: item}).fillna(0)
         self._report = pd.concat([self._report, frame.T], axis=0).fillna(0).sort(columns=list(self._sort), ascending=list(self._direct))[0:self._limit]
         self._pool.update({symbol: results})

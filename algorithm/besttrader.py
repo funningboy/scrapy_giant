@@ -14,6 +14,7 @@ from sklearn import cluster, covariance, manifold
 from zipline.algorithm import TradingAlgorithm
 from zipline.utils.factory import *
 from zipline.finance.execution import LimitOrder
+from zipline.finance.trading import SimulationParameters
 
 from datetime import datetime, timedelta
 from collections import deque
@@ -144,7 +145,8 @@ def run(opt='twse', debug=False, limit=0):
                 'stockids': [stockid],
                 'traderids': [],
                 'base': 'stock',
-                'order': ['-totalbuyvolume'],
+                'constraint': lambda x: x.value["ebuyratio"] > 10 or x.value["totalkeepbuy"] >= 1,
+                'order': lambda x: [-x.value["totalvolume"], -x.value["totalbuyratio"]],
                 'callback': None,
                 'limit': 10,
                 'debug': debug
@@ -165,7 +167,6 @@ def run(opt='twse', debug=False, limit=0):
                 'stockids': [stockid],
                 'traderids': [traderid],
                 'base': 'trader',
-                'order': [],
                 'callback': None,
                 'limit': 10,
                 'debug': debug
@@ -173,12 +174,21 @@ def run(opt='twse', debug=False, limit=0):
             panel, dbhandler = collect_hisframe(**kwargs)
             if len(panel[stockid].index) < maxlen:
                 continue
-            besttrader = BestTraderAlgorithm(dbhandler=dbhandler, debug=debug)
+
+            sim_params = SimulationParameters(
+                period_start=panel[stockid].index[0],
+                period_end=panel[stockid].index[-1],
+                data_frequency='daily',
+                emission_rate='daily'
+            )
+
+            besttrader = BestTraderAlgorithm(dbhandler=dbhandler, debug=debug, sim_params=sim_params)
             results = besttrader.run(panel).fillna(0)
-            report.collect(stockid, results)
+            risks = besttrader.perf_tracker.handle_simulation_end()  
+            report.collect(stockid, results, risks)
             print "%s pass" %(stockid)
         except:
-            #print traceback.format_exc()
+            print traceback.format_exc()
             continue
 
     if report.report.empty:

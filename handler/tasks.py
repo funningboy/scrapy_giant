@@ -45,6 +45,9 @@ def collect_iditem(stream):
     return pickle.dumps(item)
 
 
+def collect_idframe():
+    pass
+
 @shared_task(time_limit=60*60)
 def collect_hisitem(stream):
     args, kwargs = pickle.loads(stream)

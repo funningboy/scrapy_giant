@@ -11,6 +11,7 @@ from collections import deque, Counter
 
 from zipline.algorithm import TradingAlgorithm
 from zipline.utils.factory import *
+from zipline.finance.trading import SimulationParameters
 
 from sklearn import metrics
 from sklearn.cluster import KMeans
@@ -20,8 +21,10 @@ from sklearn.preprocessing import scale
 
 from bin.mongodb_driver import *
 from bin.start import *
+from handler.tasks import collect_hisframe
 from handler.hisdb_handler import TwseHisDBHandler, OtcHisDBHandler
 from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
+
 from algorithm.report import Report
 
 
@@ -223,36 +226,48 @@ def run(opt='twse', debug=False, limit=0):
     }
     idhandler = TwseIdDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcIdDBHandler(**kwargs)
     for stockid in idhandler.stock.get_ids():
-        kwargs = {
-            'debug': True,
-            'opt': opt
-        }
-        dbhandler = TwseHisDBHandler(**kwargs) if kwargs['opt'] == 'twse' else OtcHisDBHandler(**kwargs)
-        dbhandler.stock.ids = [stockid]
-        args = (starttime, endtime, [stockid], 'stock', ['-totalvolume'], 10)
-        cursor = dbhandler.stock.query_raw(*args)
-        data = dbhandler.stock.to_pandas(cursor)
-        if len(data[stockid].index) < maxlen:
-            continue
-        kmeans = KmeansAlgorithm(dbhandler=dbhandler, debug=True)
-        results = kmeans.run(data).fillna(0)
-        report.collect(stockid, results)
-        #report.collect(stockid, results)
-        print "%s pass" %(stockid)
+        try:
+            kwargs = {
+                'opt': opt,
+                'targets': ['stock'],
+                'starttime': starttime,
+                'endtime': endtime,
+                'stockids': [stockid],
+                'base': 'stock',
+                'callback': None,
+                'limit': 1,
+                'debug': debug
+            }
+            panel, dbhandler = collect_hisframe(**kwargs)
+            if len(panel[stockid].index) < maxlen:
+                continue
 
-#    if report.report.empty:
-#        return
-#
-#    # report summary
-#    stream = report.summary(dtype='html')
-#    report.write(stream, 'superman.html')
-#
-#    for stockid in report.iter_stockid
-#        stream = report.iter_report(stockid, dtype='html', has_other=True, has_sideband=True)
-#        report.write(stream, "superman_%s.html" % (stockid))
-#
-#    for stockid in report.iter_stockid():
-#        fig = plt.figure()
+            sim_params = SimulationParameters(
+                period_start=panel[stockid].index[0],
+                period_end=panel[stockid].index[-1],
+                data_frequency='daily',
+                emission_rate='daily'
+            )
+
+            kmeans = KmeansAlgorithm(dbhandler=dbhandler, debug=True, sim_params=sim_params)
+            results = kmeans.run(panel).fillna(0)
+            risks = kmeans.perf_tracker.handle_simulation_end()  
+            report.collect(stockid, results, risks)
+            print "%s pass" %(stockid)
+        except:
+            print traceback.format_exc()
+            continue
+
+    if report.report.empty:
+        return
+
+    # report summary
+    stream = report.summary(dtype='html')
+    report.write(stream, 'kmeans.html')
+
+    for stockid in report.iter_symbol():
+        stream = report.iter_report(stockid, dtype='html')
+        report.write(stream, "kmeans_%s.html" % (stockid))
 
 
 if __name__ == '__main__':

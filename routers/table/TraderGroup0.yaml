@@ -18,7 +18,7 @@ Nodes:
                 "starttime": "datetime.utcnow() - timedelta(days=5)",
                 "endtime": "datetime.utcnow()",
                 "base": "trader",
-                "order": ["-totalvolume"],
+                "order": "lambda x: [-x.value[\"totalvolume\"], -x.value[\"eclose\"]]",
                 "limit": 20
             })',
         # 1
@@ -32,7 +32,6 @@ Nodes:
                 "stockids": [],
                 "traderids": [],
                 "base": "stock",
-                "order": [],
                 "limit": 20
             })',
 
@@ -47,7 +46,7 @@ Nodes:
                 "stockids": [],
                 "traderids": [],
                 "base": "trader",
-                "order": ["-totalvolume"],
+                "order": "lambda x: [-x.value[\"totalvolume\"], -x.value[\"eclose\"]]",
                 "limit": 20
             })',
         # 4
@@ -61,7 +60,6 @@ Nodes:
                 "stockids": [],
                 "traderids": [],
                 "base": "stock",
-                "order": [],
                 "limit": 20
             })',
     ]

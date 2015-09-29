@@ -22,7 +22,6 @@ Nodes:
                 "stockids": [],
                 "traderids": "[i for i in iddb_tasks[\"twse\"]().trader.get_ids()]",
                 "base": "trader",
-                "order": ["-totalvolume", "-totalsellvolume"],
                 "limit": 20
             })',
         # 1
@@ -36,7 +35,6 @@ Nodes:
                 "stockids": [],
                 "traderids": [],
                 "base": "stock",
-                "order": [],
                 "limit": 20
             })',
 
@@ -51,7 +49,6 @@ Nodes:
                 "stockids": [],
                 "traderids": "[i for i in iddb_tasks[\"otc\"]().trader.get_ids()]",
                 "base": "trader",
-                "order": ["-totalvolume", "-totalsellvolume"],
                 "limit": 20
             })',
 
@@ -66,7 +63,6 @@ Nodes:
                 "stockids": [],
                 "traderids": [],
                 "base": "stock",
-                "order": [],
                 "limit": 20
             })',
     ]

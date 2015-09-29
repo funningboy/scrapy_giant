@@ -111,7 +111,6 @@ def run(opt='twse', debug=False, limit=0):
                 'stockids': [stockid],
                 'traderids': [],
                 'base': 'stock',
-                'order': [],
                 'callback': None,
                 'limit': 10,
                 'debug': True
@@ -129,7 +128,6 @@ def run(opt='twse', debug=False, limit=0):
                 'stockids': [stockid],
                 'traderids': [traderid],
                 'base': 'trader',
-                'order': [],
                 'callback': None,
                 'limit': 10,
                 'debug': True

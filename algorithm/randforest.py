@@ -18,9 +18,9 @@ from sklearn.grid_search import GridSearchCV, RandomizedSearchCV
 
 from bin.mongodb_driver import *
 from bin.start import *
+from handler.tasks import collect_hisframe
 from handler.hisdb_handler import TwseHisDBHandler, OtcHisDBHandler
 from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
-from handler.tasks import collect_hisframe
 
 from algorithm.report import Report
 
