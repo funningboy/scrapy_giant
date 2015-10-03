@@ -2,7 +2,7 @@
 Edges:
     [
         [0,1,1],
-        [1,2,1],
+#        [1,2,1],
     ]
 
 Nodes:
@@ -16,7 +16,7 @@ Nodes:
                 "starttime": "datetime.utcnow() - timedelta(days=3)",
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"twse\"](debug=True).stock.get_ids()]",
-                "order": ["-totalbuys", "-totalsells", "-totalportfolio"],
+                "order": "lambda x: [-x.value[\"totalbuys\"], -x.value[\"totalsells\"], -x.value[\"totalportfolio\"]]",
                 "limit": 20,
                 "debug": True,
                 "cfg": {
@@ -36,7 +36,7 @@ Nodes:
                 "starttime": "datetime.utcnow() - timedelta(days=150)",
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
-                "order": ["-buys", "-sells", "-portfolio_value"],
+                "order": "lambda x: [-x.value[\"totalbuys\"], -x.value[\"totalsells\"], -x.value[\"totalportfolio\"]]",
                 "callback": "to_detail",
                 "limit": 20,
                 "debug": True,
@@ -48,20 +48,20 @@ Nodes:
             }
         )',
 
-        # 2
-        'Loader.parse_task(
-            "./routers/tasks/NtyGmail.yaml",
-            kwargs = {
-                "opt": "twse",
-                "targets": ["gmail"],
-                "starttime": "datetime.utcnow() - timedelta(days=1)",
-                "endtime": "datetime.utcnow()",
-                "stockids": [],
-                "limit": 20,
-                "debug": True,
-                "cfg": {
-                    "subject": "test best twse Dualema list ..."
-                }
-            }
-        )'
+ #       # 2
+ #       'Loader.parse_task(
+ #           "./routers/tasks/NtyGmail.yaml",
+ #           kwargs = {
+ #               "opt": "twse",
+ #               "targets": ["gmail"],
+ #               "starttime": "datetime.utcnow() - timedelta(days=1)",
+ #               "endtime": "datetime.utcnow()",
+ #               "stockids": [],
+ #               "limit": 20,
+ #               "debug": True,
+ #               "cfg": {
+ #                   "subject": "test best twse Dualema list ..."
+ #               }
+ #           }
+ #       )'
     ]

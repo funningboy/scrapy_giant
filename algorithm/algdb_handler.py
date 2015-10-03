@@ -9,26 +9,26 @@ from bin.start import switch
 from bin.mongodb_driver import MongoDBDriver
 from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
 from handler.tasks import *
+from itertools import product
+from zipline.finance.trading import SimulationParameters
+
 from algorithm.models import *
 from algorithm.report import Report
 from algorithm.dualema import DualEMAAlgorithm
 from algorithm.besttrader import BestTraderAlgorithm
 from algorithm.bbands import BBandsAlgorithm
 from algorithm.randforest import RandForestAlgorithm
+from algorithm.kmeans import KmeansAlgorithm
 #from algorithm.kdtree import KdtKnnAlgorithm
-#from algorithm.kmeans import
+
 
 # register all alg to algdb_handler via decorator
-__all__ = [
-    'TwseDualemaAlg',
-    'OtcDualemaAlg',
-    'TwseBestTraderAlg',
-    'OtcBestTraderAlg',
-    'TwseBBandsAlg',
-    'OtcBBandsAlg',
-    'TwseRandForestAlg',
-    'OtcRandForestAlg'
-    ]
+algclass = lambda x: x[0]+x[1]
+
+__all__ = map(algclass, list(product(
+        ('Twse', 'Otc'), 
+        ('DualemaAlg', 'BestTraderAlg', 'BBandsAlg', 'RandForestAlg')
+    )))
 
 # alg db map
 algdbmap = {
@@ -36,6 +36,7 @@ algdbmap = {
     BestTraderAlgorithm: 'btraderdb',
     BBandsAlgorithm: 'bbandsdb',
     RandForestAlgorithm: 'rforestdb',
+    KmeansAlgorithm: 'kmeansdb'
 }
 
 class TwseAlgDBHandler(object):
@@ -70,15 +71,22 @@ class TwseAlgDBHandler(object):
         stockids = self._kwargs['stockids']
         for stockid in stockids:
             self._kwargs.update({'stockids': [stockid]})
-            df, handler = collect_hisframe(**copy.deepcopy(self._kwargs))
-            yield stockid, df, handler
+            panel, handler = collect_hisframe(**copy.deepcopy(self._kwargs))
+            yield stockid, panel, handler
 
     def run(self):
-        for stockid, df, dbhandler in self.iter_hisframe():
-            if not df.empty and dbhandler:
+        for stockid, panel, dbhandler in self.iter_hisframe():
+            if not panel.empty and dbhandler:
+                sim_params = SimulationParameters(
+                    period_start=panel[stockid].index[0],
+                    period_end=panel[stockid].index[-1],
+                    data_frequency='daily',
+                    emission_rate='daily'
+                )
                 alg = self._alg(dbhandler, **self._cfg)
-                results = alg.run(df).fillna(0)
-                self._report.collect("%s" %(stockid), results)
+                results = alg.run(panel).fillna(0)
+                risks = alg.perf_tracker.handle_simulation_end()
+                self._report.collect("%s" %(stockid), results, risks)
 
     def finalize(self, callback=None):
         df = self._report.summary()
@@ -185,7 +193,6 @@ class TwseAlgDBHandler(object):
                 'watchtime': endtime,
                 'bufwin': bufwin,
                 'stockid': it.key['stockid'],
-                'order': order,
                 'stocknm': self._id.stock.get_name(it.key['stockid']),
                 # value
                 'totalportfolio': it.value['totalportfolio'],

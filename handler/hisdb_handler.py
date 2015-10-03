@@ -158,6 +158,10 @@ class TwseStockHisDBHandler(object):
                 try {
                     var key =  { stockid : this.stockid };
                     // as constraint/sort key
+                    var totalhldiff = Math.abs(this.data.high - this.data.low);
+                    totalhldiff = parseFloat(totalhldiff.toFixed(2));
+                    var totalocdiff = Math.abs(this.data.open - this.data.close);
+                    totalocdiff = parseFloat(totalocdiff.toFixed(2));
                     var value = {
                         sopen: this.data.open,
                         sclose: this.data.close,
@@ -166,8 +170,8 @@ class TwseStockHisDBHandler(object):
                         eclose: this.data.close,
                         evolume: this.data.volume,
                         totalvolume: this.data.volume,
-                        totalhldiff: Math.abs(this.data.high - this.data.low),
-                        totalocdiff: Math.abs(this.data.open - this.data.close),
+                        totalhldiff: totalhldiff,
+                        totalocdiff: totalocdiff,
                         data: [{
                             date: this.date,
                             open: this.data.open,
@@ -351,9 +355,13 @@ class TwseTraderHisDBHandler(object):
                         var buyratio = 0;
                         var sellratio = 0;
                         var maxvolume = Math.max(buyvolume, sellvolume);
+                        maxvolume = parseFloat(maxvolume.toFixed(2));
                         var minvolume = Math.min(buyvolume, sellvolume);
+                        minvolume = parseFloat(minvolume.toFixed(2));
                         var maxprice = Math.max(avgbuyprice, avgsellprice);
+                        maxprice = parseFloat(maxprice.toFixed(2));
                         var minprice = Math.min(avgbuyprice, avgsellprice);
+                        minprice = parseFloat(minprice.toFixed(2));
                         if (this.data.volume >0) {
                             if (buyvolume >0) {
                                 buyratio = buyvolume / this.data.volume * 100;
@@ -764,14 +772,22 @@ class TwseFutureHisDBHandler(object):
                     var key =  { stockid : this.stockid };
                     var diff = this.future.high - this.future.low;
                     var edfodiff = this.data.open - this.future.open;
+                    edfodiff = parseFloat(edfodiff.toFixed(2));
                     var edfhdiff = this.data.high - this.future.high;
+                    edfhdiff = parseFloat(edfhdiff.toFixed(2));
                     var edfldiff = this.data.low - this.future.low;
+                    edfldiff = parseFloat(edfldiff.toFixed(2));
                     var edfcdiff = this.data.close - this.future.close;
+                    edfcdiff = parseFloat(edfcdiff.toFixed(2));
+                    var totalhldiff = Math.abs(this.future.high - this.future.low);
+                    totalhldiff = parseFloat(totalhldiff.toFixed(2));
+                    var totalocdiff = Math.abs(this.future.open - this.future.close);
+                    totalocdiff = parseFloat(totalocdiff.toFixed(2));
                     // as constraint/sort key
                     var value = {
                         totalvolume: this.future.volume,
-                        totalhldiff: Math.abs(this.future.high - this.future.low),
-                        totalocdiff: Math.abs(this.future.open - this.future.close),
+                        totalhldiff: totalhldiff,
+                        totalocdiff: totalocdiff,
                         edfodiff: edfodiff,
                         edfhdiff: edfhdiff,
                         edfldiff: edfldiff,

@@ -11,14 +11,19 @@ class AlgSummaryColl(Document):
     ending_value = FloatField(min_value=-999999999.0, max_value=999999999.0)
     ending_cash = FloatField(min_value=-999999999.0, max_value=999999999.0)
     capital_used = FloatField(min_value=-999999999.0, max_value=999999999.0)
+    alpha = FloatField(min_value=-999.0, max_value=999.0)
+    beta = FloatField(min_value=-999.0, max_value=999.0)
+    sharpe = FloatField(min_value=-999.0, max_value=999.0) 
+    max_drawdown = FloatField(min_value=-999.0, max_value=999.0) 
+    benchmark_period_return = FloatField(min_value=-999.0, max_value=999.0)
     buys = IntField(min_value=0, max_value=999)
     sells = IntField(min_value=0, max_value=999)
-    #cfg = StringL
+    #cfg = tag list
     meta = {
         'allow_inheritance': True,
         'indexes': [(
             'date', 'portfolio_value',
-            'ending_value',  'buys', 'sells'
+            'ending_cash',  'buys', 'sells'
         )],
         'ordering': [('-portfolio_value')]
     }

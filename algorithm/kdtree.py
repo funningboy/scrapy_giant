@@ -56,12 +56,36 @@ def run(opt='twse', debug=False, limit=0):
     for stockid in idhandler.stock.get_ids():
         try:
             kwargs = {
-                'opt':
+                'opt': opt,
+                'targets': ['stock'],
+                'starttime': starttime,
+                'endtime': endtime,
+                'stockids': [stockid],
+                'traderids': [],
+                'base': 'stock',
+                'callback': None,
+                'limit': 1,
+                'debug': debug
             }
-        kdtree = kdtKnnAlgorithm(dbhandler=dbhandler)
-        results = kdtree.run(data).fillna(0)
-        report.collect(stockid, results, risks)
-        print "%s pass" %(stockid)
+            panel, dbhandler = collect_hisframe(**kwargs)
+            if len(panel[stockid].index) < maxlen:
+                continue
+
+            sim_params = SimulationParameters(
+                period_start=panel[stockid].index[0],
+                period_end=panel[stockid].index[-1],
+                data_frequency='daily',
+                emission_rate='daily'
+            )
+
+            kdtree = kdtKnnAlgorithm(dbhandler=dbhandler, sim_params=sim_params)
+            results = kdtree.run(data).fillna(0)
+            risks = kdtree.perf_tracker.handle_simulation_end()
+            report.collect(stockid, results, risks)
+            print "%s pass" %(stockid)
+    except:
+        print traceback.format_exc()
+        continue
 
     if report.report.empty:
         return

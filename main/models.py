@@ -1,24 +1,86 @@
 # -*- coding: utf-8 -*-
 
 from mongoengine import *
+from collections import OrderedDict
 
-ALG_CHOICES = (
-    (0, 'TestStock'),
-    (1, 'TestTrader'),
-    # map as hisstock_detail/list
-    (2, 'StockProfileUp0'),
-    (3, 'StockProfileUp1'),
-    (4, 'StockProfileUp2'),
-    (5, 'StockProfileDown0'),
-    (6, 'StockProfileDown1'),
-    (7, 'StockProfileDown2'),
-    # map as histrader_detail/list,
-    (8, 'TraderProfileUp0'),
-    (9, 'TraderProfileUp1'),
-    (10, 'TraderProfileDown0'),
-    (11, 'TraderProfileDown1')
-    # map as alg
-)
+autocmp = OrderedDict({
+    # key, search path, end node
+    'AllIdAutoCmp': ('routers/table/AllIdAutoCmp.yaml', {
+        'twse': ([0],),
+        'otc': ([1],)
+    })
+})
+
+# register your strategies here
+routers = OrderedDict({
+    # key, search path, init node, middle node, end node
+    'TestStock': ('routers/table/TestStock.yaml', {
+        'twse': ([0], [], [1]),
+        'otc': ([2], [], [3])
+        }),
+    'TestTrader': ('routers/table/TestTrader.yaml', {
+        'twse': ([0], [], [1]),
+        'otc': ([2], [], [3])
+        }),
+    'StockProfileUp0': ('routers/table/StockProfileUp0.yaml', {
+        'twse': ([0,1,2], [3], [4]),
+        'otc': ([5,6,7], [8], [9])
+        }),
+    'StockProfileDown0': ('routers/table/StockProfileDown0.yaml', {
+        'twse': ([0,1,2], [3], [4]),
+        'otc': ([5,6,7], [8], [9])
+        }),
+    'StockProfileUp1': ('routers/table/StockProfileUp1.yaml', {
+        'twse': ([0], [1,2,3], [4]),
+        'otc': ([5], [6,7,8], [9])
+        }),
+    'StockProfileDown1': ('routers/table/StockProfileDown1.yaml', {
+        'twse': ([0], [1,2,3], [4]),
+        'otc': ([5], [6,7,8], [9])
+        }),
+    'StockProfileUp2': ('routers/table/StockProfileUp2.yaml', {
+        'twse': ([0], [1,2,3], [4]),
+        'otc': ([5], [6,7,8], [9])
+        }),
+    'StockProfileDown2': ('routers/table/StockProfileDown2.yaml', {
+        'twse': ([0], [1,2,3], [4]),
+        'otc': ([5], [6,7,8], [9])
+        }),
+    'TraderProfileUp0': ('routers/table/TraderProfileUp0.yaml', {
+        'twse': ([0], [], [1]),
+        'otc': ([2], [], [3])
+        }),
+    'TraderProfileDown0': ('routers/table/TraderProfileDown0.yaml', {
+        'twse': ([0], [], [1]),
+        'otc': ([2], [], [3])
+        }),
+    'TraderGroup0': ('routers/table/TraderGroup0.yaml', {
+        'twse': ([0], [], [1]),
+        'otc': ([2], [], [3])
+        }),
+    'TraderGroup1': ('routers/table/TraderGroup1.yaml', {
+        'twse': ([0], [], [1]),
+        'otc': ([2], [], [3])
+        }),
+    'TraderGroup2': ('routers/table/TraderGroup2.yaml', {
+        'twse': ([0], [], [1]),
+        'otc': ([2], [], [3])
+        }),
+    'TraderGroup3': ('routers/table/TraderGroup3.yaml', {
+        'twse': ([0], [], [1]),
+        'otc': ([2], [], [3])
+        }),
+    'StockGroup0': ('routers/table/StockGroup0.yaml', {
+        'twse': ([], [], []),
+        'otc': ([], [], [])
+        }),
+    'StockGroup1': ('routers/table/StockGroup1.yaml', {
+        'twse': ([], [], []),
+        'otc': ([], [], [])
+        })
+})
+
+ALG_CHOICES = set([(i, k) for i, k in enumerate(sorted(routers.keys()))])
 
 OPT_CHOICES = (
     (0, 'twse'),
