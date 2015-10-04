@@ -1,0 +1,72 @@
+# raw profile as trend up 
+
+Edges:
+    [
+        # twse
+        [0,1,1],
+
+        # otc
+        [2,3,1]
+    ]
+
+Nodes:
+    [
+        # 0
+        'Loader.parse_task(
+            "./routers/tasks/HisTrader.yaml",
+            kwargs = {
+                "opt": "twse",
+                "targets": ["trader"],
+                "starttime": "datetime.utcnow() - timedelta(days=5)",
+                "endtime": "datetime.utcnow()",
+                "stockids": [],
+                "traderids": "[i for i in iddb_tasks[\"twse\"]().trader.get_ids()]",
+                "base": "trader",
+                "constraint": "lambda x: x.value[\"esellratio\"] > 40 or x.value[\"totalkeepsell\"] > 2",
+                "order": "lambda x: [-x.value[\"totalsellratio\"], +x.value[\"totalbuyratio\"]]",
+                "limit": 20
+            })',
+        # 1
+        'Loader.parse_task(
+            "./routers/tasks/HisItemAll.yaml",
+            kwargs = {
+                "opt": "twse",
+                "targets": ["stock", "credit", "future", "trader"],
+                "starttime": "datetime.utcnow() - timedelta(days=5)",
+                "endtime": "datetime.utcnow()",
+                "stockids": [],
+                "traderids": [],
+                "base": "stock",
+                "limit": 20
+            })',
+
+        # 2
+        'Loader.parse_task(
+            "./routers/tasks/HisTrader.yaml",
+            kwargs = {
+                "opt": "otc",
+                "targets": ["trader"],
+                "starttime": "datetime.utcnow() - timedelta(days=5)",
+                "endtime": "datetime.utcnow()",
+                "stockids": [],
+                "traderids": "[i for i in iddb_tasks[\"otc\"]().trader.get_ids()]",
+                "base": "trader",
+                "constraint": "lambda x: x.value[\"esellratio\"] > 40 or x.value[\"totalkeepsell\"] > 2",
+                "order": "lambda x: [-x.value[\"totalsellratio\"], +x.value[\"totalbuyratio\"]]",
+                "limit": 20
+            })',
+
+        # 3
+        'Loader.parse_task(
+            "./routers/tasks/HisItemAll.yaml",
+            kwargs = {
+                "opt": "otc",
+                "targets": ["stock", "credit", "future", "trader"],
+                "starttime": "datetime.utcnow() - timedelta(days=5)",
+                "endtime": "datetime.utcnow()",
+                "stockids": [],
+                "traderids": [],
+                "base": "stock",
+                "limit": 20
+            })',
+    ]

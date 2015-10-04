@@ -663,8 +663,8 @@ class TwseCreditHisDBHandler(object):
                         redval.ebearishremain = values[i].data[0]['bearishremain'];
                         redval.ebearfinaratio = values[i].data[0]['bearfinaratio'];
                     }
-                    redval.totalfinanceremain += values[i].financeremain;
-                    redval.totalbearishremain += values[i].bearishremain;
+                    redval.totalfinanceremain += values[i].totalfinanceremain;
+                    redval.totalbearishremain += values[i].totalbearishremain;
                     redval.data = values[i].data.concat(redval.data);
                 }
                 return redval;

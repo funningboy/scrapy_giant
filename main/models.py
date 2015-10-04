@@ -14,11 +14,11 @@ autocmp = OrderedDict({
 # register your strategies here
 routers = OrderedDict({
     # key, search path, init node, middle node, end node
-    'TestStock': ('routers/table/TestStock.yaml', {
-        'twse': ([0], [], [1]),
-        'otc': ([2], [], [3])
+    'StockProfileRaw': ('routers/table/StockProfileRaw.yaml', {
+        'twse': ([0,1,2], [3], [4]),
+        'otc': ([5,6,7], [8], [9])
         }),
-    'TestTrader': ('routers/table/TestTrader.yaml', {
+    'TraderProfileRaw': ('routers/table/TraderProfileRaw.yaml', {
         'twse': ([0], [], [1]),
         'otc': ([2], [], [3])
         }),
@@ -70,17 +70,21 @@ routers = OrderedDict({
         'twse': ([0], [], [1]),
         'otc': ([2], [], [3])
         }),
+    'TraderGroup4': ('routers/table/TraderGroup4.yaml', {
+        'twse': ([0], [], [1]),
+        'otc': ([2], [], [3])
+        }),
     'StockGroup0': ('routers/table/StockGroup0.yaml', {
-        'twse': ([], [], []),
-        'otc': ([], [], [])
+        'twse': ([0], [], [1]),
+        'otc': ([2], [], [3])
         }),
     'StockGroup1': ('routers/table/StockGroup1.yaml', {
-        'twse': ([], [], []),
-        'otc': ([], [], [])
+        'twse': ([0], [], [1]),
+        'otc': ([2], [], [3])
         })
 })
 
-ALG_CHOICES = set([(i, k) for i, k in enumerate(sorted(routers.keys()))])
+ALG_CHOICES = [(i, k) for i, k in enumerate(sorted(routers.keys()))]
 
 OPT_CHOICES = (
     (0, 'twse'),

@@ -22,6 +22,8 @@ Nodes:
                 "stockids": [],
                 "traderids": "[i for i in iddb_tasks[\"twse\"]().trader.get_ids()]",
                 "base": "trader",
+                "constraint": "lambda x: x.value[\"esellratio\"] > 40 or x.value[\"totalkeepsell\"] > 2",
+                "order": "lambda x: [-x.value[\"totalsellratio\"], +x.value[\"totalbuyratio\"]]",
                 "limit": 20
             })',
         # 1
@@ -49,6 +51,8 @@ Nodes:
                 "stockids": [],
                 "traderids": "[i for i in iddb_tasks[\"otc\"]().trader.get_ids()]",
                 "base": "trader",
+                "constraint": "lambda x: x.value[\"esellratio\"] > 40 or x.value[\"totalkeepsell\"] > 2",
+                "order": "lambda x: [-x.value[\"totalsellratio\"], +x.value[\"totalbuyratio\"]]",
                 "limit": 20
             })',
 

@@ -4,7 +4,7 @@ Edges:
         [0,1,1],
 
         # otc
-        [3,4,1],
+        [2,3,1],
     ]
 
 Nodes:
@@ -18,7 +18,7 @@ Nodes:
                 "starttime": "datetime.utcnow() - timedelta(days=5)",
                 "endtime": "datetime.utcnow()",
                 "base": "trader",
-                "order": "lambda x: [-x.value[\"totalvolume\"], -x.value[\"eclose\"]]",
+                "order": "lambda x: [-x.value[\"totalvolume\"], -x.value[\"ebuyratio\"]]",
                 "limit": 20
             })',
         # 1
@@ -35,7 +35,7 @@ Nodes:
                 "limit": 20
             })',
 
-        # 3
+        # 2
         'Loader.parse_task(
             "./routers/tasks/HisTraderGroup1.yaml",
             kwargs = {
@@ -46,10 +46,10 @@ Nodes:
                 "stockids": [],
                 "traderids": [],
                 "base": "trader",
-                "order": "lambda x: [-x.value[\"totalvolume\"], -x.value[\"eclose\"]]",
+                "order": "lambda x: [-x.value[\"totalvolume\"], -x.value[\"ebuyratio\"]]",
                 "limit": 20
             })',
-        # 4
+        # 3
         'Loader.parse_task(
             "./routers/tasks/HisItemAll.yaml",
             kwargs = {

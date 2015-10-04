@@ -11,7 +11,7 @@ Nodes:
     [
         # 0
         'Loader.parse_task(
-            "./routers/tasks/HisTraderGroup0.yaml",
+            "./routers/tasks/HisTraderGroup4.yaml",
             kwargs = {
                 "opt": "twse",
                 "targets": ["trader"],
@@ -37,7 +37,7 @@ Nodes:
 
         # 2
         'Loader.parse_task(
-            "./routers/tasks/HisTraderGroup0.yaml",
+            "./routers/tasks/HisTraderGroup4.yaml",
             kwargs = {
                 "opt": "otc",
                 "targets": ["trader"],

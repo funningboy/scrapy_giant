@@ -1,24 +1,28 @@
+# raw profile as trend up 
+
 Edges:
     [
         # twse
         [0,1,1],
 
         # otc
-        [2,3,1],
+        [2,3,1]
     ]
 
 Nodes:
     [
         # 0
         'Loader.parse_task(
-            "./routers/tasks/HisTraderGroup0.yaml",
+            "./routers/tasks/HisTrader.yaml",
             kwargs = {
                 "opt": "twse",
                 "targets": ["trader"],
                 "starttime": "datetime.utcnow() - timedelta(days=5)",
                 "endtime": "datetime.utcnow()",
+                "stockids": [],
+                "traderids": "[i for i in iddb_tasks[\"twse\"]().trader.get_ids()]",
                 "base": "trader",
-                "order": "lambda x: [-x.value[\"totalvolume\"], -x.value[\"ebuyratio\"]]",
+                "order": "lambda x: [-x.value[\"totalbuyratio\"], +x.value[\"totalsellratio\"]]",
                 "limit": 20
             })',
         # 1
@@ -37,18 +41,19 @@ Nodes:
 
         # 2
         'Loader.parse_task(
-            "./routers/tasks/HisTraderGroup0.yaml",
+            "./routers/tasks/HisTrader.yaml",
             kwargs = {
                 "opt": "otc",
                 "targets": ["trader"],
                 "starttime": "datetime.utcnow() - timedelta(days=5)",
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
-                "traderids": [],
+                "traderids": "[i for i in iddb_tasks[\"otc\"]().trader.get_ids()]",
                 "base": "trader",
-                "order": "lambda x: [-x.value[\"totalvolume\"], -x.value[\"ebuyratio\"]]",
+                "order": "lambda x: [-x.value[\"totalbuyratio\"], +x.value[\"totalsellratio\"]]",
                 "limit": 20
             })',
+
         # 3
         'Loader.parse_task(
             "./routers/tasks/HisItemAll.yaml",

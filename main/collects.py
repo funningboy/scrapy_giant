@@ -32,7 +32,8 @@ def create_search_collect(request):
         'traderids': traderids,
         'opt': opt,
         'algorithm': algorithm,
-        'debug': settings.DEBUG
+        #'debug': settings.DEBUG
+        'debug': False
     }
     return collect
 
@@ -44,6 +45,8 @@ def create_autocmp_collect(request):
         opt = request.GET['opt']
 
     collect = {
-        'opt': opt
+        'opt': opt,
+        #'debug': settings.DEBUG,
+        'debug': False
     }
     return collect
