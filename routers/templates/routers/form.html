@@ -1,0 +1,195 @@
+{% load compress %}
+{% load staticfiles %}
+
+{% block form %}
+               <div class="clearfix"></div>
+
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div class="x_panel">
+                                <div class="x_title">
+                                    <h2>Form validation <small>sub title</small></h2>
+                                    <ul class="nav navbar-right panel_toolbox">
+                                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                        </li>
+                                        <li class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                            <ul class="dropdown-menu" role="menu">
+                                                <li><a href="#">Settings 1</a>
+                                                </li>
+                                                <li><a href="#">Settings 2</a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                        </li>
+                                    </ul>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="x_content">
+
+                                    <form class="form-horizontal form-label-left" novalidate>
+                                        {% csrf_token %}
+                                        
+                                        <p>For alternative validation library <code>parsleyJS</code> check out in the <a href="form.html">form page</a>
+                                        </p>
+                                        <span class="section">Personal Info</span>
+
+                                        <!-- opt -->
+                                        <div class="item form-group {% if searchform.opt.errors %} has-error{% endif %}">
+                                            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="opt">Opt <span class="required">*</span>
+                                            </label>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <select class="form-control" id="{{ searchform.opt.auto_id }}" name="{{ searchform.opt.name }}" onchange="myFunction(this.value)">
+                                                {% for error in searchform.opt.errors %}
+                                                <p class="help-block">{{ error }}</p>
+                                                {% endfor %}
+                                                {% for k, v in searchform.opt.field.choices %}
+                                                <option>{{ v|stringformat:"s" }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- starttime -->
+                                        <div class="item form-group {% if searchform.starttime.errors %} has-error{% endif %}">
+                                            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="starttime">StartTime <span class="required">*</span>
+                                            </label>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <input type="text" class="form-control has-feedback-left" id="{{ searchform.starttime.auto_id }}" name="{{ searchform.starttime.name }}" placeholder="{{ searchform.starttime.help_text }}" aria-describedby="inputSuccess2Status" autocomplete="off">
+                                                {% for error in searchform.starttime.errors %}
+                                                <p class="help-block">{{ error }}</p>
+                                                {% endfor %}
+                                                <span class="fa fa-calendar-o form-control-feedback left" aria-hidden="true"></span>
+                                                <span id="inputSuccess2Status" class="sr-only">(success)</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- endtime -->
+                                        <div class="item form-group {% if searchform.endtime.errors %} has-error{% endif %}">
+                                            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="endtime">EndTime <span class="required">*</span>
+                                            </label>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <input type="text" class="form-control has-feedback-left" id="{{ searchform.endtime.auto_id }}" name="{{ searchform.endtime.name }}" placeholder="{{ searchform.endtime.help_text }}" aria-describedby="inputSuccess2Status" autocomplete="off">
+                                                {% for error in searchform.endtime.errors %}
+                                                <p class="help-block">{{ error }}</p>
+                                                {% endfor %}
+                                                <span class="fa fa-calendar-o form-control-feedback left" aria-hidden="true"></span>
+                                                <span id="inputSuccess2Status" class="sr-only">(success)</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- stockids -->
+                                        <div class="item form-group {% if searchform.stockids.errors %} has-error{% endif %}">
+                                            <label for="stockids" class="control-label col-md-3 col-sm-3 col-xs-12">StockIds <span class="required"></span>
+                                            </label>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <input id="{{ searchform.stockids.auto_id }}" type="text" name="{{ searchform.stockids.name }}" data-validate-linked="stockids" class="form-control col-md-7 col-xs-12" required="required" placeholder="{{ searchform.stockids.help_text }}" autocomplete="on">
+                                                {% for error in searchform.stockids.errors %}
+                                                <p class="help-block">{{ error }}</p>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+
+                                        <!-- traderids -->
+                                        <div class="item form-group {% if searchform.traderids.errors %} has-error{% endif %}">
+                                            <label for="stockids" class="control-label col-md-3 col-sm-3 col-xs-12">TraderIds <span class="required"></span>
+                                            </label>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <input id="{{ searchform.traderids.auto_id }}" type="text" name="{{ searchform.traderids.name }}" data-validate-linked="traderids" class="form-control col-md-7 col-xs-12" required="required" placeholder="{{ searchform.traderids.help_text }}" autocomplete="on">
+                                                {% for error in searchform.traderids.errors %}
+                                                <p class="help-block">{{ error }}</p>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+
+                                        <!-- algorithm choice -->
+                                        <div class="item form-group {% if searchform.algorithm.errors %} has-error{% endif %}">
+                                            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="algorithm">Algorithm <span class="required">*</span>
+                                            </label>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <select class="form-control" id="{{ searchform.algorithm.auto_id }}" name="{{ searchform.algorithm.name }}">
+                                                {% for error in searchform.algorithm.errors %}
+                                                <p class="help-block">{{ error }}</p>
+                                                {% endfor %}
+                                                {% for k, v in searchform.algorithm.field.choices %}
+                                                <option>{{ v|stringformat:"s" }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="ln_solid"></div>
+                                        <div class="form-group">
+                                            <div class="col-md-6 col-md-offset-3">
+                                                <button type="submit" class="btn btn-primary">Cancel</button>
+                                                <button id="send" type="submit" class="btn btn-success">Submit</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                
+{% endblock %}
+
+
+{% block script %}
+
+    <!-- daterangepicker -->
+    <script src="{% static 'js/moment.min2.js' %}"></script>
+    <script src="{% static 'js/datepicker/daterangepicker.js' %}"></script>
+
+    <!-- autocomplete -->
+    <script src="{% static 'js/'' %}"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#{{ searchform.starttime.auto_id }}").daterangepicker({
+                singleDatePicker: true,
+                calender_style: "picker_1",
+                format: 'YYYY/MM/DD'
+            }, function (start, end, label) {
+                console.log(start.toISOString(), end.toISOString(), label);
+            });
+
+            $("#{{ searchform.endtime.auto_id }}").daterangepicker({
+                singleDatePicker: true,
+                calender_style: "picker_1",
+                format: 'YYYY/MM/DD'
+            }, function (start, end, label) {
+                console.log(start.toISOString(), end.toISOString(), label);
+            });
+
+            $("{{ searchform.traderids.auto_id }}").autocomplete({
+                width: 300,
+                max: 10,
+                delay: 100,
+                minLength: 1,
+                autoFocus: true,
+                cacheLength: 1,
+                scroll: true,
+                highlight: false,
+                source: function(request, response) {
+                    $.ajax({
+                        url: "http://127.0.0.1:8000/handler/api/allid_list/?opt=twse",
+                        dataType: "json",
+                        data: request,
+                        success: function( data, textStatus, jqXHR) {
+                            console.log( data);
+                            var items = data;
+                            response(items);
+                        },
+                        error: function(jqXHR, textStatus, errorThrown){
+                             console.log( textStatus);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+
+    <script type="text/javascript">
+    </script>
+{% endblock %}

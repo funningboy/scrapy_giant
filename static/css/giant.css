@@ -1,0 +1,34 @@
+#topbuy_piechart {
+    width : 100%;
+    height : 400px;
+    font-size : 8px;
+    float: middle;
+}
+
+#topsell_piechart {
+    width : 100%;
+    height : 400px;
+    font-size : 8px;
+    float: middle;
+}
+
+#topmap_columnchart {
+    width : 100%;
+    height : 400px;
+    font-size : 8px;
+    float: middle;
+}
+
+#credit_columnchart {
+    width : 100%;
+    height : 400px;
+    font-size : 8px;
+    float: middle;
+}
+
+#future_columnchart {
+    width : 100%;
+    height : 400px;
+    font-size : 8px;
+    float: middle;	
+}

@@ -1,41 +1,79 @@
-{% extends "main/base.html" %}
+
 {% load compress %}
 {% load staticfiles %}
 
-{% block page %}
-{{ block.super }}
-<!-- layout -->
-<div class="hisstocklist">
-	<div class="stockdetail">
-		<div class="row0">
-   			<!-- {%include "handler/summary.html" %} -->
-   			{%include "handler/stocklist_table.html" %}
-   		</div>
-   	</div>
-</div>
+{% block stocklist %}
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="x_panel">
+                                <div class="x_title">
+                                    <h2>Weekly Summary <small>Activity shares</small></h2>
+                                    <ul class="nav navbar-right panel_toolbox">
+                                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                        </li>
+                                        <li class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                            <ul class="dropdown-menu" role="menu">
+                                                <li><a href="#">Settings 1</a>
+                                                </li>
+                                                <li><a href="#">Settings 2</a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                        </li>
+                                    </ul>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="x_content">
+
+                                <div class="table-responsive">
+                                    <table id="stocklist_table" class="table table-bordered table-hover">
+                                        <thead>
+                                            <tr>
+                                            <th>date</th>
+                                            <th class="stockidnm">stockidnm</th> 
+                                            <th>open</th>
+                                            <th>high</th>
+                                            <th>low</th>
+                                            <th>close</th>
+                                            <th>volume</th>
+                                            <th>finarmn</th>
+                                            <th>bearrmn</th>
+                                            <th>bfratio</th>
+                                            <th>fopen</th>
+                                            <th>fclose</th>
+                                            <th>fvolume</th>
+                                            <th>expect</th>
+                                            <th>accuracy</th>
+                                            <th>event</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+  
 {% endblock %}
 
 
 {% block script %}
-{{ block.super }}
-<link rel="stylesheet" href="http://amcharts.com/lib/3/plugins/export/export.css">
-<link rel="stylesheet" href="{% static 'css/jquery.dynatable.css' %}">
-<script type="text/javascript" src="http://www.amcharts.com/lib/3/amcharts.js"></script>
-<script type="text/javascript" src="http://www.amcharts.com/lib/3/pie.js"></script>
-<script type="text/javascript" src="http://www.amcharts.com/lib/3/serial.js"></script>
-<script type="text/javascript" src="http://www.amcharts.com/lib/3/plugins/export/export.js"></script>
-<script type="text/javascript" src="{% static 'js/jquery.dynatable.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/plugins/hisstock_ltable.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/plugins/hisstock_list.js' %}"></script>
 <script type="text/javascript">
-// <![CDATA[
-// load topbuy_piechart, topsell_piechart, topmap_columnchart,
-window.onload=function(){
-    var settings = giant_settings();
-    //console.log(settings);
-    AmCharts.ready(function () {});
-    loadChartData(settings);
-}
-// ]]>
+    $(document).ready(function(){
+    //TODO:
+    //var settings = giant_settings();
+    var settings;
+
+    AmCharts.ready(function () {
+        var hstl = new hisstocklist();
+        hstl.loadChartData(settings);
+        });
+    });
 </script>
 {% endblock %}

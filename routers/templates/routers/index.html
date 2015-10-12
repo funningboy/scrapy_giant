@@ -1,0 +1,96 @@
+{% extends "main/base.html" %}
+{% load compress %}
+{% load staticfiles %}
+
+{% block page %}
+{{ block.super }}
+          <!-- page content -->
+            <div class="right_col" role="main">
+
+                <div class="">
+                    <div class="page-title">
+                        <div class="title_left">
+                            <h3>Profile Wizard</h3>
+                        </div>
+                    </div>
+                    <div class="clearfix"></div>
+
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div class="x_panel">
+                                <div class="x_title">
+                                    <div class="" role="tabpanel" data-example-id="togglable-tabs">
+
+                                        <ul id="profile_tab" class="nav nav-tabs bar_tabs" role="tablist">
+                                            <li role="presentation" class="active"><a href="#tab_content1" id="tutorial-tab" role="tab" data-toggle="tab" aria-expanded="true">Tutorial</a>
+                                            </li>
+                                            <li role="presentation" class=""><a href="#tab_content2" role="tab" id="form-tab" data-toggle="tab"  aria-expanded="false">Form</a>
+                                            </li>
+                                            <li role="presentation" class=""><a href="#tab_content3" role="tab" id="list-tab" data-toggle="tab" aria-expanded="false">List</a>
+                                            </li>
+                                            <li role="presentation" class=""><a href="#tab_content4" role="tab" id="detail-tab" data-toggle="tab" aria-expended="false">Detail</a>
+                                            <li role="presentation" class=""><a href="#tab_content5" role="tab" id="edit-tab" data-toggle="tab" aria-expanded="false">Edit</a>
+                                            </li>
+                                        </ul>
+
+                                        <div id="profile_content" class="tab-content">
+                                            <div role="tabpanel" class="tab-pane fade active in" id="tab_content1" aria-labelledby="tutorial-tab">
+                                            <p>
+                                                {% block tutorial %}
+                                                {% endblock %}
+                                                
+                                            </p>
+                                            </div>
+                                            <div role="tabpanel" class="tab-pane fade" id="tab_content2" aria-labelledby="form-tab">
+                                            <p>
+                                                {% block form %}
+                                                {% endblock %}
+                                                {% include "routers/form.html" %}
+                                            </p>
+                                            </div>
+                                            <div role="tabpanel" class="tab-pane fade" id="tab_content3" aria-labelledby="list-tab">
+                                            <p>
+                                                {% block list %}
+                                                {% endblock %}
+                                                {% include "handler/hisstock_list.html" %}
+                                            </p>
+                                            </div>
+                                            <div role="tabpanel" class="tab-pane fade" id="tab_content4" aria-labelledby="detail-tab">
+                                            <p>
+                                                {% block detail %}
+                                                {% endblock %}
+                                                {% include "handler/hisstock_detail.html" %}
+                                            </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>    
+                        </div>
+                    </div>
+                </div>
+{% endblock %}
+
+
+{% block script %}
+{{ block.super }}
+    <!-- mv to form.html -->
+    <!-- amchart -->
+    <link rel="stylesheet" href="http://amcharts.com/lib/3/plugins/export/export.css">
+    <link rel="stylesheet" href="{% static 'css/jquery.dynatable.css' %}">
+    <link rel="stylesheet" href="{% static 'css/jquery.bpopup.css' %}">
+
+    <script type="text/javascript" src="http://www.amcharts.com/lib/3/amcharts.js"></script>
+    <script type="text/javascript" src="http://www.amcharts.com/lib/3/pie.js"></script>
+    <script type="text/javascript" src="http://www.amcharts.com/lib/3/serial.js"></script>
+    <script type="text/javascript" src="http://www.amcharts.com/lib/3/plugins/export/export.js"></script>
+    <!-- dynatable -->
+    <script type="text/javascript" src="{% static 'js/jquery.dynatable.js' %}"></script>
+    <!-- bpopup -->
+    <script type="text/javascript" src="{% static 'js/jquery.bpopup.min.js' %}"></script>
+    <!-- giant -->
+    <script type="text/javascript" src="{% static 'js/plugins/giant.js' %}"></script>
+    
+{% endblock %}
+
+

@@ -21,8 +21,8 @@ def home(request):
 def about(request):
     return render(request, 'main/about.html', {})
 
-def error_search(request):
-    return render(request, 'main/error_search.html', {})
+#def error_search(request):
+#    return render(request, 'main/error_search.html', {})
 
 def router_search(request):
     collect = create_search_collect(request)

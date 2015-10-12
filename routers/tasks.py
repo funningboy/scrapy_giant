@@ -1,7 +1,7 @@
 
 from routers.loader import Loader
 from datetime import datetime, timedelta
-from main.models import routers
+from main.models import *
 
 def schedule_autocmp_tasks(**collect):
     opt = collect.pop('opt', 'twse')

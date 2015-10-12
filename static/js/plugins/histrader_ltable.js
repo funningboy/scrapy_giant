@@ -14,9 +14,10 @@ function plotlTableData(result){
             data.push({
                 "date": yyyymmdd(date),
                 "stockidnm": stockidnm,
+                "traderidnm": "",
+                "buyrat": 0.00,
+                "sellrat": 0.00,
                 "open": parseFloat(d_it.open.toFixed(2)),
-                "high": parseFloat(d_it.high.toFixed(2)),
-                "low": parseFloat(d_it.low.toFixed(2)),
                 "close": parseFloat(d_it.close.toFixed(2)),
                 "volume": parseInt(d_it.volume.toFixed()),
                 "finarmn" : 0.00,
@@ -33,13 +34,32 @@ function plotlTableData(result){
     }
 
     try {
-        var ndata = $.extend(true, [], data);
+        data = $.extend(true, [], data);
+        $.each(traderitem, function(t_idx, t_it) {
+            var d_idx = t_it.datalist.length -1;
+            var d_it = t_it.datalist[d_idx];
+            var date = new Date(d_it.date);
+            var stockidnm = t_it.stockid + '-' + t_it.stocknm;
+            var traderidnm = t_it.traderid + '-' + t_it.tradernm;
+            var rst = $.grep(data, function(e){ return e.date == yyyymmdd(date) && e.stockidnm == stockidnm; });
+            if (rst.length != 0) {
+                rst[0].traderidnm = traderidnm;
+                rst[0].buyrat = parseFloat(d_it.buyratio.toFixed(2));
+                rst[0].sellrat = parseFloat(d_it.sellratio.toFixed(2));
+            }
+        });
+    } catch(err) {
+        console.log("traderitem None");
+    }
+
+    try {
+        data = $.extend(true, [], data);
         $.each(credititem, function(c_idx, c_it) {
             var d_idx = c_it.datalist.length -1;
             var d_it = c_it.datalist[d_idx];
             var date = new Date(d_it.date);
             var stockidnm = c_it.stockid + '-' + c_it.stocknm;
-            var rst = $.grep(ndata, function(e){ return e.date == yyyymmdd(date) && e.stockidnm == stockidnm; });
+            var rst = $.grep(data, function(e){ return e.date == yyyymmdd(date) && e.stockidnm == stockidnm; });
             if (rst.length != 0) {
                 rst[0].finarmn = parseFloat(d_it.financeremain.toFixed(2));
                 rst[0].bearrmn = parseFloat(d_it.bearishremain.toFixed(2));
@@ -51,13 +71,13 @@ function plotlTableData(result){
     }
 
     try {
-        var fdata = $.extend(true, [], ndata);
+        data = $.extend(true, [], data);
         $.each(futureitem, function(f_idx, f_it) {
             var d_idx = f_it.datalist.length -1;
             var d_it = f_it.datalist[d_idx];
             var date = new Date(d_it.date);
             var stockidnm = f_it.stockid + '-' + f_it.stocknm;
-            var rst = $.grep(fdata, function(e){ return e.date == yyyymmdd(date) && e.stockidnm == stockidnm; });
+            var rst = $.grep(data, function(e){ return e.date == yyyymmdd(date) && e.stockidnm == stockidnm; });
             if (rst.length != 0) {
                 rst[0].fopen = parseFloat(d_it.fopen.toFixed(2));
                 rst[0].fclose = parseFloat(d_it.fclose.toFixed(2));
@@ -67,15 +87,12 @@ function plotlTableData(result){
     } catch(err) {
         console.log("futureitem None");
     }
-
-    // TODO
-    var tdata = $.extend(true, [], fdata);
     
     $('#traderlist_table').dynatable({
         dataset: {
-            records: tdata
+            records: data
         }
     });
 
-    //console.log(tdata);
+    //console.log(data);
 }

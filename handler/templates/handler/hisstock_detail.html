@@ -1,61 +1,220 @@
-{% extends "main/base.html" %}
+
 {% load compress %}
 {% load staticfiles %}
 
-{% block page %}
-{{ block.super }}
+{% block stockdetail %}
 <!-- layout -->
-<div class="hisstockdetail">
-    <div class="toptrader">
-        <div class="row0">
-            {%include "handler/topbuy_piechart.html" %}
-            {%include "handler/topsell_piechart.html" %}
-        </div>
-       <div class="row1">
-            {%include "handler/topmap_columnchart.html" %}
-        </div>
-    </div>
-    <div class="credit">
-        <div class="row0">
-            {%include "handler/credit_columnchart.html" %}
-        </div> 
-    </div>
-    <div class="future">
-        <div class="row0">
-            {%include "handler/future_columnchart.html" %}
-        </div> 
-    </div>  
-    <div class="stockdetail">
-        <div class="row0">
-            {%include "handler/stockdetail_table.html" %}
-        </div>
-    </div>
-</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="x_panel">
+                                <div class="x_title">
+                                    <h2>Weekly Summary <small>Activity shares</small></h2>
+                                    <ul class="nav navbar-right panel_toolbox">
+                                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                        </li>
+                                        <li class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                            <ul class="dropdown-menu" role="menu">
+                                                <li><a href="#">Settings 1</a>
+                                                </li>
+                                                <li><a href="#">Settings 2</a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                        </li>
+                                    </ul>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="x_content">
+                                    <ul id="topbuy_piechart"></ul>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="col-md-6">
+                            <div class="x_panel">
+                                <div class="x_title">
+                                    <h2>Weekly Summary <small>Activity shares</small></h2>
+                                    <ul class="nav navbar-right panel_toolbox">
+                                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                        </li>
+                                        <li class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                            <ul class="dropdown-menu" role="menu">
+                                                <li><a href="#">Settings 1</a>
+                                                </li>
+                                                <li><a href="#">Settings 2</a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                        </li>
+                                    </ul>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="x_content">
+                                    <ul id="topsell_piechart"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="x_panel">
+                                <div class="x_title">
+                                    <h2>Weekly Summary <small>Activity shares</small></h2>
+                                    <ul class="nav navbar-right panel_toolbox">
+                                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                        </li>
+                                        <li class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                            <ul class="dropdown-menu" role="menu">
+                                                <li><a href="#">Settings 1</a>
+                                                </li>
+                                                <li><a href="#">Settings 2</a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                        </li>
+                                    </ul>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="x_content">
+                                    <ul id="topmap_columnchart"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="x_panel">
+                                <div class="x_title">
+                                    <h2>Weekly Summary <small>Activity shares</small></h2>
+                                    <ul class="nav navbar-right panel_toolbox">
+                                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                        </li>
+                                        <li class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                            <ul class="dropdown-menu" role="menu">
+                                                <li><a href="#">Settings 1</a>
+                                                </li>
+                                                <li><a href="#">Settings 2</a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                        </li>
+                                    </ul>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="x_content">
+                                    <ul id="credit_columnchart"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="x_panel">
+                                <div class="x_title">
+                                    <h2>Weekly Summary <small>Activity shares</small></h2>
+                                    <ul class="nav navbar-right panel_toolbox">
+                                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                        </li>
+                                        <li class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                            <ul class="dropdown-menu" role="menu">
+                                                <li><a href="#">Settings 1</a>
+                                                </li>
+                                                <li><a href="#">Settings 2</a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                        </li>
+                                    </ul>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="x_content">
+                                    <ul id="future_columnchart"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="x_panel">
+                                <div class="x_title">
+                                    <h2>Weekly Summary <small>Activity shares</small></h2>
+                                    <ul class="nav navbar-right panel_toolbox">
+                                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                        </li>
+                                        <li class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                            <ul class="dropdown-menu" role="menu">
+                                                <li><a href="#">Settings 1</a>
+                                                </li>
+                                                <li><a href="#">Settings 2</a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                        </li>
+                                    </ul>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="x_content">
+                                      <div class="table-responsive">
+                                            <table id="stockdetail_table" class="table table-bordered table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>date</th>
+                                                        <th>open</th>
+                                                        <th>high</th>
+                                                        <th>low</th>
+                                                        <th>close</th>
+                                                        <th>volume</th>
+                                                        <th>finarmn</th>
+                                                        <th>bearrmn</th>
+                                                        <th>bfratio</th>
+                                                        <th>fopen</th>
+                                                        <th>fclose</th>
+                                                        <th>fvolume</th>
+                                                        <th>expect</th>
+                                                        <th>accuracy</th>
+                                                        <th>event</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 {% endblock %}
 
 
 {% block script %}
-{{ block.super }}
-<link rel="stylesheet" href="http://amcharts.com/lib/3/plugins/export/export.css">
-<link rel="stylesheet" href="{% static 'css/jquery.dynatable.css' %}">
-<script type="text/javascript" src="http://www.amcharts.com/lib/3/amcharts.js"></script>
-<script type="text/javascript" src="http://www.amcharts.com/lib/3/pie.js"></script>
-<script type="text/javascript" src="http://www.amcharts.com/lib/3/serial.js"></script>
-<script type="text/javascript" src="http://www.amcharts.com/lib/3/plugins/export/export.js"></script>
-<script type="text/javascript" src="{% static 'js/jquery.dynatable.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/plugins/hisstock_trader.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/plugins/hisstock_credit.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/plugins/hisstock_future.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/plugins/hisstock_table.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/plugins/hisstock_detail.js' %}"></script>
 <script type="text/javascript">
-// <![CDATA[
-window.onload=function(){
-    var settings = giant_settings();
-    //console.log(settings);
-    AmCharts.ready(function () {});
-    loadChartData(settings);
-}
-// ]]>
+    $(document).ready(function(){
+    var settings;
+
+    AmCharts.ready(function () {
+        var hstd = new hisstockdetail();
+        hstd.loadChartData(settings);
+        }); 
+    });
 </script>
 {% endblock %}

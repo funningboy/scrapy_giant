@@ -137,7 +137,15 @@ Redis vs RabbitMQ
 http://blog.langoor.mobi/django-celery-redis-vs-rabbitmq-message-broker/
 run as celery task
 trader/stock data align 
+https://github.com/pydanny/django-mongonaut
 ```
 
 TBDO
 #https://eonasdan.github.io/bootstrap-datetimepicker/Installing/#minimal-requirements 
+
+URLs:
+http://127.0.0.1:8000/handler/api/hisstock_list/?opt=twse&starttime=2015/10/01&endtime=2015/10/10&stockids=2330&traderids=&algorithm=StockProfileRaw"
+
+http://127.0.0.1:8000/handler/api/hisstock_detail/?opt=twse&starttime=2015/10/01&endtime=2015/10/10&stockids=2330&traderids=&algorithm=StockProfileRaw"
+
+http://127.0.0.1:8000/handler/api/hisstock_detail/?opt=twse
