@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import copy
+import json 
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
@@ -14,65 +15,49 @@ from zipline.finance.trading import SimulationParameters
 
 from algorithm.models import *
 from algorithm.report import Report
-from algorithm.dualema import DualEMAAlgorithm
-from algorithm.besttrader import BestTraderAlgorithm
-from algorithm.bbands import BBandsAlgorithm
-from algorithm.randforest import RandForestAlgorithm
-from algorithm.kmeans import KmeansAlgorithm
-#from algorithm.kdtree import KdtKnnAlgorithm
-
-
-# register all alg to algdb_handler via decorator
-algclass = lambda x: x[0]+x[1]
-
-__all__ = map(algclass, list(product(
-        ('Twse', 'Otc'), 
-        ('DualemaAlg', 'BestTraderAlg', 'BBandsAlg', 'RandForestAlg')
-    )))
-
-# alg db map
-algdbmap = {
-    DualEMAAlgorithm: 'dualemadb',
-    BestTraderAlgorithm: 'btraderdb',
-    BBandsAlgorithm: 'bbandsdb',
-    RandForestAlgorithm: 'rforestdb',
-    KmeansAlgorithm: 'kmeansdb'
-}
 
 class TwseAlgDBHandler(object):
 
-    def __init__(self, **kwargs):
+    def __init__(self, alg, **kwargs):
+        self._alg = alg
         self._order = kwargs.pop('order', [])
         self._cfg = kwargs.pop('cfg', {})
+        self._reserved = kwargs.pop('reserved', False)
         self._debug = kwargs.pop('debug', False)
+        # hisframe collect args
         self._kwargs = {
             'opt': kwargs.pop('opt', None),
             'starttime': kwargs.pop('starttime', datetime.utcnow() - timedelta(days=30)),
             'endtime': kwargs.pop('endtime', datetime.utcnow()),
+            'targets': ['stock'],
             'base': kwargs.pop('base', 'stock'),
             'stockids': kwargs.pop('stockids', []),
             'traderids': kwargs.pop('traderids', []),
             'limit': kwargs.pop('limit', 10),
             'debug': self._debug
         }
-        db = "twse%s" %(algdbmap[self._alg])
+        db = "twsealgdb"
         db = db if not self._debug else 'test' + db
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect(db, host=host, port=port, alias=db)
-        self._sumycoll = switch(AlgSummaryColl, db)
+        self._algcoll = switch(AlgStrategyColl, db)
         self._id = TwseIdDBHandler(debug=self._debug, opt='twse')
-        self._report = Report(sort=[('buys', False), ('sells', False), ('portfolio_value', False)], limit=100)
+        self._report = Report(alg, sort=[('buys', False), ('sells', False), ('portfolio_value', False)], limit=100)
 
     @property
-    def sumycoll(self):
-        return self._sumycoll
+    def algcoll(self):
+        return self._algcoll
 
     def iter_hisframe(self):
-        stockids = self._kwargs['stockids']
-        for stockid in stockids:
-            self._kwargs.update({'stockids': [stockid]})
+        if not self._reserved:
+            stockids = self._kwargs['stockids']
+            for stockid in stockids:
+                self._kwargs.update({'stockids': [stockid]})
+                panel, handler = collect_hisframe(**copy.deepcopy(self._kwargs))
+                yield stockid, panel, handler
+        else:
             panel, handler = collect_hisframe(**copy.deepcopy(self._kwargs))
-            yield stockid, panel, handler
+            yield stockid, panel, handler 
 
     def run(self):
         for stockid, panel, dbhandler in self.iter_hisframe():
@@ -81,9 +66,9 @@ class TwseAlgDBHandler(object):
                     period_start=panel[stockid].index[0],
                     period_end=panel[stockid].index[-1],
                     data_frequency='daily',
-                    emission_rate='daily'
-                )
+                    emission_rate='daily')
                 alg = self._alg(dbhandler, **self._cfg)
+                self._cfg = alg.cfg
                 results = alg.run(panel).fillna(0)
                 risks = alg.perf_tracker.handle_simulation_end()
                 self._report.collect("%s" %(stockid), results, risks)
@@ -96,18 +81,28 @@ class TwseAlgDBHandler(object):
             return callback(df)
         return df
 
-    def delete_summary(self, item):
+    def delete_summary(self, uid):
         pass
 
     def insert_summary(self, df):
         keys = [k for k,v in AlgSummaryColl._fields.iteritems() if k not in ['id', '_cls']]
+        toplist = []
         names = df.columns.values.tolist()
-        for ix, cols in df.iterrows():
-            cursor = self._sumycoll.objects(Q(date=cols['date']) & Q(stockid=ix))
-            coll = self._sumycoll() if len(cursor) == 0 else cursor[0]
-            [setattr(coll, k, cols[k]) for k in names if k in keys]
-            coll.stockid = ix
-            coll.save()
+        algnm = self._alg.__name__.lower()
+        cfg = json.dumps(dict(self._cfg))
+        date = self._kwargs['endtime']
+        for k, v in df.T.to_dict().items():
+            data = { 'stockid': k }
+            data.update(v)
+            toplist.append(AlgSummaryColl(**data))
+        cursor = self._algcoll.objects(Q(algnm=algnm) & Q(cfg=cfg) & Q(date=date))
+        cursor = list(cursor)
+        coll = self._algcoll() if len(cursor) == 0 else cursor[0]
+        coll.cfg = cfg
+        coll.algnm = algnm
+        coll.date = date
+        coll.toplist = toplist
+        coll.save()
 
     def to_detail(self, df):
         retval = []
@@ -121,7 +116,7 @@ class TwseAlgDBHandler(object):
                 coll.update({
                     'date': ix,
                     'stockid': stockid
-                    })
+                })
                 retval.append(coll)
         return retval
 
@@ -135,22 +130,31 @@ class TwseAlgDBHandler(object):
         map_f = """
             function () {
                 try {
-                    var key =  { stockid : this.stockid };
-                    // as constraint/sort key
-                    var value = {
-                        totalportfolio: this.portfolio_value,
-                        totalbuys: this.buys,
-                        totalsells: this.sells,
-                        totalused: this.capital_used,
-                        data: [{
-                            date: this.date,
-                            buy: this.buys,
-                            sell: this.sells,
-                            portfolio: this.portfolio_value,
-                            used: this.capital_used
-                        }]
-                    };
-                    emit(key, value);
+                    for(var i=0; i < this.toplist.length; i++) {
+                        var key =  { algnm: this.algnm, cfg: this.cfg, stockid: this.toplist[i].stockid };
+                        var portfolio = this.toplist[i].portfolio_value;
+                        var buys = this.toplist[i].buys;
+                        var sells = this.toplist[i].sells;
+                        var used = this.toplist[i].capital_used;
+                        var alpha = this.toplist[i].alpha;
+                        var beta = this.toplist[i].beta;
+                        var sharpe = this.toplist[i].sharpe;
+                        var max_drawdown = this.toplist[i].max_drawdown;
+                        var benchmark = this.toplist[i].benchmark_period_return;
+                        // as constraint/sort key
+                        var value = {
+                            portfolio: portfolio,
+                            buys: buys,
+                            sells: sells,
+                            used: used,
+                            alpha: alpha,
+                            beta: beta,
+                            sharpe: sharpe,
+                            max_drawdown: max_drawdown,
+                            benchmark: benchmark
+                        };
+                        emit(key, value);
+                    }
                 }
                 catch(e){
                 }
@@ -161,18 +165,26 @@ class TwseAlgDBHandler(object):
         reduce_f = """
             function (key, values) {
                 var redval = {
-                    totalportfolio: 0,
-                    totalbuys: 0,
-                    totalsells: 0,
-                    totalused: 0,
-                    data: []
+                    portfolio: 0,
+                    buys: 0,
+                    sells: 0,
+                    used: 0,
+                    alpha: 0,
+                    beta: 0,
+                    sharpe: 0,
+                    max_drawdown: 0,
+                    benchmark: 0
                 };
-                for (var i=0; i < values.length; i++) {
-                    redval.totalportfolio += values[i].totalportfolio;
-                    redval.totalbuys += values[i].totalbuys;
-                    redval.totalsells += values[i].totalsells;
-                    redval.totalused += values[i].totalused;
-                    redval.data = values[i].data.concat(redval.data);
+                if (values.length == 1) {
+                    redval.portfolio = values[0].portfolio;
+                    redval.buys = values[0].buys;
+                    redval.sells = values[0].sells;
+                    redval.used = values[0].used;
+                    redval.alpha = values[0].alpha;
+                    redval.beta = values[0].beta;
+                    redval.sharpe = values[0].sharpe; 
+                    redval.max_drawdown = values[0].max_drawdown;
+                    redval.benchmark = values[0].benchmark;
                 }
                 return redval;
             }
@@ -180,7 +192,7 @@ class TwseAlgDBHandler(object):
         finalize_f = """
         """
         bufwin = (endtime - starttime).days
-        cursor = self._sumycoll.objects(Q(date__gte=starttime) & Q(date__lte=endtime))
+        cursor = self._algcoll.objects(Q(date__gte=starttime) & Q(date__lte=endtime)).order_by('-date').limit(1)
         results = list(cursor.map_reduce(map_f, reduce_f, 'algmap'))
         if constraint:
             results = filter(constraint, results)
@@ -190,15 +202,21 @@ class TwseAlgDBHandler(object):
         for it in results:
             coll = {
                 # key
-                'watchtime': endtime,
-                'bufwin': bufwin,
+                'algnm': it.key['algnm'],
                 'stockid': it.key['stockid'],
                 'stocknm': self._id.stock.get_name(it.key['stockid']),
+                'cfg': it.key['cfg'],
+                'endtime': endtime, 
                 # value
-                'totalportfolio': it.value['totalportfolio'],
-                'totalbuys': it.value['totalbuys'],
-                'totalsells': it.value['totalsells'],
-                'totalused': it.value['totalused']
+                'portfolio': it.value['portfolio'],
+                'buys': it.value['buys'],
+                'sells': it.value['sells'],
+                'used': it.value['used'],
+                'alpha': it.value['alpha'],
+                'beta': it.value['beta'],
+                'sharpe': it.value['sharpe'],
+                'max_drawdown': it.value['max_drawdown'],
+                'benchmark': it.value['benchmark']
             }
             retval.append(coll)
         return callback(retval) if callback else retval
@@ -207,72 +225,11 @@ class TwseAlgDBHandler(object):
         pass
 
 
-class TwseDualemaAlg(TwseAlgDBHandler):
+class OtcAlgDBHandler(TwseAlgDBHandler):
 
-    def __init__(self, **kwargs):
-        self._alg = DualEMAAlgorithm
-        super(TwseDualemaAlg, self).__init__(**kwargs)
-        self._kwargs.update({'targets': ['stock']})
-
-class TwseBestTraderAlg(TwseAlgDBHandler):
-
-    def __init__(self, **kwargs):
-        self._alg = BestTraderAlgorithm
-        super(TwseBestTraderAlg, self).__init__(**kwargs)
-        self._kwargs.update({'targets': ['stock', 'trader']})
-
-class TwseBBandsAlg(TwseAlgDBHandler):
-
-    def __init__(self, **kwargs):
-        self._alg = BBandsAlgorithm
-        super(TwseBBandsAlg, self).__init__(**kwargs)
-        self._kwargs.update({'targets': ['stock']})
-
-class TwseRandForestAlg(TwseAlgDBHandler):
-
-    def __init__(self, **kwargs):
-        self._alg = RandForestAlgorithm
-        super(TwseRandForestAlg, self).__init__(**kwargs)
-        self._kwargs.update({'targets': ['stock']})
-
-class OtcDualemaAlg(TwseDualemaAlg):
-
-    def __init__(self, **kwargs):
-        super(OtcDualemaAlg, self).__init__(**kwargs)
-        db = "otc%s" %(algdbmap[self._alg])
-        db = db if not self._debug else 'test' + db
-        host, port = MongoDBDriver._host, MongoDBDriver._port
-        connect(db, host=host, port=port, alias=db)
-        self._sumycoll = switch(AlgSummaryColl, db)
-        self._id = OtcIdDBHandler(debug=self._debug, opt='otc')
-
-class OtcBestTraderAlg(TwseBestTraderAlg):
-
-    def __init__(self, **kwargs):
-        super(OtcBestTraderAlg, self).__init__(**kwargs)
-        db = "otc%s" %(algdbmap[self._alg])
-        db = db if not self._debug else 'test' + db
-        host, port = MongoDBDriver._host, MongoDBDriver._port
-        connect(db, host=host, port=port, alias=db)
-        self._sumycoll = switch(AlgSummaryColl, db)
-        self._id = OtcIdDBHandler(debug=self._debug, opt='otc')
-
-class OtcBBandsAlg(TwseBBandsAlg):
-
-    def __init__(self, **kwargs):
-        super(OtcBBandsAlg, self).__init__(**kwargs)
-        db = "otc%s" %(algdbmap[self._alg])
-        db = db if not self._debug else 'test' + db
-        host, port = MongoDBDriver._host, MongoDBDriver._port
-        connect(db, host=host, port=port, alias=db)
-        self._sumycoll = switch(AlgSummaryColl, db)
-        self._id = OtcIdDBHandler(debug=self._debug, opt='otc')
-
-class OtcRandForestAlg(TwseRandForestAlg):
-
-    def __init__(self, **kwargs):
-        super(OtcRandForestAlg, self).__init__(**kwargs)
-        db = "otc%s" %(algdbmap[self._alg])
+    def __init__(self, alg, **kwargs):
+        super(OtcAlgDBHandler, self).__init__(alg, **kwargs)
+        db = "otcalgdb"
         db = db if not self._debug else 'test' + db
         host, port = MongoDBDriver._host, MongoDBDriver._port
         connect(db, host=host, port=port, alias=db)

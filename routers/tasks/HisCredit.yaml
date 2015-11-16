@@ -8,11 +8,13 @@
         endtime: "datetime.utcnow()",
         stockids: [],
         traderids: [],
+        reserved: False,
         base: 'stock',
         constraint: "lambda x: x.value[\"efinanceremain\"] > 0 or x.value[\"ebearfinaratio\"] > 0",
         order: "lambda x: [-x.value[\"ebearfinaratio\"], -x.value[\"totalfinanceremain\"]]",
         limit: "random.randint(100, 200)",
-        debug: False
+        debug: False,
+        metadata: null
     },
     description: 'find best buy stockids based on credit collected constraint during this time period set'
 }

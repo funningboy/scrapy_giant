@@ -26,31 +26,37 @@ from handler.hisdb_handler import TwseHisDBHandler, OtcHisDBHandler
 from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
 
 from algorithm.report import Report
+from algorithm.register import AlgRegister
 
-
-class KmeansAlgorithm(TradingAlgorithm):
+class Kmeans(TradingAlgorithm):
 
     def __init__(self, dbhandler, **kwargs):
         self._debug = kwargs.pop('debug', False)
-        self._buf_win = kwargs.pop('buf_win', 15)
-        self._buy_hold = kwargs.pop('buy_hold', 5)
-        self._sell_hold = kwargs.pop('sell_hold', 5)
-        self._buy_amount = kwargs.pop('buy_amount', 1000)
-        self._sell_amount = kwargs.pop('sell_amount', 1000)        
-        self._samples = kwargs.pop('samples', 500)
-        self._trains = kwargs.pop('trains', 10)
-        self._tests = kwargs.pop('tests', 10)
-        self._trend_up = kwargs.pop('trend_up', True)
-        self._trend_down = kwargs.pop('trend_down', True)
-        self._score = kwargs.pop('score', 0.99)
-        super(KmeansAlgorithm, self).__init__(**kwargs)
+        self._cfg = {
+            'buf_win': kwargs.pop('buf_win', 15),
+            'buy_hold': kwargs.pop('buy_hold', 5),
+            'sell_hold': kwargs.pop('sell_hold', 5),
+            'buy_amount': kwargs.pop('buy_amount', 1000),
+            'sell_amount': kwargs.pop('sell_amount', 1000),        
+            'samples': kwargs.pop('samples', 500),
+            'trains': kwargs.pop('trains', 10),
+            'tests': kwargs.pop('tests', 10),
+            'trend_up': kwargs.pop('trend_up', True),
+            'trend_down': kwargs.pop('trend_down', True),
+            'score': kwargs.pop('score', 0.99)
+        }
+        super(Kmeans, self).__init__(**kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
 
+    @property
+    def cfg(self):
+        return self._cfg
+
     def initialize(self):
-        self.window = deque(maxlen=self._buf_win)
-        self.X = deque(maxlen=self._samples)
-        self.Y = deque(maxlen=self._samples)
+        self.window = deque(maxlen=self._cfg['buf_win'])
+        self.X = deque(maxlen=self._cfg['samples'])
+        self.Y = deque(maxlen=self._cfg['samples'])
         self.trained = False
         self.tested = False
         self.match = False
@@ -73,7 +79,7 @@ class KmeansAlgorithm(TradingAlgorithm):
                  metrics.adjusted_mutual_info_score(labels,  estimator.labels_),
                  metrics.silhouette_score(data, estimator.labels_,
                                           metric='euclidean',
-                                          sample_size=self._samples)))
+                                          sample_size=self._cfg['samples'])))
 
     def _classifier(self, data, labels):
         # cluster: 
@@ -159,7 +165,7 @@ class KmeansAlgorithm(TradingAlgorithm):
             data[self.sids[0]].volume
         ))
 
-        if len(self.window) == self._buf_win:
+        if len(self.window) == self._cfg['buf_win']:
             open, high, low, close, volume = [np.array(i) for i in zip(*self.window)]
             changes = np.diff(close) / close[1:]
 
@@ -170,30 +176,30 @@ class KmeansAlgorithm(TradingAlgorithm):
 
             # train
             if not self.trained and not self.tested:
-                if len(self.Y) == self._trains and len(self.X) == self._trains:
+                if len(self.Y) == self._cfg['trains'] and len(self.X) == self._cfg['trains']:
                     X, y = np.array(list(self.X)), np.array(list(self.Y))
                     retval = self._classifier(X, y)
 
                     if retval == 1:
                         if self.invested_buy:
-                            self.order(self.sids[0], sell._buy_amount)
+                            self.order(self.sids[0], sell._cfg['buy_amount'])
                             self.invested_buy = True
                             self.buy = True
-                            self.buy_hold = self._buy_hold 
+                            self.buy_hold = self._cfg['buy_hold'] 
                         elif self.invested_buy == True and self.buy_hold == 0:
-                            self.order(self.sids[0], -self._buy_amount)
+                            self.order(self.sids[0], -self._cfg['buy_amount'])
                             self.invested_buy = False
                             self.sell = True
 
                     # buy after sell
                     if retval == 0:
                         if self.invested_sell:
-                            self.order(self.sids[0], -self._sell_amount)
+                            self.order(self.sids[0], -self._cfg['sell_amount'])
                             self.invested_sell = True
                             self.sell = True
-                            self.sell_hold = self._sell_hold
+                            self.sell_hold = self._cfg['sell_hold']
                         elif self.invested_sell == True  and self.sell_hold == 0:
-                            self.order(self.sids[0], self._sell_amount)
+                            self.order(self.sids[0], self._cfg['sell_amount'])
                             self.invested_sell = False
                             self.buy = True
 
@@ -209,14 +215,15 @@ class KmeansAlgorithm(TradingAlgorithm):
                     }
                     self.record(**signals)
 
-            # test??
-
+# register to alg tasks
+AlgRegister.add(Kmeans)
 
 def run(opt='twse', debug=False, limit=0):
     maxlen = 30
     starttime = datetime.utcnow() - timedelta(days=300)
     endtime = datetime.utcnow()
     report = Report(
+        'kmeans',
         sort=[('buys', False), ('sells', False), ('portfolio_value', False)], limit=20)
     # set debug or normal mode
     kwargs = {
@@ -249,7 +256,7 @@ def run(opt='twse', debug=False, limit=0):
                 emission_rate='daily'
             )
 
-            kmeans = KmeansAlgorithm(dbhandler=dbhandler, debug=True, sim_params=sim_params)
+            kmeans = Kmeans(dbhandler=dbhandler, debug=True, sim_params=sim_params)
             results = kmeans.run(panel).fillna(0)
             risks = kmeans.perf_tracker.handle_simulation_end()  
             report.collect(stockid, results, risks)

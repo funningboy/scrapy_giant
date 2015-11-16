@@ -23,9 +23,9 @@ from handler.hisdb_handler import TwseHisDBHandler, OtcHisDBHandler
 from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
 
 from algorithm.report import Report
+from algorithm.register import AlgRegister
 
-# decorator??
-class RandForestAlgorithm(TradingAlgorithm):
+class RandForest(TradingAlgorithm):
     """ RandForest
     buy:
     sell:
@@ -33,26 +33,32 @@ class RandForestAlgorithm(TradingAlgorithm):
 
     def __init__(self, dbhandler, *args, **kwargs):
         self._debug = kwargs.pop('debug', False)
-        self._buf_win = kwargs.pop('buf_win', 15)
-        self._buy_hold = kwargs.pop('buy_hold', 5)
-        self._sell_hold = kwargs.pop('sell_hold', 5)
-        self._buy_amount = kwargs.pop('buy_amount', 1000)
-        self._sell_amount = kwargs.pop('sell_amount', 1000)        
-        self._samples = kwargs.pop('samples', 500)
-        self._trains = kwargs.pop('trains', 100)
-        self._tests = kwargs.pop('tests', 10)
-        self._trend_up = kwargs.pop('trend_up', True)
-        self._trend_down = kwargs.pop('trend_down', True)
-        self._score = kwargs.pop('score', 0.99)
-        super(RandForestAlgorithm, self).__init__(*args, **kwargs)
+        self._cfg = {
+            'buf_win': kwargs.pop('buf_win', 15),
+            'buy_hold': kwargs.pop('buy_hold', 5),
+            'sell_hold': kwargs.pop('sell_hold', 5),
+            'buy_amount': kwargs.pop('buy_amount', 1000),
+            'sell_amount': kwargs.pop('sell_amount', 1000),        
+            'samples': kwargs.pop('samples', 500),
+            'trains': kwargs.pop('trains', 100),
+            'tests': kwargs.pop('tests', 10),
+            'trend_up': kwargs.pop('trend_up', True),
+            'trend_down': kwargs.pop('trend_down', True),
+            'score': kwargs.pop('score', 0.99)
+        }
+        super(RandForest, self).__init__(*args, **kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
 
+    @property
+    def cfg(self):
+        return self._cfg
+
     def initialize(self):
         self.clf = RandomForestClassifier(n_estimators=20)
-        self.window = deque(maxlen=self._buf_win)
-        self.X = deque(maxlen=self._samples)
-        self.Y = deque(maxlen=self._samples)
+        self.window = deque(maxlen=self._cfg['buf_win'])
+        self.X = deque(maxlen=self._cfg['samples'])
+        self.Y = deque(maxlen=self._cfg['samples'])
         self.trained = False
         self.tested = False
         self.match = False
@@ -73,7 +79,7 @@ class RandForestAlgorithm(TradingAlgorithm):
             data[sid].volume
         ))
 
-        if len(self.window) == self._buf_win:
+        if len(self.window) == self._cfg['buf_win']:
             open, high, low, close, volume = [np.array(i) for i in zip(*self.window)]
             changes = np.diff(close) / close[1:]
 
@@ -84,7 +90,7 @@ class RandForestAlgorithm(TradingAlgorithm):
 
             # train
             if not self.trained and not self.tested:
-                if len(self.Y) == self._trains and len(self.X) == self._trains:
+                if len(self.Y) == self._cfg['trains'] and len(self.X) == self._cfg['trains']:
                     X, y = np.array(list(self.X)), np.array(list(self.Y))
                     self.clf.fit(X, y)
                     self.X.clear()
@@ -93,11 +99,11 @@ class RandForestAlgorithm(TradingAlgorithm):
 
             # test
             if self.trained and not self.tested:    
-                if len(self.Y) == self._tests and len(self.Y) == self._tests:
+                if len(self.Y) == self._cfg['tests'] and len(self.Y) == self._cfg['tests']:
                     X, y = np.array(list(self.X)), np.array(list(self.Y))
                     score = self.clf.score(X, y).mean()
                     print "predict score mean %.2f" %(score)
-                    if score > self._score:
+                    if score > self._cfg['score']:
                         self.match = True
                     self.tested = True
 
@@ -110,26 +116,26 @@ class RandForestAlgorithm(TradingAlgorithm):
                     self.sell = False
 
                     # sell after buy
-                    if self._trend_up:
+                    if self._cfg['trend_up']:
                         if change > 0 and not self.invested_buy:
-                            self.order(sid, self._buy_amount)
+                            self.order(sid, self._cfg['buy_amount'])
                             self.invested_buy = True
                             self.buy = True
-                            self.buy_hold = self._buy_hold
+                            self.buy_hold = self._cfg['buy_hold']
                         elif self.invested_buy == True and self.buy_hold == 0:
-                            self.order(sid, -self._buy_amount)
+                            self.order(sid, -self._cfg['buy_amount'])
                             self.invested_buy = False
                             self.sell = True
 
                     # buy after sell
-                    if self._trend_down:
+                    if self._cfg['trend_down']:
                         if change < 0 and not self.invested_sell:
-                            self.order(sid, -self._sell_amount)
+                            self.order(sid, -self._sell_cfg['amount'])
                             self.invested_sell = True
                             self.sell = True
-                            self.sell_hold = self._sell_hold
+                            self.sell_hold = self._cfg['sell_hold']
                         elif self.invested_sell == True  and self.sell_hold == 0:
-                            self.order(sid, self._sell_amount)
+                            self.order(sid, self._cfg['sell_amount'])
                             self.invested_sell = False
                             self.buy = True
 
@@ -147,6 +153,8 @@ class RandForestAlgorithm(TradingAlgorithm):
                     self.record(**signals)
                 return
 
+# register to alg tasks
+AlgRegister.add(RandForest)
 
 def run(opt='twse', debug=False, limit=0):
     """ as doctest run """
@@ -154,6 +162,7 @@ def run(opt='twse', debug=False, limit=0):
     starttime = datetime.utcnow() - timedelta(days=300)
     endtime = datetime.utcnow()
     report = Report(
+        'randforest', 
         sort=[('buys', False), ('sells', False), ('portfolio_value', False)], limit=20)
 
     kwargs = {
@@ -181,12 +190,13 @@ def run(opt='twse', debug=False, limit=0):
             panel, dbhandler = collect_hisframe(**kwargs)
             if len(panel[stockid].index) < maxlen:
                 continue
-            rforest = RandForestAlgorithm(dbhandler=dbhandler)
+            rforest = RandForest(dbhandler=dbhandler)
             results = rforest.run(panel).fillna(0)
-            report.collect(stockid, results)
+            risks = rforest.perf_tracker.handle_simulation_end()
+            report.collect(stockid, results, risks)
             print "%s pass" %(stockid)
         except:
-            #print traceback.format_exc()
+            print traceback.format_exc()
             continue
 
     if report.report.empty:

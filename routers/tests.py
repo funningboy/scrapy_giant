@@ -8,7 +8,7 @@ from routers.generator import Constraint, Generator
 skip_tests = {
     # static 
     'TestLoaderStrategy': False,
-    'TestAlwaysRunStrategy': False,
+    'TestAlwaysRunStrategy': True,
     'TestGeneratorRandom': True
     #
 } 
@@ -61,6 +61,7 @@ class TestLoaderStrategy(NoSQLTestCase):
 @unittest.skipIf(skip_tests['TestAlwaysRunStrategy'], "skip")
 class TestAlwaysRunStrategy(NoSQLTestCase):
  
+    # register daily regress as notifier
     _paths = [
         ('routers/table/ExcAlgDualema.yaml', True),
         ('routers/table/ExcRptDualema.yaml', False),

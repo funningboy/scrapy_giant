@@ -20,7 +20,7 @@ Nodes:
                 "starttime": "datetime.utcnow() - timedelta(days=3)",
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"twse\"]().stock.get_ids()]",
-                "order": "lambda x: [-x.value[\"totalbuys\"], -x.value[\"totalsells\"]]",
+                "order": "lambda x: [-x.value[\"buys\"], -x.value[\"sells\"]]",
                 "limit": 10,
                 "cfg": {
                     "buf_win": 140
@@ -37,7 +37,7 @@ Nodes:
                 "starttime": "datetime.utcnow() - timedelta(days=10)",
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
-                "order": "lambda x: [-x.value[\"totalbuys\"], -x.value[\"totalsells\"]]",
+                "order": "lambda x: [-x.value[\"buys\"], -x.value[\"sells\"]]",
                 "callback": "to_detail",
                 "limit": 10,
                 "cfg": {
@@ -68,7 +68,7 @@ Nodes:
                 "starttime": "datetime.utcnow() - timedelta(days=3)",
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"otc\"]().stock.get_ids()]",
-                "order": "lambda x: [-x.value[\"totalbuys\"], -x.value[\"totalsells\"]]",
+                "order": "lambda x: [-x.value[\"buys\"], -x.value[\"sells\"]]",
                 "limit": 10,
                 "cfg": {
                     "buf_win": 140
@@ -85,7 +85,7 @@ Nodes:
                 "starttime": "datetime.utcnow() - timedelta(days=10)",
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
-                "order": "lambda x: [-x.value[\"totalbuys\"], -x.value[\"totalsells\"]]",
+                "order": "lambda x: [-x.value[\"buys\"], -x.value[\"sells\"]]",
                 "callback": "to_detail",
                 "limit": 10,
                 "cfg": {

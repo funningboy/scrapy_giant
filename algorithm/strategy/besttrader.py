@@ -26,9 +26,9 @@ from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
 from handler.tasks import collect_hisframe
 
 from algorithm.report import Report
+from algorithm.register import AlgRegister
 
-
-class BestTraderAlgorithm(TradingAlgorithm):
+class BestTrader(TradingAlgorithm):
     """ find the best correlation between trader and stocks
     buy:
     sell:
@@ -36,14 +36,16 @@ class BestTraderAlgorithm(TradingAlgorithm):
 
     def __init__(self, dbhandler, **kwargs):
         self._debug = kwargs.pop('debug', False)
-        self._buf_win = kwargs.pop('buf_win', 2)
-        self._buy_hold = kwargs.pop('buy_hold', 3)
-        self._sell_hold = kwargs.pop('sell_hold', 3)
-        self._buy_amount = kwargs.pop('buy_amount', 1000)
-        self._sell_amount = kwargs.pop('sell_amount', 1000)
-        self._trend_up = kwargs.pop('trend_up', True)
-        self._trend_down = kwargs.pop('trend_down', True)
-        super(BestTraderAlgorithm, self).__init__(**kwargs)
+        self._cfg = {
+            'buf_win': kwargs.pop('buf_win', 2),
+            'buy_hold': kwargs.pop('buy_hold', 3),
+            'sell_hold': kwargs.pop('sell_hold', 3),
+            'buy_amount': kwargs.pop('buy_amount', 1000),
+            'sell_amount': kwargs.pop('sell_amount', 1000),
+            'trend_up': kwargs.pop('trend_up', True),
+            'trend_down': kwargs.pop('trend_down', True)
+        }
+        super(BestTrader, self).__init__(**kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
         self.tids = self.dbhandler.trader.ids
@@ -52,8 +54,12 @@ class BestTraderAlgorithm(TradingAlgorithm):
         if self._debug:
             print self.tops
 
+    @property
+    def cfg(self):
+        return self._cfg
+
     def initialize(self):
-        self.window = deque(maxlen=self._buf_win)
+        self.window = deque(maxlen=self._cfg['buf_win'])
         self.invested_buy = False
         self.invested_sell = False
         self.buy = False
@@ -83,7 +89,7 @@ class BestTraderAlgorithm(TradingAlgorithm):
                 print "%s: traderid(%s) not found in stockid(%s)" %(date, tid, sid)
             pass    
 
-        if len(self.window) == self._buf_win:
+        if len(self.window) == self._cfg['buf_win']:
             buyvolume, sellvolume, avgbuyprice, avgsellprice, ratio, open, high, low, close, volume = [np.array(i) for i in zip(*self.window)]
  
             self.buy = False
@@ -117,6 +123,8 @@ class BestTraderAlgorithm(TradingAlgorithm):
             signals.update(sideband)
             self.record(**signals)
 
+# register to alg tasks
+AlgRegister.add(BestTrader)
 
 def run(opt='twse', debug=False, limit=0):
     """ as doctest run """
@@ -124,6 +132,7 @@ def run(opt='twse', debug=False, limit=0):
     starttime = datetime.utcnow() - timedelta(days=15)
     endtime = datetime.utcnow()
     report = Report(
+        'besttrader', 
         sort=[('buys', False), ('sells', False), ('portfolio_value', False)], limit=20)
 
     kwargs = {
@@ -182,7 +191,7 @@ def run(opt='twse', debug=False, limit=0):
                 emission_rate='daily'
             )
 
-            besttrader = BestTraderAlgorithm(dbhandler=dbhandler, debug=debug, sim_params=sim_params)
+            besttrader = BestTrader(dbhandler=dbhandler, debug=debug, sim_params=sim_params)
             results = besttrader.run(panel).fillna(0)
             risks = besttrader.perf_tracker.handle_simulation_end()  
             report.collect(stockid, results, risks)

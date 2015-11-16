@@ -65,15 +65,31 @@
 {% block script %}
 <script type="text/javascript" src="{% static 'js/plugins/hisstock_list.js' %}"></script>
 <script type="text/javascript">
-    $(document).ready(function(){
-    //TODO:
-    //var settings = giant_settings();
-    var settings;
 
-    AmCharts.ready(function () {
+    $(document).ready(function(){
+        // settings update
+        var settings = {
+            'opt': 'twse',
+            'starttime': '2015/10/01',
+            'endtime': '2015/10/10',
+            'stockids': '',
+            'traderids': '',
+            'algorithm': 'StockProfileRaw',
+            //'session': ''
+            //'csrf'
+        };
+    
         var hstl = new hisstocklist();
-        hstl.loadChartData(settings);
+
+        // $().click(function() {}
+            hstl.set(settings);
+        // });
+
+        $("#list-tab").click(function() {
+           hstl.run();
         });
+
     });
+
 </script>
 {% endblock %}

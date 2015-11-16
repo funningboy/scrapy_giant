@@ -3,8 +3,7 @@
 from datetime import datetime
 from mongoengine import *
 
-class AlgSummaryColl(Document):
-    date = DateTimeField(default=datetime.utcnow())
+class AlgSummaryColl(EmbeddedDocument):
     stockid = StringField()
     traderid = StringField()
     portfolio_value = FloatField(min_value=-999999999.0, max_value=999999999.0)
@@ -16,18 +15,33 @@ class AlgSummaryColl(Document):
     sharpe = FloatField(min_value=-999.0, max_value=999.0) 
     max_drawdown = FloatField(min_value=-999.0, max_value=999.0) 
     benchmark_period_return = FloatField(min_value=-999.0, max_value=999.0)
+    # 1m, 3m, 6m, 1y pperiod benchmark
     buys = IntField(min_value=0, max_value=999)
     sells = IntField(min_value=0, max_value=999)
-    #cfg = tag list
+
     meta = {
         'allow_inheritance': True,
         'indexes': [(
-            'date', 'portfolio_value',
-            'ending_cash',  'buys', 'sells'
+            'portfolio_value', 'capital_used'
+            'ending_cash',  'buys', 'sells', 'max_drawdown'
         )],
-        'ordering': [('-portfolio_value')]
+        'ordering': [('-portfolio_value', '-capital_used', '-max_drawdown')]
     }
 
+class AlgStrategyColl(Document):
+    date = DateTimeField(default=datetime.utcnow())
+    last_update = DateTimeField()
+    cfg = StringField()
+    algnm = StringField()
+    # ref ptr user
+    toplist = ListField(EmbeddedDocumentField(AlgSummaryColl))
+
+    meta = {
+        'allow_inheritance': True,
+        'indexes': [(
+            'date', 'algnm'
+        )]
+    }
 
 class AlgDetailColl(Document):
     date = DateTimeField(default=datetime.utcnow())

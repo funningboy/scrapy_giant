@@ -8,12 +8,14 @@
         endtime: "datetime.utcnow()",
         stockids: [],
         traderids: [],
+        reserved: False,
         base: 'stock',
         constraint: "lambda x: x.value[\"eclose\"] > 0 and x.value[\"evolume\"] > 0",
         order: "lambda x: [-x.value[\"totalvolume\"], -x.value[\"eclose\"]]",
         callback: null,
         limit: "random.randint(100, 200)",
-        debug: False
+        debug: False,
+        metadata: null
     },
     description: 'find best buy stockids based on stock collected constraint during this time period set'
 }

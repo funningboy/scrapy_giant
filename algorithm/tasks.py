@@ -5,30 +5,17 @@ from __future__ import absolute_import
 from celery import shared_task
 from handler.tasks import *
 from algorithm.algdb_handler import *
+from algorithm.register import AlgRegister
+from algorithm.strategy.dualema import *
 
 from celery.utils.log import get_task_logger
 logger = get_task_logger('algorithm')
 
+algitems = AlgRegister.keys()
 algdb_tasks = {
-    'twse': {
-        'dualema': TwseDualemaAlg,
-        'btrader': TwseBestTraderAlg,
-        'bbands': TwseBBandsAlg,
-        #'rforest': TwseRandForestAlg,
-        #'kmeans': TwseKmeansAlg,
-        #'kdtree': TwseKdTreeAlg
-    },
-    'otc': {
-        'dualema': OtcDualemaAlg,
-        'btrader': OtcBestTraderAlg,
-        'bbands': OtcBBandsAlg,
-        #'rforest': OtcRandForestAlg,
-        #'kmeans': OtcKmeansAlg,
-        #'kdtree': OtcKdTreeAlg
-    }
+    'twse': TwseAlgDBHandler,
+    'otc': OtcAlgDBHandler
 }
-
-algitems = ['dualema', 'btrader', 'bbands']
 
 @shared_task(time_limit=60*60*60)
 def run_algitem(stream):
@@ -41,7 +28,8 @@ def run_algitem(stream):
     item = {}
     for target in targets:
         if target in algitems:
-            alghandler = algdb_tasks[opt][target](**kwargs) 
+            alg = AlgRegister.algcls(target)
+            alghandler = algdb_tasks[opt](alg, **kwargs) 
             alghandler.run()
             if callback == 'insert_summary':
                 alghandler.finalize(alghandler.insert_summary)
@@ -70,7 +58,8 @@ def collect_algitem(stream):
     item = {}
     for target in targets:
         if target in algitems:
-            alghandler = algdb_tasks[opt][target](**kwargs) 
+            alg = AlgRegister.algcls(target)
+            alghandler = algdb_tasks[opt](alg, **kwargs) 
             args = (starttime, endtime, cfg, constraint, order, limit, callback)
             dt = alghandler.query_summary(*args)
             if dt:

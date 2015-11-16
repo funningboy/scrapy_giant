@@ -26,9 +26,9 @@ from handler.hisdb_handler import TwseHisDBHandler, OtcHisDBHandler
 from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
 
 from algorithm.report import Report
+from algorithm.register import AlgRegister
 
-
-class DualEMAAlgorithm(TradingAlgorithm):
+class DualEMA(TradingAlgorithm):
     """ Dual Moving Average Crossover algorithm.
     buy:
     sell:
@@ -36,21 +36,27 @@ class DualEMAAlgorithm(TradingAlgorithm):
 
     def __init__(self, dbhandler, **kwargs):
         self._debug = kwargs.pop('debug', False)
-        self._buf_win = kwargs.pop('buf_win', 30)
-        self._buy_hold = kwargs.pop('buy_hold', 5)
-        self._sell_hold = kwargs.pop('sell_hold', 5)
-        self._buy_amount = kwargs.pop('buy_amount', 1000)
-        self._sell_amount = kwargs.pop('sell_amount', 1000)
-        self._short_ema_win = kwargs.pop('short_ema_win', 7)
-        self._long_ema_win = kwargs.pop('long_ema_win', 20)
-        self._trend_up = kwargs.pop('trend_up', True)
-        self._trend_down = kwargs.pop('trend_down', True)
-        super(DualEMAAlgorithm, self).__init__(**kwargs)
+        self._cfg = {
+            'buf_win': kwargs.pop('buf_win', 30),
+            'buy_hold': kwargs.pop('buy_hold', 5),
+            'sell_hold': kwargs.pop('sell_hold', 5),
+            'buy_amount': kwargs.pop('buy_amount', 1000),
+            'sell_amount': kwargs.pop('sell_amount', 1000),
+            'short_ema_win': kwargs.pop('short_ema_win', 7),
+            'long_ema_win': kwargs.pop('long_ema_win', 20),
+            'trend_up': kwargs.pop('trend_up', True),
+            'trend_down': kwargs.pop('trend_down', True)
+        }
+        super(DualEMA, self).__init__(**kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
 
+    @property
+    def cfg(self):
+        return self._cfg
+
     def initialize(self):
-        self.window = deque(maxlen=self._buf_win)
+        self.window = deque(maxlen=self._cfg['buf_win'])
         self.invested_buy = False
         self.invested_sell = False
         self.buy = False
@@ -68,10 +74,10 @@ class DualEMAAlgorithm(TradingAlgorithm):
             data[sid].volume
         ))
 
-        if len(self.window) == self._buf_win:
+        if len(self.window) == self._cfg['buf_win']:
             open, high, low, close, volume = [np.array(i) for i in zip(*self.window)]
-            short_ema = talib.EMA(close, timeperiod=self._short_ema_win)
-            long_ema = talib.EMA(close, timeperiod=self._long_ema_win)
+            short_ema = talib.EMA(close, timeperiod=self._cfg['short_ema_win'])
+            long_ema = talib.EMA(close, timeperiod=self._cfg['long_ema_win'])
             real_obv = talib.OBV(close, np.asarray(volume, dtype='float'))
 
             self.buy_hold = self.buy_hold - 1 if self.buy_hold > 0 else self.buy_hold
@@ -80,26 +86,26 @@ class DualEMAAlgorithm(TradingAlgorithm):
             self.sell = False
 
             # sell after buy
-            if self._trend_up:
+            if self._cfg['trend_up']:
                 if short_ema[-1] > long_ema[-1] and not self.invested_buy:
-                    self.order(sid, self._buy_amount)
+                    self.order(sid, self._cfg['buy_amount'])
                     self.invested_buy = True
                     self.buy = True
-                    self.buy_hold = self._buy_hold
+                    self.buy_hold = self._cfg['buy_hold']
                 elif self.invested_buy == True and self.buy_hold == 0:
-                    self.order(sid, -self._buy_amount)
+                    self.order(sid, -self._cfg['buy_amount'])
                     self.invested_buy = False
                     self.sell = True
 
             # buy after sell
-            if self._trend_down:
+            if self._cfg['trend_down']:
                 if short_ema[-1] < long_ema[-1] and not self.invested_sell:
-                    self.order(sid, -self._sell_amount)
+                    self.order(sid, -self._cfg['sell_amount'])
                     self.invested_sell = True
                     self.sell = True
-                    self.sell_hold = self._sell_hold
+                    self.sell_hold = self._cfg['sell_hold']
                 elif self.invested_sell == True  and self.sell_hold == 0:
-                    self.order(sid, self._sell_amount)
+                    self.order(sid, self._cfg['sell_amount'])
                     self.invested_sell = False
                     self.buy = True
 
@@ -117,6 +123,8 @@ class DualEMAAlgorithm(TradingAlgorithm):
             }
             self.record(**signals)
 
+# register to alg tasks
+AlgRegister.add(DualEMA)
 
 def run(opt='twse', debug=False, limit=0):
     """ as doctest run """
@@ -124,6 +132,7 @@ def run(opt='twse', debug=False, limit=0):
     starttime = datetime.utcnow() - timedelta(days=300)
     endtime = datetime.utcnow()
     report = Report(
+        'dualema',
         sort=[('buys', False), ('sells', False), ('portfolio_value', False)], limit=20)
 
     kwargs = {
@@ -158,7 +167,7 @@ def run(opt='twse', debug=False, limit=0):
                 emission_rate='daily'
             )
 
-            dualema = DualEMAAlgorithm(dbhandler=dbhandler, debug=debug, sim_params=sim_params)
+            dualema = DualEMA(dbhandler=dbhandler, debug=debug, sim_params=sim_params)
             results = dualema.run(panel).fillna(0)
             risks = dualema.perf_tracker.handle_simulation_end()  
             report.collect(stockid, results, risks)

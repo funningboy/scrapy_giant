@@ -14,9 +14,6 @@ from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
 from handler.models import *
 # use mongoengine(high level mongodb drive) as ORM data backend for Django access
 
-__all__ = ['TwseHisDBHandler', 'OtcHisDBHandler']
-
-
 class TwseHisDBHandler(object):
     """ ref tests.py
     """
@@ -127,9 +124,9 @@ class TwseStockHisDBHandler(object):
         return self._coll
 
     def update_raw(self, item):
-        self.insert_raw(item)
+        pass
 
-    def delete_raw(self, item):
+    def delete_raw(self, uid):
         pass
 
     def insert_raw(self, item):
@@ -300,9 +297,9 @@ class TwseTraderHisDBHandler(object):
         return self._coll
 
     def update_raw(self, item):
-        self.insert_raw(item)
+        pass
 
-    def delete_raw(self, item):
+    def delete_raw(self, uid):
         pass
 
     def insert_raw(self, item):
@@ -557,7 +554,7 @@ class TwseCreditHisDBHandler(object):
     def update_raw(self, item):
         pass
 
-    def delete_raw(self, item):
+    def delete_raw(self, uid):
         pass
 
     def insert_raw(self, item):
@@ -742,7 +739,7 @@ class TwseFutureHisDBHandler(object):
     def update_raw(self, item):
         pass
 
-    def delete_raw(self, item):
+    def delete_raw(self, uid):
         pass
 
     def insert_raw(self, item):

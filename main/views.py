@@ -30,3 +30,5 @@ def router_search(request):
         if r[0](collect):
             return r[1](request, collect) 
     return error_search(request)
+
+#def router_search

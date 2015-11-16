@@ -11,11 +11,16 @@ from main.tests import NoSQLTestCase
 from algorithm.tasks import *
 
 skip_tests = {
-    'TestTwseDualemaAlg': False
+    'TestDualEMADetail': False,
+    'TestDualEMASummary': False,
+    'TestBestTraderDetail': False,
+    'TestBestTraderSummary': False
 }
 
-@unittest.skipIf(skip_tests['TestTwseDualemaAlg'], "skip")
-class TestTwseDualemaAlg(NoSQLTestCase):
+
+
+@unittest.skipIf(skip_tests['TestDualEMADetail'], "skip")
+class TestDualEMADetail(NoSQLTestCase):
 
     def test_on_to_detail(self):
         stream = pickle.dumps(((), {
@@ -24,10 +29,11 @@ class TestTwseDualemaAlg(NoSQLTestCase):
             'starttime': datetime.utcnow() - timedelta(days=150),
             'endtime': datetime.utcnow(),
             'base': 'stock',
-            'stockids': ['2317', '2330', '1314'],
-            'constraint': None,
-            'order': lambda x: [-x.value['totalportfolio']],
-            'limit': 3,
+            'stockids': ['2330'],
+            'reserved': False,
+            'constraint': lambda x: x.key['algnm'] == 'dualema' and x.value['buys'] >= 0 and x.value['sells'] >= 0,
+            'order': lambda x: [-x.value['portfolio'], -x.value['used']],
+            'limit': 1,
             'callback': 'to_detail',
             'debug': True,
             'cfg': {
@@ -41,7 +47,10 @@ class TestTwseDualemaAlg(NoSQLTestCase):
         self.assertTrue(item['dualemaitem'])  
         self.assertTrue(len(item['dualemaitem'])>0)
         self.assertTrue(set(sorted(list(item['dualemaitem'][0].keys()))) >= set(sorted(['date', 'portfolio_value', 'buy', 'open'])))
-    
+
+@unittest.skipIf(skip_tests['TestDualEMASummary'], "skip")
+class TestDualEMASummary(NoSQLTestCase):
+
     def test_on_to_summary(self):
         stream = pickle.dumps(((), {
             'opt': 'twse',
@@ -50,8 +59,9 @@ class TestTwseDualemaAlg(NoSQLTestCase):
             'endtime': datetime.utcnow(),
             'base': 'stock',
             'stockids': ['2317', '2330', '1314'],
-            'constraint': None,
-            'order': None,
+            'reserved': False,
+            'constraint': lambda x: x.key['algnm'] == 'dualema' and x.value['buys'] >=0 and x.value['sells'] >= 0,
+            'order': lambda x: [-x.value['portfolio'], -x.value['used']],
             'limit': 3,
             'callback': 'insert_summary',
             'debug': True,
@@ -61,13 +71,12 @@ class TestTwseDualemaAlg(NoSQLTestCase):
                 'long_ema_win': 40
             }
         })) 
-        alg = algdb_tasks['twse']['dualema'](debug=True) 
-        alg.sumycoll.drop_collection()
+        alg = AlgRegister.algcls('dualema')
+        alg = algdb_tasks['twse'](alg, debug=True) 
+        alg.algcoll.drop_collection()
         run_algitem.delay(stream).get()
         # query summary factor back and check
-        starttime, endtime = datetime.utcnow() - timedelta(days=1), datetime.utcnow()
-        if endtime.isoweekday() in [6, 7]:
-            starttime -= timedelta(days=2)
+        starttime, endtime = datetime.utcnow() - timedelta(days=5), datetime.utcnow()
         stream = pickle.dumps(((), {
             'opt': 'twse',
             'targets': ['dualema'],
@@ -75,8 +84,9 @@ class TestTwseDualemaAlg(NoSQLTestCase):
             'endtime': endtime,
             'base': 'stock',
             'stockids': ['2317', '2330', '1314'],
-            'constraint': None,
-            'order': lambda x: [-x.value['totalportfolio']],
+            'reserved': False,
+            'constraint': lambda x: x.key['algnm'] == 'dualema' and x.value['buys'] >=0 and x.value['sells'] >= 0,
+            'order': lambda x: [-x.value['portfolio'], -x.value['used']],
             'limit': 1,
             'debug': True,
             'cfg': {
@@ -89,4 +99,4 @@ class TestTwseDualemaAlg(NoSQLTestCase):
         self.assertTrue(item)
         self.assertTrue(item['dualemaitem'])
         self.assertTrue(len(item['dualemaitem'])>0)
-        self.assertTrue(set(sorted(list(item['dualemaitem'][0].keys()))) >= set(sorted(['watchtime', 'totalportfolio', 'totalbuys'])))
+        self.assertTrue(set(sorted(list(item['dualemaitem'][0].keys()))) >= set(sorted(['portfolio', 'buys'])))

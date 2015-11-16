@@ -7,12 +7,14 @@
         endtime: null,
         stockids: [],
         traderids: [],
+        reserved: False,
         base: 'stock',
-        constraint": "lambda x: x.value[\"totalportfolio\"] > 0",
-        order": "lambda x: [-x.value[\"totalbuys\"], -x.value[\"totalsells\"]]",
+        constraint": "lambda x: x.value[\"portfolio\"] > 0",
+        order": "lambda x: [-x.value[\"buys\"], -x.value[\"sells\"]]",
         callback: null,
         limit: 50,
-        debug: False
+        debug: False,
+        metadata: null
     },
     description: 'collect all algitem based on each leaf items'
 }

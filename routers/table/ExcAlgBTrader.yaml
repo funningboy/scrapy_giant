@@ -71,8 +71,8 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
                 "base": "stock",
-                "constraint": "lambda x: x.value[\"totalportfolio\"] > 0",
-                "order": "lambda x: [-x.value[\"totalbuys\"], -x.value[\"totalsells\"]]",
+                "constraint": "lambda x: x.value[\"portfolio\"] > 0",
+                "order": "lambda x: [-x.value[\"buys\"], -x.value[\"sells\"]]",
                 "callback": "insert_summary",
                 "limit": 50,
                 "cfg": {
@@ -139,8 +139,8 @@ Nodes:
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
                 "base": "stock",
-                "constraint": "lambda x: x.value[\"totalportfolio\"] > 0",
-                "order": "lambda x: [-x.value[\"totalbuys\"], -x.value[\"totalsells\"]]",
+                "constraint": "lambda x: x.value[\"portfolio\"] > 0",
+                "order": "lambda x: [-x.value[\"buys\"], -x.value[\"sells\"]]",
                 "limit": 50,
                 "cfg": {
                     "buf_win": 140

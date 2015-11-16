@@ -16,7 +16,7 @@ Nodes:
                 "starttime": "datetime.utcnow() - timedelta(days=3)",
                 "endtime": "datetime.utcnow()",
                 "stockids": "[i for i in iddb_tasks[\"twse\"](debug=True).stock.get_ids()]",
-                "order": "lambda x: [-x.value[\"totalbuys\"], -x.value[\"totalsells\"], -x.value[\"totalportfolio\"]]",
+                "order": "lambda x: [-x.value[\"buys\"], -x.value[\"sells\"], -x.value[\"portfolio\"]]",
                 "limit": 20,
                 "debug": True,
                 "cfg": {
@@ -36,7 +36,7 @@ Nodes:
                 "starttime": "datetime.utcnow() - timedelta(days=150)",
                 "endtime": "datetime.utcnow()",
                 "stockids": [],
-                "order": "lambda x: [-x.value[\"totalbuys\"], -x.value[\"totalsells\"], -x.value[\"totalportfolio\"]]",
+                "order": "lambda x: [-x.value[\"buys\"], -x.value[\"sells\"], -x.value[\"portfolio\"]]",
                 "callback": "to_detail",
                 "limit": 20,
                 "debug": True,

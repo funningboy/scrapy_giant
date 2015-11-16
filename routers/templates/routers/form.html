@@ -140,9 +140,8 @@
     <!-- daterangepicker -->
     <script src="{% static 'js/moment.min2.js' %}"></script>
     <script src="{% static 'js/datepicker/daterangepicker.js' %}"></script>
-
     <!-- autocomplete -->
-    <script src="{% static 'js/'' %}"></script>
+    <script src="{% static 'js/autocomplete/jquery.autocomplete.js' %}"></script>
 
     <script type="text/javascript">
         $(document).ready(function () {
@@ -161,8 +160,19 @@
             }, function (start, end, label) {
                 console.log(start.toISOString(), end.toISOString(), label);
             });
+        });
+    </script>
 
-            $("{{ searchform.traderids.auto_id }}").autocomplete({
+    <script type="text/javascript">
+        $(document).ready(function () {
+            //var 
+            //if refresh ...
+            $("#{{ searchform.traderids.auto_id }}").autocomplete({
+                //$console.log("dddd");
+                source: ['1', '2']
+            });
+
+            $("#{{ searchform.stockids.auto_id }}").autocomplete({
                 width: 300,
                 max: 10,
                 delay: 100,
@@ -185,11 +195,9 @@
                              console.log( textStatus);
                         }
                     });
-                }
+                },
+                //click?
             });
         });
-    </script>
-
-    <script type="text/javascript">
     </script>
 {% endblock %}

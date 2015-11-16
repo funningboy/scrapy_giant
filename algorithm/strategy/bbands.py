@@ -27,9 +27,9 @@ from handler.hisdb_handler import TwseHisDBHandler, OtcHisDBHandler
 from handler.iddb_handler import TwseIdDBHandler, OtcIdDBHandler
 
 from algorithm.report import Report
+from algorithm.register import AlgRegister
 
-
-class BBandsAlgorithm(TradingAlgorithm):
+class BBands(TradingAlgorithm):
     """ BBands
     buy:
     sell:
@@ -37,19 +37,25 @@ class BBandsAlgorithm(TradingAlgorithm):
 
     def __init__(self, dbhandler, **kwargs):
         self._debug = kwargs.pop('debug', False)
-        self._buf_win = kwargs.pop('buf_win', 30)
-        self._buy_hold = kwargs.pop('buy_hold', 5)
-        self._sell_hold = kwargs.pop('sell_hold', 5)
-        self._buy_amount = kwargs.pop('buy_amount', 1000)
-        self._sell_amount = kwargs.pop('sell_amount', 1000)
-        self._trend_up = kwargs.pop('trend_up', True)
-        self._trend_down = kwargs.pop('_trend_down', True)
+        self._cfg = {
+            'buf_win': kwargs.pop('buf_win', 30),
+            'buy_hold': kwargs.pop('buy_hold', 5),
+            'sell_hold': kwargs.pop('sell_hold', 5),
+            'buy_amount': kwargs.pop('buy_amount', 1000),
+            'sell_amount': kwargs.pop('sell_amount', 1000),
+            'trend_up': kwargs.pop('trend_up', True),
+            'trend_down': kwargs.pop('_trend_down', True)
+        }
         super(BBandsAlgorithm, self).__init__(**kwargs)
         self.dbhandler = dbhandler
         self.sids = self.dbhandler.stock.ids
 
+    @property
+    def cfg(self):
+        return self._cfg
+
     def initialize(self):
-        self.window = deque(maxlen=self._buf_win)
+        self.window = deque(maxlen=self._cfg['buf_win'])
         self.invested_buy = False
         self.invested_sell = False
         self.buy = False
@@ -67,14 +73,14 @@ class BBandsAlgorithm(TradingAlgorithm):
             data[sid].volume
         ))
 
-        if len(self.window) == self._buf_win:
+        if len(self.window) == self._cfg['buf_win']:
             open, high, low, close, volume = [np.array(i) for i in zip(*self.window)]
             upper, middle, lower = talib.BBANDS(close, matype=MA_Type.T3)
             upper_bb, lower_bb = close - upper, close - lower
             upper_bb, lower_bb = upper_bb[~np.isnan(upper_bb)], lower_bb[~np.isnan(lower_bb)]
             h_idx, l_idx = np.argmax(upper_bb), np.argmin(lower_bb)
 
-            rule_idx = h_idx + self._buf_win//3 <= l_idx and l_idx + 15 <= self._buf_win
+            rule_idx = h_idx + self._cfg['buf_win']//3 <= l_idx and l_idx + 15 <= self._cfg['buf_win']
             rule_inbb = close[-1] >= middle[-1] * 0.8 and close[-1] <= middle[-1] * 1.2
             rule_hidd = close[-1] >= open[-1] * 1.01
 
@@ -84,26 +90,26 @@ class BBandsAlgorithm(TradingAlgorithm):
             self.sell = False
 
             # sell after buy
-            if self._trend_up:
+            if self._cf['trend_up']:
                 if rule_idx and rule_inbb and rule_hidd and not self.invested_buy:
-                    self.order(sid, self._buy_amount)
+                    self.order(sid, self._cfg['buy_amount'])
                     self.invested_buy = True
                     self.buy = True
-                    self.buy_hold = self._buy_hold
+                    self.buy_hold = self._cfg['buy_hold']
                 elif self.invested_buy == True and self.buy_hold == 0:
-                    self.order(sid, -self._buy_amount)
+                    self.order(sid, -self._cfg['buy_amount'])
                     self.invested_buy = False
                     self.sell = True
 
             # buy after sell
             if self._trend_down:
                 if not rule_idx and not rule_inbb and not rule_hidd and not self.invested_sell:
-                    self.order(sid, -self._sell_amount)
+                    self.order(sid, -self._cfg['sell_amount'])
                     self.invested_sell = True
                     self.sell = True
-                    self.sell_hold = self._sell_hold
+                    self.sell_hold = self._cfg['sell_hold']
                 elif self.invested_sell == True and self.sell_hold == 0:
-                    self.order(sid, self._sell_hold)
+                    self.order(sid, self._cfg['sell_hold'])
                     self.invested_sell = False
                     self.buy = True
 
@@ -122,12 +128,15 @@ class BBandsAlgorithm(TradingAlgorithm):
             }
             self.record(**signals)
 
+# register to alg tasks
+AlgRegister.add(BBands)
 
 def run(opt='twse', debug=False, limit=0):
     maxlen = 30
     starttime = datetime.utcnow() - timedelta(days=300)
     endtime = datetime.utcnow()
     report = Report(
+        'bbands',
         sort=[('buys', False), ('sells', False), ('portfolio_value', False)], limit=20)
     kwargs = {
         'debug': debug,
@@ -160,7 +169,7 @@ def run(opt='twse', debug=False, limit=0):
                 emission_rate='daily'
             )
 
-            bbands = BBandsAlgorithm(dbhandler=dbhandler, debug=debug, sim_params=sim_params)
+            bbands = BBands(dbhandler=dbhandler, debug=debug, sim_params=sim_params)
             results = bbands.run(panel).fillna(0)
             risks = bbands.perf_tracker.handle_simulation_end()
             report.collect(stockid, results, risks)

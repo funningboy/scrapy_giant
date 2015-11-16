@@ -83,9 +83,9 @@ def run(opt='twse', debug=False, limit=0):
             risks = kdtree.perf_tracker.handle_simulation_end()
             report.collect(stockid, results, risks)
             print "%s pass" %(stockid)
-    except:
-        print traceback.format_exc()
-        continue
+        except:
+            print traceback.format_exc()
+            continue
 
     if report.report.empty:
         return

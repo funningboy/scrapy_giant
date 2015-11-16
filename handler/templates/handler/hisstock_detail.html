@@ -209,12 +209,26 @@
 <script type="text/javascript" src="{% static 'js/plugins/hisstock_detail.js' %}"></script>
 <script type="text/javascript">
     $(document).ready(function(){
-    var settings;
-
-    AmCharts.ready(function () {
+        // settings update
+        var settings2 = {
+            'opt': 'twse',
+            'starttime': '2015/10/01',
+            'endtime': '2015/10/10',
+            'stockids': '2330',
+            'traderids': '',
+            'algorithm': 'StockProfileRaw'
+        };
+    
         var hstd = new hisstockdetail();
-        hstd.loadChartData(settings);
-        }); 
+
+        // $().click(function() {}
+            hstd.set(settings2);
+        // });
+
+        $("#detail-tab").click(function() {
+           hstd.run();
+        });
+
     });
 </script>
 {% endblock %}

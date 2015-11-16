@@ -62,15 +62,16 @@ class TwseHisCreditSpider(CrawlSpider):
         item = response.meta['item']
         index = response.meta['index']
         item['url'] = response.url
-        date = sel.xpath('.//*[@id="dirname"]/@value').extract()[0][-8:]
-        elems = sel.xpath('.//*[@id="tbl-containerx"]/table/tbody/tr') if index == 0 else sel.xpath('.//*[@id="tbl-container"]/table/tbody/tr')
+        date = sel.xpath('///*[@id="date-field"]/@value').extract()[0]
+        yy, mm, dd = map(int, date.split('/'))
+        elems = sel.xpath('.//*[@id="main-content"]/table/tbody/tr')
         for elem in elems[:-1]:
             its = elem.xpath('./td/text()').extract()
             if len(its) < 8:
                 continue
             its = [it.strip(string.whitespace).replace(',', '') for it in its]
             sub = {
-                'date': "%s-%s-%s" %(date[0:4], date[4:6], date[6:8]),
+                'date': "%s-%s-%s" %(yy+1911, mm, dd),
                 'type': 'finance' if index == 0 else 'bearish',
                 'stockid': its[0],
                 'stocknm': its[1],

@@ -11,7 +11,8 @@ from collections import OrderedDict
 
 class Report(object):
 
-    def __init__(self, sort=[('ending_value', 1)], limit=10):
+    def __init__(self, algnm, sort=[('ending_value', 1)], limit=10):
+        self._algnm = algnm
         self._limit = limit
         self._sort, self._direct = zip(*sort)
         self._report = pd.DataFrame()
@@ -40,10 +41,8 @@ class Report(object):
             'ending_cash': results['ending_cash'][-1] if 'ending_cash' in results.columns else 0,
             'capital_used': results['capital_used'][-1] if 'capital_used' in results.columns else 0
         })
-        try:
-            item.update(risks['one_month'][-1])
-        except:
-            pass
+        # update risk to report
+        item.update(risks['one_month'][-1])
         frame = pd.DataFrame.from_dict({symbol: item}).fillna(0)
         self._report = pd.concat([self._report, frame.T], axis=0).fillna(0).sort(columns=list(self._sort), ascending=list(self._direct))[0:self._limit]
         self._pool.update({symbol: results})
