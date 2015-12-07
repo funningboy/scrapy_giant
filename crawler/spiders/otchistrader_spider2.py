@@ -3,6 +3,7 @@
 # http://www.wantgoo.com/stock/agentdata.aspx?StockNo=2330
 import re
 import string
+import json
 
 from scrapy.selector import Selector
 from scrapy.spider import BaseSpider
@@ -92,18 +93,46 @@ class OtcHisTraderSpider2(CrawlSpider):
         item = response.meta['item']
         item['traderlist'] = []
         item['url'] = response.url
-        date = sel.xpath('.//*[@id="ctl00_ContentPlaceHolder1_DropDownList1"]/option[1]/text()').extract()[0]
-        item['date'] = u"%s-%s-%s" % (date[0:4], date[4:6], date[6:8])
+        date = sel.xpath('.//*[@id="txtDaysDefine_s"]/@value').extract()[0]
+        item['date'] = u"%s-%s-%s" % (date[0:4], date[5:7], date[8:10])
         item['stockid'], item['stocknm'] = item['stockid'], ''
         item['open'] = u'0'
         item['high'] = u'0'
         item['low'] = u'0'
         item['close'] = u'0'
         item['volume'] = u'0'
-        elems = sel.xpath('.//table[@id="ctl00_ContentPlaceHolder1_GridView2"]//td/font/text()').extract()
-        for i in xrange(0, len(elems)-20+1, 4):
-            tradernm = elems[i].replace('-', '').replace(u'\u3000', u'').replace(u' ', u'')
-            traderid = self._id.trader.get_id(tradernm)
+        URL = 'http://w.wantgoo.com/Stock/aStock/AgentStat_Ajax'
+        request = Request(
+            URL,
+            meta={
+                'item': item,
+                'StockNo': item['stockid'],
+                'Types': '3.5',
+                'Rows': '50'
+            },
+            callback=self.parse_after_form_submit,
+            dont_filter=True)
+        yield request
+        
+    def parse_after_form_submit(self, response):
+        item = response.meta['item']
+        listjson = json.loads(response.body, encoding='utf8')
+        retvals = listjson['returnValues']
+        elems = json.loads(retvals, encoding='utf8')
+        for elem in elems:
+            if u'券商名稱' in elem:
+                tradernm = elem[u'券商名稱'].replace('-', '').replace(u' ', u'')
+                traderid = self._id.trader.get_id(tradernm)
+                price = elem[u'均價'] 
+                buyvolume = elem[u'買量']
+                sellvolume = elem[u'賣量']
+            elif u'券商名稱2' in elem: 
+                tradernm = elem[u'券商名稱2'].replace('-', '').replace(u' ', u'')
+                traderid = self._id.trader.get_id(tradernm)
+                price = elem[u'均價2'] 
+                buyvolume = elem[u'買量2']
+                sellvolume = elem[u'賣量2']
+
             if not traderid:
                 log.msg("%s not found at trader list" %(tradernm), log.INFO)
                 continue
@@ -111,12 +140,11 @@ class OtcHisTraderSpider2(CrawlSpider):
                 'index': u'0',
                 'traderid': u"%s" %(traderid),
                 'tradernm': tradernm,
-                'price': elems[i+3] if elems[i+3] else u'0',
-                'buyvolume': u"%d" % (float(elems[i+1])*1000) if elems[i+1] else u'0',
-                'sellvolume': u"%d" % (float(elems[i+2])*1000) if elems[i+2] else u'0'
+                'price':  u"%.2f" % (float(price)) if price else u'0',
+                'buyvolume': u"%d" % (float(buyvolume)*1000) if buyvolume else u'0',
+                'sellvolume': u"%d" % (float(sellvolume)*1000) if sellvolume else u'0'
             }
             item['traderlist'].append(sub)
         log.msg("fetch %s pass at %d times" %(item['stockid'], item['count']), log.INFO)
         log.msg("item[0] %s ..." % (item['traderlist'][0]), level=log.DEBUG)
         yield item
-

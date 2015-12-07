@@ -17,7 +17,16 @@ skip_tests = {
     'TestBestTraderSummary': False
 }
 
+@unittest.skipIf()
+class TestBestTraderDetail():
 
+    def test_on_to_detail(self):
+        stream = pickle.dumps(((), {
+            'opt': 'twse',
+            'targets': ['besttrader'],
+            #'starttime':
+            #'endtime':
+        }))
 
 @unittest.skipIf(skip_tests['TestDualEMADetail'], "skip")
 class TestDualEMADetail(NoSQLTestCase):
