@@ -111,8 +111,8 @@ class TestOtcHisTraderCaptcha(object):
                 except:
                     pass
         except Exception:
-            print traceback.format_exc()
-            print 'error download csv'
+            #print traceback.format_exc()
+            #print 'error download csv'
             pass
         return False
 
@@ -131,9 +131,11 @@ class TestCaptcha(unittest.TestCase):
         debug = False
         cap = TestOtcHisTraderCaptcha()
         record = defaultdict(list)
+        # put your alg here
         tests = [
             (OtcHisTraderCaptcha0(debug), False),
-            (OtcHisTraderCaptcha1(debug), True)
+            (OtcHisTraderCaptcha1(debug), True),
+#            (OtcHisTraderCaptcha2(debug), True)
         ]
         for test in tests:
             if test[1]:

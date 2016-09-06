@@ -12,6 +12,7 @@ import urllib
 from lxml import etree
 from StringIO import StringIO
 from collections import Counter
+import traceback
 import json
 import cookielib
 import time
@@ -128,9 +129,11 @@ class TestCaptcha(unittest.TestCase):
         debug = False
         cap = TestTwseHisTraderCaptcha()
         record = defaultdict(list)
+        # put your alg here
         tests = [
-            (TwseHisTraderCaptcha0(debug), True),
-            (TwseHisTraderCaptcha1(debug), False)
+            (TwseHisTraderCaptcha0(debug), False),
+            (TwseHisTraderCaptcha1(debug), False),
+            (TwseHisTraderCaptcha2(debug), True)
         ]
         for test in tests:
             # as thread

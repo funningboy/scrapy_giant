@@ -15,7 +15,7 @@ from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy import Request, FormRequest
 from scrapy import log
 from crawler.items import TwseHisTraderItem
-from crawler.spiders.twsehistrader_captcha import TwseHisTraderCaptcha0, TwseHisTraderCaptcha1
+from crawler.spiders.twsehistrader_captcha import TwseHisTraderCaptcha0, TwseHisTraderCaptcha1, TwseHisTraderCaptcha2
 
 from handler.iddb_handler import TwseIdDBHandler
 
@@ -99,7 +99,7 @@ class TwseHisTraderSpider(CrawlSpider):
         item, content = response.meta['item'], response.meta['content']
         arr = np.asarray(bytearray(response.body), dtype=np.uint8)
         img = cv2.imdecode(arr, -1)
-        text = TwseHisTraderCaptcha0(False).run(img)
+        text = TwseHisTraderCaptcha1(False).run(img)
         #text = raw_input('test:')
         content.update({
             'CaptchaControl1': text
