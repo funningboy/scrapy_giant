@@ -52,6 +52,8 @@ class TwseHisStockItem(scrapy.Item):
     stocknm = scrapy.Field()
     count = scrapy.Field()
     data = scrapy.Field()
+    year = scrapy.Field()
+    month = scrapy.Field()
 #   data:[{
 #       date = scrapy.Field()
 #       exhvolume = scrapy.Field()

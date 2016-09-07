@@ -6,7 +6,8 @@ import numpy as np
 from StringIO import StringIO
 import string
 from dateutil.relativedelta import relativedelta
-from datetime import datetime
+from datetime import datetime, date
+import traceback 
 
 from scrapy.selector import Selector
 from scrapy.contrib.spiders import CrawlSpider, Rule
@@ -17,6 +18,11 @@ from crawler.items import TwseHisStockItem
 from handler.iddb_handler import TwseIdDBHandler
 
 __all__ = ['TwseHisStockSpider']
+
+"""
+sync to 'http://www.twse.com.tw/ch/trading/exchange/STOCK_DAY/STOCK_DAYMAIN.php'
+"""
+
 
 class TwseHisStockSpider(CrawlSpider):
     name = 'twsehisstock'
@@ -47,6 +53,7 @@ class TwseHisStockSpider(CrawlSpider):
         self._id = TwseIdDBHandler(**kwargs)
 
     def start_requests(self):
+        URL = 'http://www.twse.com.tw/ch/trading/exchange/STOCK_DAY/STOCK_DAYMAIN.php'
         for i,stockid in enumerate(self._id.stock.get_ids()):
             if self._id.stock.is_warrant(stockid):
                 continue
@@ -55,23 +62,17 @@ class TwseHisStockSpider(CrawlSpider):
                 if mon == 0:
                     if timestamp.day == 1 and timestamp.hour <= 14:
                         continue
-                URL = (
-                    'http://www.twse.com.tw/ch/trading/exchange/' +
-                    'STOCK_DAY/STOCK_DAY_print.php?genpage=genpage/' +
-                    'Report%(year)d%(mon)02d/%(year)d%(mon)02d_F3_1_8_%(stock)s.php' +
-                    '&type=csv') % {
-                        'year': timestamp.year,
-                        'mon': timestamp.month,
-                        'stock': stockid
-                }
+                
                 item = TwseHisStockItem()
                 item.update({
                     'stockid': stockid,
-                    'count': 0
+                    'count': 0,
+                    'year': "{0}".format(timestamp.year),
+                    'month': "{0}".format(timestamp.month)
                 })
                 request = Request(
                     URL,
-                    meta= {
+                    meta={
                         'item': item,
                         'cookiejar': i
                     },
@@ -80,6 +81,28 @@ class TwseHisStockSpider(CrawlSpider):
                 yield request
 
     def parse(self, response):
+        URL = 'http://www.twse.com.tw/ch/trading/exchange/STOCK_DAY/STOCK_DAYMAIN.php'
+        item = response.meta['item']
+        sel = Selector(response)
+        content = {
+            'download': 'csv',
+            'query_year': item['year'],
+            'query_month': item['month'],
+            'CO_ID': item['stockid'],
+            'query-buttom': u'查詢'
+        }
+        request = FormRequest(
+            URL,
+            meta={
+                'item': item,
+                'cookiejar': response.meta['cookiejar']
+            },
+            formdata=content,
+            callback=self.parse_after_form_submit,
+            dont_filter=True)
+        yield request
+
+    def parse_after_form_submit(self, response):
         """
         data struct
         [
@@ -102,11 +125,14 @@ class TwseHisStockSpider(CrawlSpider):
         try:
             frame = pd.read_csv(
                 StringIO(response.body), delimiter=',',
-                na_values=['--'], header=None, skiprows=[0, 1], dtype=np.object).dropna()
+                na_values=['--'], header=None, skiprows=[0, 1], dtype=np.object)
+            # rm empty field
+            del frame[9]
             if frame.empty:
                 log.msg("fetch %s empty" % (item['stockid']), log.INFO)
                 return
         except:
+            print traceback.print_exc()
             log.msg("fetch %s fail" % (item['stockid']), log.INFO)
             return
         for elems in frame.T.to_dict().values():

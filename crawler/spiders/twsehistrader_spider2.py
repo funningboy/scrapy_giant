@@ -100,7 +100,7 @@ class TwseHisTraderSpider2(CrawlSpider):
         item['low'] = u'0'
         item['close'] = u'0'
         item['volume'] = u'0'
-        URL = 'http://w.wantgoo.com/Stock/aStock/AgentStat_Ajax'
+        URL = 'http://www.wantgoo.com/Stock/aStock/AgentStat_Ajax'
         request = Request(
             URL,
             meta={
