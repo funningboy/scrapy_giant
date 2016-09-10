@@ -172,7 +172,7 @@ class TestOtcThreadService(TestRunScrapyService):
         [self.assertTrue(self.has_pass(scrapy_tests[k][2])) for k in jobs]
 
         # otc
-        jobs = ['otchisstock', 'otchistrader2', 'otchiscredit', 'otchisfuture']
+        jobs = ['otchisstock', 'otchistrader', 'otchiscredit', 'otchisfuture']
         tasks = group([
             run_scrapy_service.subtask(scrapy_tests[k]) for k in jobs
         ])
@@ -262,7 +262,6 @@ class TestTwseHisStock(TestRunScrapyService):
         stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
         print stream
 
-@unittest.skipIf(True, 'skip')
 class TestTwseHisTrader(TestRunScrapyService):
 
     def test_on_run(self):
@@ -282,6 +281,7 @@ class TestTwseHisTrader(TestRunScrapyService):
         stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
         print stream
 
+@unittest.skipIf(True, 'skip')
 class TestTwseHisTrader2(TestRunScrapyService):
 
     def test_on_run(self):
@@ -358,7 +358,6 @@ class TestOtcHisStock(TestRunScrapyService):
         stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
         print stream
 
-@unittest.skipIf(True, 'skip')
 class TestOtcHisTrader(TestRunScrapyService):
     
     def test_on_run(self):
@@ -378,6 +377,7 @@ class TestOtcHisTrader(TestRunScrapyService):
         stream = item.to_json(sort_keys=True, indent=4, default=json_util.default, ensure_ascii=True)
         print stream
 
+@unittest.skipIf(True, 'skip')
 class TestOtcHisTrader2(TestRunScrapyService):
     
     def test_on_run(self):
